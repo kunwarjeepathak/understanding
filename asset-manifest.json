@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/kunwar.github.io/static/css/main.05a3b538.css",
+    "main.js": "/kunwar.github.io/static/js/main.48881336.js",
+    "index.html": "/kunwar.github.io/index.html",
+    "main.05a3b538.css.map": "/kunwar.github.io/static/css/main.05a3b538.css.map",
+    "main.48881336.js.map": "/kunwar.github.io/static/js/main.48881336.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.05a3b538.css",
+    "static/js/main.48881336.js"
+  ]
+}
