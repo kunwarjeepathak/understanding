@@ -173,3 +173,30 @@ header input {
 .toggle-icon {
   transition: transform 0.2s;
 }
+/* Add this to your existing CSS */
+.sub-answer {
+  overflow-y: auto; /* Enable vertical scrolling */
+  max-height: 70vh !important; /* Use viewport height units */
+  padding: 10px;
+}
+
+.sub-answer.open {
+  max-height: 70vh !important; /* Consistent height when open */
+  overflow-y: auto; /* Scroll when content overflows */
+}
+
+/* Make tables responsive */
+.sub-answer table {
+  width: 100%;
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* Add smooth transitions */
+.answer, .sub-answer {
+  transition: 
+    max-height 0.3s ease, 
+    padding 0.3s ease,
+    overflow 0.3s ease;
+}

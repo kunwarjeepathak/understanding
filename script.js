@@ -10,8 +10,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const icon = header.querySelector(".toggle-icon");
 
     header.addEventListener("click", () => {
-      const open = answer.classList.toggle("open");
-      icon.style.transform = open ? "rotate(90deg)" : "rotate(0deg)";
+      const wasOpen = answer.classList.contains("open");
+      answer.classList.toggle("open", !wasOpen);
+      icon.style.transform = !wasOpen ? "rotate(90deg)" : "rotate(0deg)";
     });
 
     // Toggle each sub-question
@@ -20,8 +21,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const subIcon = subBtn.querySelector(".toggle-icon");
 
       subBtn.addEventListener("click", () => {
-        const openSub = subAns.classList.toggle("open");
-        subIcon.style.transform = openSub ? "rotate(90deg)" : "rotate(0deg)";
+        const wasSubOpen = subAns.classList.contains("open");
+        subAns.classList.toggle("open", !wasSubOpen);
+        subIcon.style.transform = !wasSubOpen ? "rotate(90deg)" : "rotate(0deg)";
+        
+        // Scroll to show more content
+        if (!wasSubOpen) {
+          setTimeout(() => {
+            subAns.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }, 300);
+        }
       });
     });
   });

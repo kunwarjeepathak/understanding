@@ -33,23 +33,149 @@
       <!-- Main Topic: Multithreading -->
       <div class="qa-card" data-cat="java">
         <button class="q-header">
-          <span>Explain in detail Multithreading</span>
+          <span>Multithreading</span>
           <span class="toggle-icon">▸</span>
         </button>
         <div class="answer">
           <ul class="sub-list">
             <li>
               <button class="sub-header">
-                <span>What is thread lifecycle?</span>
+                <span>thread lifecycle?</span>
                 <span class="toggle-icon">▸</span>
               </button>
               <div class="sub-answer">
-                <p>
-                  A Java thread moves through several states: NEW, RUNNABLE, BLOCKED,
-                  WAITING, TIMED_WAITING, and TERMINATED. You can inspect these via
-                  Thread.getState().  
-                </p>
-              </div>
+  <h3>Thread Lifecycle Explained</h3>
+  
+  <h4>1. Introduction</h4>
+  <p>Understanding thread lifecycle is crucial for building robust, high-performance concurrent applications. We'll explore both OS-level and JVM perspectives.</p>
+  
+  <h4>2. OS-Level Thread Lifecycle</h4>
+  <ul>
+    <li><strong>New (Created)</strong>
+      <ul>
+        <li>Thread control block (TCB) allocated</li>
+        <li>Resources initialized (stack, registers)</li>
+      </ul>
+    </li>
+    <li><strong>Ready</strong>
+      <ul>
+        <li>On run queue waiting for CPU</li>
+        <li>Scheduler selects based on priority</li>
+      </ul>
+    </li>
+    <li><strong>Running</strong>
+      <ul>
+        <li>CPU executing instructions</li>
+        <li>Context switches handle state transitions</li>
+      </ul>
+    </li>
+    <li><strong>Blocked (Waiting)</strong>
+      <ul>
+        <li>Waiting for I/O, lock, or event</li>
+        <li>Not eligible for CPU</li>
+      </ul>
+    </li>
+    <li><strong>Terminated (Zombie)</strong>
+      <ul>
+        <li>Execution finished/killed</li>
+        <li>Resources freed after status collection</li>
+      </ul>
+    </li>
+  </ul>
+  
+  <h4>3. Java Thread States (java.lang.Thread.State)</h4>
+  <table>
+    <thead>
+      <tr>
+        <th>State</th>
+        <th>Description</th>
+        <th>Entry Trigger</th>
+        <th>Exit Trigger</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>NEW</td>
+        <td>Thread created but not started</td>
+        <td>new Thread()</td>
+        <td>start()</td>
+      </tr>
+      <tr>
+        <td>RUNNABLE</td>
+        <td>Eligible to run</td>
+        <td>start()/notify()</td>
+        <td>sleep()/wait()</td>
+      </tr>
+      <tr>
+        <td>BLOCKED</td>
+        <td>Waiting for monitor lock</td>
+        <td>synchronized contention</td>
+        <td>Lock acquired</td>
+      </tr>
+      <tr>
+        <td>WAITING</td>
+        <td>Indefinite wait for action</td>
+        <td>wait()/join()</td>
+        <td>notify()/interrupt()</td>
+      </tr>
+      <tr>
+        <td>TIMED_WAITING</td>
+        <td>Waiting with timeout</td>
+        <td>sleep(ms)/wait(ms)</td>
+        <td>Timeout/notification</td>
+      </tr>
+      <tr>
+        <td>TERMINATED</td>
+        <td>Execution completed</td>
+        <td>run() exits</td>
+        <td>-</td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <h4>4. Key Lifecycle Transitions</h4>
+  <ul>
+    <li><strong>Creation:</strong> new Thread() → start()</li>
+    <li><strong>Running → Blocking:</strong>
+      <ul>
+        <li>sleep() → TIMED_WAITING</li>
+        <li>wait() → WAITING</li>
+        <li>Lock contention → BLOCKED</li>
+      </ul>
+    </li>
+    <li><strong>Blocking → Runnable:</strong>
+      <ul>
+        <li>Lock release → RUNNABLE</li>
+        <li>notify() → BLOCKED → RUNNABLE</li>
+      </ul>
+    </li>
+    <li><strong>Termination:</strong> run() completes → TERMINATED</li>
+  </ul>
+  
+  <h4>5. Memory Consistency (Happens-Before)</h4>
+  <ul>
+    <li>Thread start: Writes before start() visible in new thread</li>
+    <li>Lock release/acquire: Unlock happens-before subsequent lock</li>
+    <li>Volatile variables: Write happens-before subsequent read</li>
+    <li>Thread join: Termination happens-before join() returns</li>
+  </ul>
+  
+  <h4>6. Practical Q&A</h4>
+  <ul>
+    <li><strong>BLOCKED vs WAITING:</strong> BLOCKED waits for lock, WAITING for notification</li>
+    <li><strong>sleep() vs wait():</strong> sleep() keeps locks, wait() releases monitor</li>
+    <li><strong>Daemon threads:</strong> thread.setDaemon(true) before start()</li>
+    <li><strong>Interrupting:</strong> thread.interrupt() throws InterruptedException</li>
+  </ul>
+  
+  <h4>7. Interview Tips</h4>
+  <ul>
+    <li>Draw state diagrams with transition triggers</li>
+    <li>Distinguish kernel vs user-level threads</li>
+    <li>Discuss thread pools (Executors.newFixedThreadPool)</li>
+    <li>Explain context switching costs</li>
+  </ul>
+</div>
             </li>
             <li>
               <button class="sub-header">
