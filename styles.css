@@ -1,0 +1,175 @@
+:root {
+  --primary: #4a90e2;
+  --bg: #f7f9fc;
+  --text: #333;
+  --card-bg: #fff;
+  --border: #d1d9e6;
+  --radius: 6px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Header */
+header {
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+header .logo {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+header input {
+  width: 200px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* Layout */
+.layout {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  background: var(--card-bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+.sidebar ul {
+  list-style: none;
+}
+
+.sidebar li {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.sidebar li.active {
+  background: var(--bg);
+}
+
+.sidebar li.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary);
+}
+
+/* Content Area */
+.content {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+/* QA Card */
+.qa-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.qa-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* Main Question Header */
+.q-header {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 1rem;
+  text-align: left;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Answer Container */
+.answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+/* When open */
+.answer.open {
+  max-height: 1000px; /* ample space */
+}
+
+/* Sub-list styling */
+.sub-list {
+  list-style: none;
+  padding: 0.5rem 1rem;
+}
+
+.sub-list li + li {
+  margin-top: 0.5rem;
+}
+
+/* Sub-question Header */
+.sub-header {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.5rem 0;
+  text-align: left;
+  font-size: 0.95rem;
+  font-weight: 400;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Sub-answer */
+.sub-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.sub-answer.open {
+  padding: 0.5rem 0;
+  max-height: 500px;
+}
+
+/* Toggle Icon rotation */
+.toggle-icon {
+  transition: transform 0.2s;
+}
