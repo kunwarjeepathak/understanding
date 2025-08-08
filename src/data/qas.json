@@ -1,0 +1,26 @@
+[
+  {
+    "question": "What is React?",
+    "answer": "A JavaScript library for building user interfaces.",
+    "subItems": [
+      {
+        "question": "What is a component?",
+        "answer": "Components let you split the UI into independent, reusable pieces."
+      },
+      {
+        "question": "What is JSX?",
+        "answer": "A syntax extension that looks similar to HTML and is used with React."
+      }
+    ]
+  },
+  {
+    "question": "How does state work?",
+    "answer": "State is an object that determines the behavior of a component and how it will render.",
+    "subItems": [
+      {
+        "question": "What is useState?",
+        "answer": "A React hook that lets you add state to functional components."
+      }
+    ]
+  }
+]
