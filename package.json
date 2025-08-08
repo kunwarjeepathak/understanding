@@ -2,7 +2,7 @@
   "name": "qa-hub",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://kunwarjeepathak.github.io/kunwar.github.io"
+  "homepage": "https://kunwarjeepathak.github.io/kunwar.github.io",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
