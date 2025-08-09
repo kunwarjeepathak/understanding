@@ -2565,7 +2565,1909 @@ jmxc.close();
 `
 }
 ]
+},// Add this as the AWS Lambda card in your src/qa-data.ts
+
+{
+category: 'aws',
+title: 'AWS Lambda Functions',
+subItems: [
+{
+question: 'What is AWS Lambda and when should you use it?',
+answerMd: `
+### What Is AWS Lambda?
+
+\`\`\`mermaid
+flowchart LR
+ES[Event Source] --> L[Lambda Function]
+L --> C[Container Init]
+C --> H[Handler Execution]
+H --> R[Return Response]
+\`\`\`
+
+AWS Lambda is a serverless compute service that runs your code in response to events without provisioning servers. It automatically scales based on the volume of events.
+
+\`\`\`js
+// Example: simple Node.js handler
+exports.handler = async (event) => {
+console.log("Received event:", JSON.stringify(event));
+return { statusCode: 200, body: "Hello from Lambda!" };
+};
+\`\`\`
+`
 },
+{
+question: 'How does AWS Lambda pricing work?',
+answerMd: `
+### Lambda Pricing Model
+
+\`\`\`mermaid
+pie
+title Cost Components
+"Requests" : 20
+"Compute Duration (GB-s)" : 80
+\`\`\`
+
+1. **Request Charges**
+\$0.20 per 1M requests (after free tier).
+
+2. **Compute Duration**
+Billed in GB-seconds:
+\`Cost = Memory(GB) × Duration(s) × \$0.0000166667\`
+
+3. **Free Tier**
+1M free requests + 400 000 GB-s per month.
+
+\`\`\`math
+Cost = Requests × \$0.0000002 + (Memory_{GB} × Duration_{s} × 0.0000166667)
+\`\`\`
+`
+},
+{
+question: 'What event sources can trigger a Lambda function?',
+answerMd: `
+### Supported Event Sources
+
+\`\`\`mermaid
+flowchart TB
+subgraph Push Sources
+APIG[API Gateway]
+SNS[SNS Topic]
+S3[S3 Object Event]
+EB[EventBridge]
+end
+subgraph Pull Sources
+SQS[SQS Queue]
+KDS[Kinesis Stream]
+DBS[DynamoDB Stream]
+end
+APIG & SNS & S3 & EB --> L[Lambda]
+SQS & KDS & DBS --> L
+\`\`\`
+
+You can also invoke Lambda directly via SDK, CLI, or Function URLs.
+`
+},
+{
+question: 'How do you package and deploy a Lambda function?',
+answerMd: `
+### Packaging & Deployment
+
+\`\`\`mermaid
+sequenceDiagram
+participant Dev as Developer
+participant ZIP as ZIP Archive
+participant S3 as S3 (opt)
+participant AWS as AWS Lambda
+Dev->>ZIP: zip code & deps
+ZIP->>S3: upload to S3       %% optional
+Dev->>AWS: update-function-code
+AWS-->>Dev: confirmation
+\`\`\`
+
+**ZIP Deployment (CLI)**
+\`\`\`bash
+zip -r function.zip index.js node_modules/
+aws lambda update-function-code \
+--function-name MyFunc \
+--zip-file fileb://function.zip
+\`\`\`
+
+**Container Image Deployment**
+\`\`\`bash
+docker build -t repo/myfunc:latest .
+docker push repo/myfunc:latest
+aws lambda update-function-code \
+--function-name MyFunc \
+--image-uri repo/myfunc:latest
+\`\`\`
+`
+},
+{
+question: 'What are cold starts in Lambda and how can you mitigate them?',
+answerMd: `
+### Cold Start Lifecycle
+
+\`\`\`mermaid
+stateDiagram-v2
+[*] --> ColdInit
+ColdInit --> HandlerInit
+HandlerInit --> Running
+Running --> [*]
+\`\`\`
+
+A cold start happens when AWS provisions a new container. To mitigate:
+
+- **Provisioned Concurrency**
+Keep pre-initialized containers warm.
+- **Smaller Packages**
+Exclude unused dependencies; use Lambda Layers.
+- **Lazy Init**
+Move heavy code into the handler instead of global scope.
+`
+},
+{
+question: 'How do Lambda Versions and Aliases work?',
+answerMd: `
+### Versions & Aliases Flow
+
+\`\`\`mermaid
+flowchart LR
+Dev[Developer] --> |PublishVersion| V1[v1]
+Dev --> |PublishVersion| V2[v2]
+AliasProd[Alias: “prod”] --> V1
+AliasDev[Alias: “dev”] --> V2
+\`\`\`
+
+- **Versions** are immutable snapshots of code + config.
+- **Aliases** point to versions and support weighted traffic for blue/green shifts.
+
+\`\`\`bash
+# Publish a new version
+aws lambda publish-version --function-name MyFunc
+# Update alias to new version
+aws lambda update-alias \
+--function-name MyFunc \
+--name prod \
+--function-version 2
+\`\`\`
+`
+},
+{
+question: 'What are Lambda Layers and how do you use them?',
+answerMd: `
+### Layer Packaging
+
+\`\`\`mermaid
+classDiagram
+class Function {
++handler()
++layers[]
+}
+class Layer {
+-nodejs/
+-python/
+}
+Function <|.. Layer
+\`\`\`
+
+**Create & Publish**
+\`\`\`bash
+zip -r layer.zip nodejs/
+aws lambda publish-layer-version \
+--layer-name SharedLibs \
+--zip-file fileb://layer.zip \
+  --compatible-runtimes nodejs14.x
+\`\`\`
+
+**Attach to Function**
+\`\`\`bash
+aws lambda update-function-configuration \
+--function-name MyFunc \
+--layers arn:aws:lambda:us-east-1:123456789012:layer:SharedLibs:1
+\`\`\`
+`
+},
+{
+question: 'How do you configure environment variables and timeouts?',
+answerMd: `
+### Configuration Settings
+
+\`\`\`mermaid
+flowchart LR
+UI[Console/CLI] --> CFG[Function Config]
+CFG --> Env[Environment Variables]
+CFG --> Timeout[Timeout (s)]
+\`\`\`
+
+Configure via AWS CLI:
+
+\`\`\`bash
+aws lambda update-function-configuration \
+--function-name MyFunc \
+--environment Variables="{STAGE=prod,LOG_LEVEL=info}" \
+--timeout 30
+\`\`\`
+
+- **Environment Variables** are available in \`process.env\` (Node.js) or \`os.environ\` (Python).
+- **Timeout** max is 900 seconds (15 minutes).
+`
+}
+]
+},// Add these cards after your AWS Lambda card in src/qa-data.ts
+
+{
+category: 'aws',
+title: 'AWS Core Services: Networking & Security',
+subItems: [
+{
+question: 'What is an AWS VPC and how is it structured?',
+answerMd: `
+### AWS VPC Overview
+
+\`\`\`mermaid
+flowchart TB
+VPC[VPC: 10.0.0.0/16]
+subgraph Public
+IGW[Internet Gateway]
+RT-Pub[Route Table (0.0.0.0/0 → IGW)]
+Subnet-Pub1[Subnet A (10.0.1.0/24)]
+Subnet-Pub2[Subnet B (10.0.2.0/24)]
+end
+subgraph Private
+NAT[NAT Gateway]
+RT-Priv[Route Table (0.0.0.0/0 → NAT)]
+Subnet-Priv1[Subnet C (10.0.3.0/24)]
+Subnet-Priv2[Subnet D (10.0.4.0/24)]
+end
+VPC --> Public
+VPC --> Private
+Subnet-Pub1 --> RT-Pub
+Subnet-Pub2 --> RT-Pub
+Subnet-Priv1 --> RT-Priv
+Subnet-Priv2 --> RT-Priv
+RT-Pub --> IGW
+RT-Priv --> NAT
+\`\`\`
+
+- A VPC is your isolated network container.
+- Public subnets route directly to an Internet Gateway (IGW).
+- Private subnets route outbound via a NAT Gateway.
+- Security Groups (instance-level) and Network ACLs (subnet-level) control traffic.
+
+\`\`\`bash
+# CLI: create VPC, subnets, IGW, route tables
+VPC_ID=$(aws ec2 create-vpc --cidr-block 10.0.0.0/16 --query 'Vpc.VpcId' --output text)
+aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block 10.0.1.0/24
+aws ec2 create-internet-gateway
+aws ec2 attach-internet-gateway --vpc-id $VPC_ID --internet-gateway-id igw-123456
+aws ec2 create-route-table --vpc-id $VPC_ID
+\`\`\`
+`
+},
+{
+question: 'How do IAM users, roles, and policies work together?',
+answerMd: `
+### IAM Entities & Trust
+
+\`\`\`mermaid
+flowchart LR
+User[User] --uses--> Policy{Inline & Managed Policies}
+Role[Role] --assume--> Policy
+Role --trusted by--> Service[EC2 / Lambda / STS]
+User & Role --grant permissions--> AWS_Resources
+\`\`\`
+
+- **Users**: long-term credentials (console/API).
+- **Roles**: assumable identities for services or federated users.
+- **Policies**: JSON documents that allow or deny actions on resources.
+
+\`\`\`json
+// Example IAM policy granting S3 read-only
+{
+"Version": "2012-10-17",
+"Statement": [{
+"Effect": "Allow",
+"Action": ["s3:GetObject", "s3:ListBucket"],
+"Resource": ["arn:aws:s3:::my-bucket", "arn:aws:s3:::my-bucket/*"]
+}]
+}
+\`\`\`
+`
+}
+]
+},
+
+{
+category: 'aws',
+title: 'AWS Messaging Services: SQS & SNS',
+subItems: [
+{
+question: 'How does Amazon SQS work and when should you use it?',
+answerMd: `
+### Amazon SQS Architecture
+
+\`\`\`mermaid
+sequenceDiagram
+Producer->>SQS: SendMessage
+Note right of SQS: Messages stored durably
+Consumer->>SQS: ReceiveMessage / DeleteMessage
+\`\`\`
+
+- **Standard Queues**: at-least-once delivery, best-effort ordering.
+- **FIFO Queues**: exactly-once processing, strict ordering.
+- **Dead-Letter Queues**: isolate messages that exceed max retries.
+
+\`\`\`js
+// Node.js v3 example: send & receive
+import { SQSClient, SendMessageCommand, ReceiveMessageCommand, DeleteMessageCommand } from "@aws-sdk/client-sqs";
+const client = new SQSClient({ region: "us-east-1" });
+await client.send(new SendMessageCommand({ QueueUrl, MessageBody: "Hello" }));
+const msgs = await client.send(new ReceiveMessageCommand({ QueueUrl, MaxNumberOfMessages: 1 }));
+if (msgs.Messages) {
+await client.send(new DeleteMessageCommand({ QueueUrl, ReceiptHandle: msgs.Messages[0].ReceiptHandle! }));
+}
+\`\`\`
+`
+},
+{
+question: 'How does Amazon SNS work and when should you use it?',
+answerMd: `
+### Amazon SNS Fan-out
+
+\`\`\`mermaid
+flowchart TB
+Publisher -->|Publish| SNS[Topic]
+SNS -->|HTTP| Endpoint1[HTTP/S Endpoint]
+SNS -->|Email| Endpoint2[Email]
+SNS -->|SQS| Endpoint3[Queue]
+\`\`\`
+
+- **Topics** broadcast notifications to multiple subscribers.
+- Supports HTTP/S, email, SMS, SQS, Lambda endpoints.
+- Use SNS for push-based, real-time fan-out.
+
+\`\`\`js
+// Node.js v3: publish a message
+import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
+const sns = new SNSClient({ region: "us-east-1" });
+await sns.send(new PublishCommand({ TopicArn, Message: "Alert: job completed" }));
+\`\`\`
+`
+}
+]
+},
+
+{
+category: 'aws',
+title: 'AWS ETL & Analytics: Glue',
+subItems: [
+{
+question: 'What is AWS Glue and what components does it have?',
+answerMd: `
+### AWS Glue Components
+
+\`\`\`mermaid
+flowchart LR
+S3_Raw[S3 Raw Data] --> Crawler[Crawler] --> DataCatalog[Data Catalog]
+DataCatalog --> Job[Glue ETL Job] --> S3_Cleaned[S3 Cleaned Data]
+Job -->|Logs| CloudWatch[CloudWatch Logs]
+\`\`\`
+
+- **Glue Data Catalog**: unified metadata repository.
+- **Crawlers**: infer schemas and populate the catalog.
+- **ETL Jobs**: Spark-based scripts (Python/Scala) transform data.
+- **Triggers**: schedule or event-driven job runs.
+
+`
+},
+{
+question: 'How do you author and run an AWS Glue job?',
+answerMd: `
+### Glue Job Example (Python)
+
+\`\`\`python
+import sys
+from awsglue.transforms import *
+from awsglue.utils import getResolvedOptions
+from awsglue.context import GlueContext
+from pyspark.context import SparkContext
+
+args = getResolvedOptions(sys.argv, ["JOB_NAME"])
+sc = SparkContext()
+glueContext = GlueContext(sc)
+spark = glueContext.spark_session
+
+# Read from catalog
+datasource = glueContext.create_dynamic_frame.from_catalog(
+database="raw_db", table_name="events"
+)
+
+# Transform
+mapped = ApplyMapping.apply(
+frame=datasource,
+mappings=[("userId", "string", "user_id", "string"),
+("timestamp", "long", "ts", "timestamp")]
+)
+
+# Write back to S3 in Parquet
+glueContext.write_dynamic_frame.from_options(
+frame=mapped,
+connection_type="s3",
+connection_options={"path": "s3://cleaned-bucket/"},
+format="parquet"
+)
+
+job.commit()
+\`\`\`
+
+**CLI to start job**
+\`\`\`bash
+aws glue start-job-run --job-name my-glue-job
+\`\`\`
+`
+}
+]
+},// Add this as the next card in your src/qa-data.ts
+
+{
+category: 'react',
+title: 'React Basic Concepts',
+subItems: [
+{
+question: 'What is JSX and how does it work?',
+answerMd: `
+### What Is JSX?
+
+\`\`\`mermaid
+flowchart LR
+JSX["JSX Code"] --> Babel["Babel / TypeScript Compiler"]
+Babel --> JS["JavaScript"]
+JS --> Browser["Browser Runtime"]
+\`\`\`
+
+JSX is a syntax extension that lets you write HTML-like code in JavaScript. Under the hood, Babel transforms JSX into \`React.createElement\` calls, which produce React elements.
+
+\`\`\`jsx
+// JSX
+const element = <h1 className="title">Hello, world!</h1>;
+
+// Transpiled JavaScript
+const element = React.createElement(
+'h1',
+{ className: 'title' },
+'Hello, world!'
+);
+\`\`\`
+`
+},
+{
+question: 'How do you create and compose React components?',
+answerMd: `
+### Components & Composition
+
+\`\`\`mermaid
+flowchart TD
+App["<App />"] --> Header["<Header />"]
+App --> Content["<Content />"]
+Content --> Article["<Article />"]
+Content --> Sidebar["<Sidebar />"]
+\`\`\`
+
+React apps are built by composing components. A component is a JavaScript function or class that returns JSX.
+
+\`\`\`jsx
+// Functional components
+function Header(props) {
+return <header>{props.title}</header>;
+}
+
+function Article() {
+return <p>This is an article.</p>;
+}
+
+function Content() {
+return (
+<main>
+<Article />
+<Sidebar />
+</main>
+);
+}
+
+function App() {
+return (
+<div>
+<Header title="My App" />
+<Content />
+</div>
+);
+}
+\`\`\`
+`
+},
+{
+question: 'What are props and state in React?',
+answerMd: `
+### Props vs State
+
+\`\`\`mermaid
+flowchart LR
+Parent["Parent"] --props--> Child["Child"]
+Child --reads--> Display["Display Output"]
+
+Child --calls setState--> StateChanged["Component Re-renders"]
+\`\`\`
+
+- **Props** are read-only inputs passed from parent to child.
+- **State** is managed within a component and can change over time, triggering re-renders.
+
+\`\`\`jsx
+function Counter({ initial }) {
+const [count, setCount] = useState(initial); // state
+
+  return (
+<div>
+<p>Count: {count}</p>
+<button onClick={() => setCount(count + 1)}>Increase</button>
+</div>
+);
+}
+
+// Usage
+<Counter initial={0} />
+\`\`\`
+`
+},
+{
+question: 'What is the Virtual DOM and how does reconciliation work?',
+answerMd: `
+### Virtual DOM & Reconciliation
+
+\`\`\`mermaid
+flowchart TD
+Render1["Virtual DOM A"] -->|User Event| Render2["Virtual DOM B"]
+Render1 -->|diff| Diff["Compute minimal changes"]
+Diff --> Patch["Apply patches to Real DOM"]
+\`\`\`
+
+React keeps a lightweight copy of the DOM (Virtual DOM). On state or prop changes, it diffs old vs new Virtual DOM trees, computes the smallest set of updates, and patches the real DOM, optimizing performance.
+`
+},
+{
+question: 'What are React Hooks?',
+answerMd: `
+### Introduction to Hooks
+
+Hooks are functions that let you “hook into” React features in functional components.
+
+- **useState**: add local state
+- **useEffect**: side effects and lifecycle
+- **useContext**, **useReducer**, etc.
+
+Hooks let you reuse stateful logic without classes.
+
+\`\`\`jsx
+import React, { useState, useEffect } from 'react';
+\`\`\`
+`
+},
+{
+question: 'How do useState and useEffect work?',
+answerMd: `
+### useState & useEffect
+
+\`\`\`mermaid
+flowchart LR
+Init["Initial Render"] --> useState1["useState Hook"]
+useState1 --> Render["Render UI"]
+Render --> useEffect1["useEffect Hook"]
+useEffect1 -->|runs after paint| Effect["Perform side effect"]
+\`\`\`
+
+\`\`\`jsx
+function Timer() {
+const [seconds, setSeconds] = useState(0);
+
+useEffect(() => {
+const id = setInterval(() => setSeconds(s => s + 1), 1000);
+return () => clearInterval(id); // cleanup on unmount
+  }, []); // empty deps: run once
+
+  return <div>Seconds: {seconds}</div>;
+}
+\`\`\`
+`
+},
+{
+question: 'How do you handle events in React?',
+answerMd: `
+### Event Handling
+
+\`\`\`mermaid
+flowchart LR
+User["User Click"] -->|onClick| Button["<button>"]
+Button --> Handler["handler function"]
+Handler --> Update["State update"]
+\`\`\`
+
+React events use camelCase and receive a SyntheticEvent.
+
+\`\`\`jsx
+function Toggle() {
+const [on, setOn] = useState(false);
+
+function handleClick(e) {
+console.log(e.target); // SyntheticEvent
+    setOn(prev => !prev);
+}
+
+return (
+<button onClick={handleClick}>
+{on ? 'ON' : 'OFF'}
+</button>
+);
+}
+\`\`\`
+`
+},
+{
+question: 'What is conditional rendering in React?',
+answerMd: `
+### Conditional Rendering
+
+\`\`\`mermaid
+flowchart TB
+State["state.show"] -->|true| A["<ComponentA />"]
+State -->|false| B["<ComponentB />"]
+\`\`\`
+
+Render UI based on conditions using JavaScript expressions.
+
+\`\`\`jsx
+function Greeting({ isLoggedIn }) {
+return (
+<div>
+{isLoggedIn ? <h1>Welcome back!</h1> : <h1>Please sign in.</h1>}
+{isLoggedIn && <LogoutButton />}
+</div>
+);
+}
+\`\`\`
+`
+}
+]
+},// Add this as the next card in your src/qa-data.ts
+
+{
+category: 'react',
+title: 'Context vs Redux for State Management',
+subItems: [
+{
+question: 'What is React Context API and when to use it?',
+answerMd: `
+### React Context API
+
+\`\`\`mermaid
+flowchart LR
+Provider["<ThemeContext.Provider>"]
+Consumer["useContext(ThemeContext)"]
+Provider --> Consumer
+\`\`\`
+
+Context lets you share values (theme, locale, auth) across the component tree without prop-drilling.
+
+\`\`\`jsx
+import React, { useContext } from 'react';
+
+const ThemeContext = React.createContext('light');
+
+function App() {
+return (
+<ThemeContext.Provider value="dark">
+<Toolbar />
+</ThemeContext.Provider>
+);
+}
+
+function Toolbar() {
+return <ThemedButton />;
+}
+
+function ThemedButton() {
+const theme = useContext(ThemeContext);
+return <button className={theme}>Current theme: {theme}</button>;
+}
+\`\`\`
+
+Use Context for low-frequency updates and small slices of global data.
+`
+},
+{
+question: 'What is Redux and how does it work?',
+answerMd: `
+### Redux Architecture
+
+\`\`\`mermaid
+flowchart TD
+Dispatch["dispatch(action)"] --> Store["Redux Store"]
+Store --> Reducer["reducer(state, action)"]
+Reducer --> State["new state"]
+State --> Subscribers["UI updates via useSelector"]
+\`\`\`
+
+Redux centralizes state in a single immutable store.
+- **Actions** describe “what happened.”
+- **Reducers** compute new state.
+- **Store** holds the state and dispatches updates.
+
+\`\`\`jsx
+import { createStore } from 'redux';
+
+const initialState = { count: 0 };
+
+function counterReducer(state = initialState, action) {
+switch (action.type) {
+case 'INCREMENT':
+return { count: state.count + 1 };
+default:
+return state;
+}
+}
+
+const store = createStore(counterReducer);
+
+store.subscribe(() => console.log(store.getState()));
+store.dispatch({ type: 'INCREMENT' }); // { count: 1 }
+\`\`\`
+`
+},
+{
+question: 'How do you wire up Redux in a React app?',
+answerMd: `
+### Integrating Redux with React
+
+\`\`\`mermaid
+flowchart TD
+Store["Redux Store"] --> Provider["<Provider store>"]
+Provider --> App["<App />"]
+App --> useSelector["useSelector()"]
+App --> useDispatch["useDispatch()"]
+\`\`\`
+
+\`\`\`jsx
+import React from 'react';
+import { Provider, useSelector, useDispatch } from 'react-redux';
+import { createStore } from 'redux';
+
+const store = createStore(counterReducer);
+
+function Counter() {
+const count = useSelector(state => state.count);
+const dispatch = useDispatch();
+return (
+<div>
+<p>{count}</p>
+<button onClick={() => dispatch({ type: 'INCREMENT' })}>
++
+</button>
+</div>
+);
+}
+
+function App() {
+return <Counter />;
+}
+
+export default function Root() {
+return (
+<Provider store={store}>
+<App />
+</Provider>
+);
+}
+\`\`\`
+`
+},
+{
+question: 'What are the key differences between Context API and Redux?',
+answerMd: `
+### Context vs Redux: Feature Comparison
+
+| Aspect                | Context API                                         | Redux                                                          |
+|-----------------------|-----------------------------------------------------|----------------------------------------------------------------|
+| Data Source           | Multiple independent contexts                       | Single centralized store                                       |
+| Updates Frequency     | Low to medium                                       | Can handle high-frequency updates                              |
+| Boilerplate           | Minimal                                             | More setup (actions, reducers, middleware)                     |
+| DevTools              | No built-in                                       | Redux DevTools for time-travel debugging                       |
+| Ecosystem             | Built into React                                    | Rich middleware (Thunk, Saga), community plugins               |
+| Performance Concerns  | Propagates to all consumers unless memoized         | Scoped updates via selectors, middleware for async flows       |
+
+Use Context for simple, static data. Choose Redux for complex state logic, caching, or cross-cutting concerns.
+`
+},
+{
+question: 'How can you combine Context with useReducer as a lightweight alternative to Redux?',
+answerMd: `
+### Context + useReducer Pattern
+
+\`\`\`mermaid
+flowchart TB
+Reducer["useReducer"] --> State["state, dispatch"]
+State & Dispatch --> Provider["Context.Provider"]
+Provider --> Consumers["useContext"]
+\`\`\`
+
+\`\`\`jsx
+import React, { useReducer, useContext } from 'react';
+
+const AuthContext = React.createContext();
+
+const initialAuth = { user: null };
+
+function authReducer(state, action) {
+switch (action.type) {
+case 'LOGIN':
+return { user: action.payload };
+case 'LOGOUT':
+return { user: null };
+default:
+return state;
+}
+}
+
+export function AuthProvider({ children }) {
+const [state, dispatch] = useReducer(authReducer, initialAuth);
+return (
+<AuthContext.Provider value={{ state, dispatch }}>
+{children}
+</AuthContext.Provider>
+);
+}
+
+export function useAuth() {
+return useContext(AuthContext);
+}
+\`\`\`
+
+This pattern gives you Redux-like reducers and dispatch, with zero extra dependencies.
+`
+},
+{
+question: 'When should you choose Context over Redux (and vice versa)?',
+answerMd: `
+### Choosing the Right Tool
+
+- Use Context API when:
+- You have a few global values (theme, locale, user).
+- Updates are infrequent.
+- You want minimal boilerplate.
+
+- Use Redux when:
+- Your app has complex, interconnected state.
+- You need time-travel debugging or middleware.
+- You handle high-frequency updates (e.g., real-time data).
+
+Both can coexist—use Redux for core business logic and Context for UI concerns like theming.
+`
+}
+]
+},// Add this as the next card in your src/qa-data.ts
+
+{
+category: 'react',
+title: 'React Router and Dynamic Routes',
+subItems: [
+{
+question: 'How do you install and set up React Router?',
+answerMd: `
+### 1. Installation
+
+\`\`\`bash
+npm install react-router-dom
+\`\`\`
+
+### 2. Root Setup
+
+\`\`\`jsx
+// index.tsx or main.tsx
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
+
+ReactDOM.render(
+<BrowserRouter>
+<App />
+</BrowserRouter>,
+document.getElementById('root')
+);
+\`\`\`
+`
+},
+{
+question: 'How do you define and render basic routes?',
+answerMd: `
+### Defining Routes
+
+\`\`\`mermaid
+flowchart LR
+BrowserRouter --> Routes
+Routes --> RouteHome[/"path: \"/\" -> Home"/]
+Routes --> RouteAbout[/"path: \"/about\" -> About"/]
+\`\`\`
+
+\`\`\`jsx
+import { Routes, Route } from 'react-router-dom';
+import Home from './Home';
+import About from './About';
+
+function App() {
+return (
+<Routes>
+<Route path="/" element={<Home />} />
+<Route path="/about" element={<About />} />
+</Routes>
+);
+}
+\`\`\`
+`
+},
+{
+question: 'How do you create navigation links?',
+answerMd: `
+### Navigation with Links
+
+\`\`\`mermaid
+flowchart LR
+Navbar --> LinkHome["<Link to='/'/> Home"]
+Navbar --> LinkAbout["<Link to='/about'/> About"]
+\`\`\`
+
+\`\`\`jsx
+import { Link } from 'react-router-dom';
+
+function Navbar() {
+return (
+<nav>
+<Link to="/">Home</Link>
+<Link to="/about">About</Link>
+</nav>
+);
+}
+\`\`\`
+`
+},
+{
+question: 'What are dynamic routes and how do you define them?',
+answerMd: `
+### Dynamic Routes
+
+\`\`\`mermaid
+flowchart LR
+Routes --> RouteUser[/"path: \"/users/:id\" -> UserProfile"/]
+\`\`\`
+
+\`\`\`jsx
+// In App.tsx
+<Routes>
+<Route path="/users/:id" element={<UserProfile />} />
+</Routes>
+\`\`\`
+`
+},
+{
+question: 'How do you access URL parameters in a component?',
+answerMd: `
+### Accessing URL Params
+
+\`\`\`jsx
+import { useParams } from 'react-router-dom';
+
+function UserProfile() {
+const { id } = useParams();
+// fetch user by id or display
+  return <div>User Profile for ID: {id}</div>;
+}
+\`\`\`
+`
+},
+{
+question: 'How do you handle 404 Not Found pages?',
+answerMd: `
+### 404 Not Found
+
+\`\`\`jsx
+import NotFound from './NotFound';
+
+<Routes>
+{/* other routes */}
+<Route path="*" element={<NotFound />} />
+</Routes>
+\`\`\`
+`
+},
+{
+question: 'How do you navigate programmatically?',
+answerMd: `
+### Programmatic Navigation
+
+\`\`\`mermaid
+flowchart LR
+Component --> useNavigate["useNavigate() hook"]
+useNavigate --> navigate["navigate('/path')"]
+\`\`\`
+
+\`\`\`jsx
+import { useNavigate } from 'react-router-dom';
+
+function Login() {
+const navigate = useNavigate();
+
+function onLoginSuccess() {
+// after your logic, redirect
+    navigate('/dashboard');
+}
+
+return <button onClick={onLoginSuccess}>Log In</button>;
+}
+\`\`\`
+`
+}
+]
+},// Add this as the next card in your src/qa-data.ts
+
+{
+category: 'react',
+title: 'Best Practices for Custom Hooks and Performance Tuning',
+subItems: [
+{
+question: 'What is a custom Hook and when should you create one?',
+answerMd: `
+### Defining Custom Hooks
+
+\`\`\`mermaid
+flowchart LR
+ComponentA --> HookA["useCustomHook()"]
+HookA --> Logic["shared logic"]
+Logic --> State["useState / useEffect"]
+\`\`\`
+
+A custom Hook is a JavaScript function whose name starts with "use" and that can call other Hooks. Create one when:
+- You have reusable stateful logic across components.
+- You need to encapsulate side effects or subscriptions.
+- You want to improve separation of concerns in your UI.
+`
+},
+{
+question: 'How should you name and structure your custom Hooks?',
+answerMd: `
+### Naming & Structure
+
+1. Prefix with "use" so React can enforce the Rules of Hooks.
+2. Keep parameters minimal and explicit.
+3. Return a consistent API (array for ordering, object for named values).
+
+\`\`\`jsx
+// Good: clear signature and return shape
+function useFetch(url) {
+const [data, setData] = useState(null);
+const [error, setError] = useState(null);
+
+useEffect(() => {
+fetch(url)
+.then(res => res.json())
+.then(setData)
+.catch(setError);
+}, [url]);
+
+return { data, error };
+}
+\`\`\`
+`
+},
+{
+question: 'How do you manage dependencies and avoid stale closures?',
+answerMd: `
+### Dependency Management
+
+\`\`\`mermaid
+flowchart LR
+useCallback --> deps["dependency array"]
+StateChange --> Recreate["recreate callback"]
+NoDeps --> Stale["stale variables"]
+\`\`\`
+
+- Always list every external variable in your dependency array.
+- Use \`useCallback\` or \`useMemo\` when passing functions/objects to children.
+- Prefer stable references (e.g., refs) for values you don’t want to re-trigger effects.
+`
+},
+{
+question: 'What are best practices for testing custom Hooks?',
+answerMd: `
+### Testing Custom Hooks
+
+\`\`\`jsx
+import { renderHook, act } from '@testing-library/react-hooks';
+
+function useCounter(initial = 0) {
+const [count, setCount] = useState(initial);
+const increment = () => setCount(c => c + 1);
+return { count, increment };
+}
+
+test('should increment counter', () => {
+const { result } = renderHook(() => useCounter(5));
+
+act(() => {
+result.current.increment();
+});
+
+expect(result.current.count).toBe(6);
+});
+\`\`\`
+
+- Use \`@testing-library/react-hooks\` for isolated hook tests.
+- Wrap hook calls in \`act()\` for state updates.
+- Mock external modules or APIs to avoid side effects.
+`
+},
+{
+question: 'How do you use useMemo and useCallback for performance tuning?',
+answerMd: `
+### Memoization with Hooks
+
+\`\`\`mermaid
+flowchart LR
+Render1 --> useMemo["heavy computation"] --> Cache
+Render2 --> useMemo["skipped if deps unchanged"]
+\`\`\`
+
+\`\`\`jsx
+function ExpensiveList({ items }) {
+const sorted = useMemo(() => {
+// heavy sort
+    return [...items].sort((a, b) => a.value - b.value);
+}, [items]);
+
+const handleClick = useCallback(id => {
+console.log('clicked', id);
+}, []);
+
+return sorted.map(item => (
+<div key={item.id} onClick={() => handleClick(item.id)}>
+{item.name}
+</div>
+));
+}
+\`\`\`
+
+- useMemo: cache expensive computations.
+- useCallback: memoize functions passed to children.
+`
+},
+{
+question: 'When should you apply React.memo and component-level memoization?',
+answerMd: `
+### Component Memoization
+
+\`\`\`mermaid
+flowchart LR
+Parent["Parent renders"] --> Cond["props unchanged?"]
+Cond -- yes --> ChildMemo["skip re-render"]
+Cond -- no --> Child["re-render child"]
+\`\`\`
+
+\`\`\`jsx
+const Item = React.memo(function Item({ data, onSelect }) {
+return <div onClick={() => onSelect(data.id)}>{data.name}</div>;
+});
+\`\`\`
+
+- Wrap pure functional components in \`React.memo\` to skip renders when props are shallowly equal.
+- Combine with \`useCallback\` to stabilize handler references.
+`
+},
+{
+question: 'How do you implement lazy loading and code splitting in React?',
+answerMd: `
+### Lazy Loading & Code Splitting
+
+\`\`\`mermaid
+flowchart LR
+import --> ReactLazy["React.lazy()"]
+Suspense["<Suspense>"] --> fallback["Loading..."]
+LazyComponent --> Suspense
+\`\`\`
+
+\`\`\`jsx
+import React, { Suspense, lazy } from 'react';
+
+const Chart = lazy(() => import('./Chart'));
+
+function Dashboard() {
+return (
+<Suspense fallback={<div>Loading chart...</div>}>
+<Chart />
+</Suspense>
+);
+}
+\`\`\`
+
+- Use \`React.lazy\` for dynamic imports of large modules.
+- Wrap lazy components in \`<Suspense>\` with an appropriate fallback.
+`
+},
+{
+question: 'What tools and techniques can you use for profiling and tuning React performance?',
+answerMd: `
+### Profiling & Optimization Workflow
+
+- Use React DevTools Profiler to record render timings and flame charts.
+- Identify “costly” components by render duration and frequency.
+- Apply memoization or split out heavy logic into web workers.
+- Use virtualization libraries (react-window, react-virtualized) for long lists.
+- Monitor bundle size with webpack-bundle-analyzer and trim unused code.
+`
+}
+]
+},// Add this as the next card in your src/qa-data.ts
+
+{
+category: 'react',
+title: 'Integrating TypeScript end-to-end in your React codebase',
+subItems: [
+{
+question: 'How do you set up a new React project with TypeScript?',
+answerMd: `
+### Bootstrapping a React+TypeScript App
+
+\`\`\`bash
+# Create React App
+npx create-react-app my-app --template typescript
+
+# Vite
+npm create vite@latest my-app -- --template react-ts
+cd my-app
+npm install
+npm run dev
+\`\`\`
+
+Both templates generate:
+- .tsx entry files
+- tsconfig.json with sensible defaults
+- Type definitions for React and DOM
+`
+},
+{
+question: 'How do you configure tsconfig.json for React?',
+answerMd: `
+### Key tsconfig.json Settings
+
+\`\`\`json
+{
+"compilerOptions": {
+"target": "es6",
+"jsx": "react-jsx",
+"strict": true,
+"moduleResolution": "node",
+"esModuleInterop": true,
+"skipLibCheck": true,
+"forceConsistentCasingInFileNames": true,
+"resolveJsonModule": true
+},
+"include": ["src"]
+}
+\`\`\`
+
+- **jsx**: \`react-jsx\` enables the new JSX transform
+- **strict**: turns on all strict type-checking options
+- **resolveJsonModule**: import JSON files directly
+`
+},
+{
+question: 'How do you migrate existing .js/.jsx files to .ts/.tsx?',
+answerMd: `
+### Step-by-Step Migration
+
+1. Rename \`.js/.jsx\` → \`.ts/.tsx\`.
+2. Fix import errors:
+\`\`\`ts
+import Foo from './Foo'; // ensure Foo.tsx exists
+   \`\`\`
+3. Annotate missing types or add \`// @ts-ignore\` temporarily.
+4. Replace \`propTypes\` with TypeScript interfaces/types.
+5. Remove any runtime type checks once compile-time types pass.
+`
+},
+{
+question: 'How do you type component props and state?',
+answerMd: `
+### Typing Props & State
+
+\`\`\`typescript
+// Functional component with props
+interface ButtonProps {
+label: string;
+disabled?: boolean;
+}
+
+const Button: React.FC<ButtonProps> = ({ label, disabled = false }) => {
+const [clicked, setClicked] = React.useState<boolean>(false);
+
+return (
+<button disabled={disabled} onClick={() => setClicked(true)}>
+{clicked ? 'Clicked!' : label}
+</button>
+);
+};
+\`\`\`
+
+- Define an interface or type alias for your props.
+- Use \`React.FC<Props>\` or explicitly type the function signature.
+- State hooks accept a generic for the state type.
+`
+},
+{
+question: 'How do you type hooks, refs, and events?',
+answerMd: `
+### Typing Hooks, Refs & Events
+
+\`\`\`typescript
+// useRef for a DOM node
+const inputRef = React.useRef<HTMLInputElement | null>(null);
+
+// useContext with a typed context
+interface AuthContextType { user: string | null }
+const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
+
+// Event handler props
+function TextInput() {
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+console.log(e.target.value);
+};
+
+return <input ref={inputRef} onChange={handleChange} />;
+}
+\`\`\`
+
+- Pass generics to \`useRef<ElementType>\`.
+- Create Contexts with a default typed value or \`undefined\`.
+- Use React’s built–in event types like \`MouseEvent\` and \`ChangeEvent\`.
+`
+},
+{
+question: 'How do you declare module types for assets and CSS modules?',
+answerMd: `
+### Asset & CSS Module Declarations
+
+\`\`\`typescript
+// src/custom.d.ts
+declare module '*.png';
+declare module '*.svg' {
+const ReactComponent: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+export default ReactComponent;
+}
+declare module '*.module.css' {
+const classes: { [key: string]: string };
+export default classes;
+}
+\`\`\`
+
+Add a \`custom.d.ts\` to let TS know how to import images, SVGs, and CSS modules.
+`
+},
+{
+question: 'How do you create generic components and custom hooks?',
+answerMd: `
+### Using Generics
+
+\`\`\`typescript
+// Generic List component
+interface ListProps<T> {
+items: T[];
+renderItem: (item: T) => React.ReactNode;
+}
+
+function List<T>({ items, renderItem }: ListProps<T>) {
+return <ul>{items.map((item, i) => <li key={i}>{renderItem(item)}</li>)}</ul>;
+}
+
+// Generic custom hook
+function usePrevious<T>(value: T): T | undefined {
+const ref = React.useRef<T>();
+React.useEffect(() => {
+ref.current = value;
+}, [value]);
+return ref.current;
+}
+\`\`\`
+
+Generics let you write reusable, strongly-typed components and hooks.
+`
+},
+{
+question: 'How do you enforce linting, formatting, and type-checking?',
+answerMd: `
+### CI & Tooling Workflow
+
+\`\`\`bash
+npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin prettier eslint-config-prettier
+\`\`\`
+
+.eslintrc.js
+\`\`\`javascript
+module.exports = {
+parser: '@typescript-eslint/parser',
+extends: [
+'react-app',
+'plugin:@typescript-eslint/recommended',
+'prettier'
+],
+plugins: ['@typescript-eslint'],
+rules: { /* your overrides */ }
+};
+\`\`\`
+
+package.json scripts
+\`\`\`json
+{
+"scripts": {
+"lint": "eslint 'src/**/*.{ts,tsx}'",
+"format": "prettier --write 'src/**/*.{ts,tsx,css}'",
+"type-check": "tsc --noEmit"
+}
+}
+\`\`\`
+
+Integrate these into your CI pipeline to catch errors before merge.
+`
+}
+]
+},// Add these as the next cards in your src/qa-data.ts
+
+{
+category: 'javascript',
+title: 'JavaScript Fundamental Concepts',
+subItems: [
+{
+question: 'What are the differences between var, let, and const?',
+answerMd: `
+### var, let, const
+
+\`\`\`mermaid
+flowchart LR
+Global["Global/Function Scope"]
+Block["Block Scope"]
+Global --> varVar["var declaration"]
+Block --> letVar["let declaration"]
+Block --> constVar["const declaration"]
+\`\`\`
+
+- var is function- or global-scoped and hoisted with an initial value of undefined.
+- let and const are block-scoped and hoisted into a temporal dead zone until initialized.
+- const creates a read-only binding; object contents can still change.
+
+\`\`\`js
+console.log(a, b); // undefined, ReferenceError
+var a = 10;
+let b = 20;
+const c = 30;
+\`\`\`
+`
+},
+{
+question: 'How do closures work in JavaScript?',
+answerMd: `
+### Closures
+
+\`\`\`mermaid
+flowchart TD
+OuterFunc["outer() creates x"] --> InnerFunc["inner() closes over x"]
+InnerFunc --> Access["inner() can access x even after outer() returns"]
+\`\`\`
+
+A closure is a function bundled with its lexical environment. Inner functions “remember” variables from their outer scope.
+
+\`\`\`js
+function outer() {
+let count = 0;
+return function inner() {
+count++;
+console.log(count);
+};
+}
+
+const fn = outer();
+fn(); // 1
+fn(); // 2
+\`\`\`
+`
+},
+{
+question: 'What is prototypical inheritance?',
+answerMd: `
+### Prototypal Inheritance
+
+\`\`\`mermaid
+flowchart LR
+Obj1["obj1"] --> Proto["[[Prototype]]"] --> Obj2["obj2"]
+\`\`\`
+
+Objects inherit properties through a prototype chain. Each object has an internal link to its prototype.
+
+\`\`\`js
+const proto = { greet() { return 'hi'; } };
+const obj = Object.create(proto);
+console.log(obj.greet()); // 'hi'
+\`\`\`
+`
+},
+{
+question: 'How does the JavaScript event loop work?',
+answerMd: `
+### Event Loop
+
+\`\`\`mermaid
+flowchart LR
+CallStack["Call Stack"] -->|push function| Execute
+WebAPIs["Web APIs"] --> CallbackQueue["Callback Queue"]
+CallbackQueue -->|queue callbacks| EventLoop["Event Loop"]
+EventLoop -->|drain when stack empty| CallStack
+\`\`\`
+
+JavaScript is single-threaded. Asynchronous callbacks wait in the task queue and run only when the call stack is empty.
+
+\`\`\`js
+setTimeout(() => console.log('task'), 0);
+console.log('sync');
+// Output: "sync" then "task"
+\`\`\`
+`
+},
+{
+question: 'What are Promises and async/await?',
+answerMd: `
+### Promises & Async/Await
+
+\`\`\`mermaid
+flowchart TD
+Promise["new Promise()"] --> then[".then()/.catch()"]
+AsyncFunc["async function"] --> Await["await expression"]
+Await --> Continue["pauses until resolved"]
+\`\`\`
+
+Promises represent future values. async/await is syntactic sugar over Promises for clearer async code.
+
+\`\`\`js
+function fetchData() {
+return new Promise(res => setTimeout(() => res('data'), 1000));
+}
+
+async function logData() {
+const result = await fetchData();
+console.log(result);
+}
+\`\`\`
+`
+},
+{
+question: 'How do ES modules work?',
+answerMd: `
+### ES Modules
+
+\`\`\`mermaid
+flowchart LR
+Exporting["export const x"] --> Importing["import { x } from './mod.js'"]
+\`\`\`
+
+ES modules let you split code into files. Imports are static and support tree-shaking.
+
+\`\`\`js
+// math.js
+export function add(a, b) { return a + b; }
+
+// app.js
+import { add } from './math.js';
+console.log(add(2, 3)); // 5
+\`\`\`
+`
+}
+]
+},
+{
+category: 'javascript',
+title: 'TypeScript Fundamental Concepts',
+subItems: [
+{
+question: 'How does TypeScript type inference work?',
+answerMd: `
+### Type Inference
+
+\`\`\`mermaid
+flowchart LR
+Declaration["let x = 5;"] --> TS["TypeScript infers x: number"]
+\`\`\`
+
+TypeScript automatically infers types from initial values and function return types. You only need annotations when inference falls short.
+
+\`\`\`ts
+let count = 10;       // inferred as number
+const name = 'Alice'; // inferred as string
+
+function square(n: number) {
+return n * n;       // return type inferred as number
+}
+\`\`\`
+`
+},
+{
+question: 'What is the difference between interface and type?',
+answerMd: `
+### interface vs type
+
+\`\`\`mermaid
+flowchart LR
+Interface["interface User { ... }"] --> Extend["can extend: interface Admin extends User"]
+TypeAlias["type Point = { x: number }"] --> Union["can create unions/intersections"]
+\`\`\`
+
+- interface is extendable and mergeable; ideal for object shapes.
+- type aliases are more flexible (unions, primitives, tuples) but cannot be reopened.
+
+\`\`\`ts
+interface User { id: number; name: string }
+type ID = string | number;
+\`\`\`
+`
+},
+{
+question: 'What are union and intersection types?',
+answerMd: `
+### Union & Intersection
+
+\`\`\`mermaid
+flowchart TD
+A["A | B"] --> Value["value of A or B"]
+A["A & B"] --> Combined["value must satisfy both A and B"]
+\`\`\`
+
+- Union (\`|\`) allows one of several types.
+- Intersection (\`&\`) combines multiple types into one.
+
+\`\`\`ts
+type A = { x: number };
+type B = { y: string };
+
+let u: A | B = { x: 1 };
+let i: A & B = { x: 1, y: 'ok' };
+\`\`\`
+`
+},
+{
+question: 'How do generics work in TypeScript?',
+answerMd: `
+### Generics
+
+\`\`\`mermaid
+flowchart LR
+Component["function identity<T>(arg: T)"] --> Return["returns T"]
+\`\`\`
+
+Generics allow you to write reusable components and functions that work with any type.
+
+\`\`\`ts
+function identity<T>(arg: T): T {
+return arg;
+}
+
+const num = identity<number>(123);   // num: number
+const str = identity('hello');       // str: string (inferred)
+\`\`\`
+`
+},
+{
+question: 'What are utility types (e.g., Partial, Omit)?',
+answerMd: `
+### Utility Types
+
+\`\`\`mermaid
+flowchart LR
+Partial["Partial<T>"] --> { all props optional }
+Omit["Omit<T, K>"] --> { remove keys K from T }
+\`\`\`
+
+Built-in mapped types to transform existing types:
+
+\`\`\`ts
+interface Todo { id: number; title: string; completed: boolean }
+
+type TodoPreview = Partial<Todo>;        // all props optional
+type TodoWithoutID = Omit<Todo, 'id'>;   // remove id
+\`\`\`
+`
+},
+{
+question: 'How do you implement type guards and narrowing?',
+answerMd: `
+### Type Guards & Narrowing
+
+\`\`\`mermaid
+flowchart LR
+Value["unknown value"] --> Guard["if (typeof x === 'string')"] --> Narrow["x is string"]
+\`\`\`
+
+Use \`typeof\`, \`instanceof\`, or custom user-defined guards to inform the compiler of more specific types.
+
+\`\`\`ts
+function isString(x: unknown): x is string {
+return typeof x === 'string';
+}
+
+function process(x: unknown) {
+if (isString(x)) {
+console.log(x.toUpperCase()); // safe
+  }
+}
+\`\`\`
+`
+}
+]
+},// Add this as the next card in your src/qa-data.ts
+
+{
+category: 'cloud',
+title: 'Spring Cloud Architecture & Microservices Patterns',
+subItems: [
+{
+question: 'What is the Spring Cloud architecture for microservices?',
+answerMd: `
+### Spring Cloud Architecture for Microservices
+
+\`\`\`mermaid
+flowchart LR
+Config["Config Server"] -->|serves config| ServiceA["Service A"]
+Config --> ServiceB["Service B"]
+Eureka["Service Registry (Eureka)"] --> ServiceA
+Eureka --> ServiceB
+Gateway["API Gateway"] --> Eureka
+Gateway --> Clients["Clients"]
+ServiceA --> CircuitBreaker["Resilience4j CircuitBreaker"]
+ServiceB --> CircuitBreaker
+ServiceA -->|publishes| Bus["Spring Cloud Bus"]
+ServiceB --> Bus
+\`\`\`
+
+- Config Server centralizes configuration for all services.
+- Service Registry (Eureka/Consul) enables dynamic discovery.
+- API Gateway (Spring Cloud Gateway/Zuul) routes requests and applies filters.
+- Circuit breakers, retries, and rate limiters provided via Resilience4j.
+- Spring Cloud Bus propagates config changes over a message broker (RabbitMQ/Kafka).
+
+\`\`\`java
+// Config Server
+@SpringBootApplication
+@EnableConfigServer
+public class ConfigServiceApplication { }
+
+// Eureka Client & Config Client
+@SpringBootApplication
+@EnableEurekaClient
+@EnableConfigClient
+public class ServiceAApplication {
+public static void main(String[] args) {
+SpringApplication.run(ServiceAApplication.class, args);
+}
+}
+
+// API Gateway routes definition
+@Bean
+public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
+return builder.routes()
+.route("service-a", r -> r.path("/a/**").uri("lb://SERVICE-A"))
+.route("service-b", r -> r.path("/b/**").uri("lb://SERVICE-B"))
+.build();
+}
+\`\`\`
+`
+},
+{
+question: 'What are the core microservices design patterns?',
+answerMd: `
+### Core Microservices Design Patterns
+
+\`\`\`mermaid
+flowchart LR
+Client --> Gateway["API Gateway"]
+Gateway --> Service1["Service 1"]
+Gateway --> Service2["Service 2"]
+Service1 --> DB1["Database 1"]
+Service2 --> DB2["Database 2"]
+SagaOrch["Saga Orchestrator"] --> Service1
+SagaOrch --> Service2
+\`\`\`
+
+| Pattern            | Purpose                                              |
+|--------------------|------------------------------------------------------|
+| Service Discovery  | Dynamic registration and lookup of service instances |
+| API Gateway        | Single entry point for routing, auth, and rate limit|
+| Circuit Breaker    | Fail fast and prevent cascading failures             |
+| Bulkhead           | Isolate resources to limit failure blast radius      |
+| Retry & Fallback   | Automatic retries and graceful degradation           |
+| Saga               | Manage distributed transactions                      |
+| CQRS               | Separate read/write models for scalability           |
+| Sidecar            | Package auxiliary features (logging, proxy) per service |
+
+\`\`\`java
+// Example: Saga orchestrator using Spring State Machine
+@Configuration
+public class OrderSagaConfig {
+@Bean
+public StateMachine<OrderState, OrderEvent> orderSagaMachine(
+StateMachineFactory<OrderState, OrderEvent> factory) {
+return factory.getStateMachine("order-saga");
+}
+}
+\`\`\`
+`
+},
+{
+question: 'How do you implement rate limiting, retry, and fallback mechanisms?',
+answerMd: `
+### Rate Limiting, Retry & Fallback
+
+\`\`\`mermaid
+flowchart LR
+Client -->|HTTP request| Gateway
+Gateway -->|RateLimiter| Service
+Service -->|Retry| ExternalAPI
+ExternalAPI -->|failure| CircuitBreaker
+CircuitBreaker --> Fallback["Fallback Method"]
+\`\`\`
+
+\`\`\`yaml
+# application.yml
+resilience4j:
+retry:
+instances:
+backendService:
+maxAttempts: 3
+waitDuration: 500ms
+ratelimiter:
+instances:
+gatewayLimit:
+limitForPeriod: 10
+limitRefreshPeriod: 1s
+circuitbreaker:
+instances:
+backendService:
+slidingWindowSize: 5
+failureRateThreshold: 50
+\`\`\`
+
+\`\`\`java
+@Service
+public class MyService {
+@Retry(name = "backendService")
+@RateLimiter(name = "gatewayLimit")
+@CircuitBreaker(name = "backendService", fallbackMethod = "fallback")
+public String callExternalApi() {
+return restTemplate.getForObject("http://external/api", String.class);
+}
+
+public String fallback(Exception ex) {
+return "Default fallback response";
+}
+}
+\`\`\`
+
+- RateLimiter controls request throughput to protect downstream services.
+- Retry automatically re-attempts failed calls before throwing an error.
+- CircuitBreaker opens on repeated failures, routing calls to a fallback method.
+`
+}
+]
+}
 ];
 
 export default data;

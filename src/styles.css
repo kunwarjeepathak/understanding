@@ -142,3 +142,19 @@ header input {
   border-radius: 4px;
   font-family: monospace;
 }
+/* ——— Dark-themed Code Snippets Only ——— */
+.sub-answer pre {
+  background: #2d2d2d;
+  color: #f8f8f2;
+  padding: 0.75rem;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.sub-answer code {
+  background: #2d2d2d;
+  color: #f8f8f2;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: monospace;
+}
