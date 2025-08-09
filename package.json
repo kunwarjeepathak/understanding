@@ -2,12 +2,12 @@
   "name": "qa-hub-react",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://kunwarjeepathak.github.io/understanding",
+  "homepage": "https://kunwarjeepathak.github.io/kunwar.github.io",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build -b main",
+    "deploy": "gh-pages -d build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -19,7 +19,6 @@
     "react-dom": "^18.2.0",
     "react-markdown": "^8.0.6",
     "react-scripts": "^5.0.1",
-    "react-syntax-highlighter": "^15.6.1",
     "rehype-highlight": "^6.0.0",
     "remark-gfm": "^3.0.1",
     "remark-mermaidjs": "^7.0.0"

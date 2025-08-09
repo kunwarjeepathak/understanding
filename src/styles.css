@@ -142,39 +142,3 @@ header input {
   border-radius: 4px;
   font-family: monospace;
 }
-/* styles.css or App.css */
-/*.qa-content pre,
-.qa-content code {
-  background-color: #1e1e1e;   *//* near-black *//*
-  color: #f8f8f2;              *//* light text *//*
-  padding: 0.75em 1em;         *//* some breathing room *//*
-  border-radius: 4px;          *//* rounded corners *//*
-  overflow-x: auto;            *//* scroll long lines *//*
-}*/
-/* src/App.css */
-.code-wrapper pre {
-  background-color: #000000 !important;
-}/* Add this to src/styles.css */
-/*
- pre, code {
-   background-color: #1e1e1e; */
-/* near-black *//*
-
-   color: #f8f8f2; */
-/* light text *//*
-
-   padding: 0.75em 1em; */
-/* some breathing room *//*
-
-   border-radius: 4px; */
-/* rounded corners *//*
-
-   overflow-x: auto; */
-/* scroll long lines *//*
-
- }*/
-
-.qa-content pre, .qa-content code, pre, code {
-  background-color: #282828 !important; /* Gruvbox dark background */
-  color: #ebdbb2 !important; /* Gruvbox light text */
-}
