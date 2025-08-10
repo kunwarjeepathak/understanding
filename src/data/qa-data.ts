@@ -1,3 +1,4 @@
+declare module 'mermaid';
 export interface SubItemData {
 question: string;
 answerMd: string;
@@ -3007,8 +3008,949 @@ aws glue start-job-run --job-name my-glue-job
 `
 }
 ]
-},// Add this as the next card in your src/qa-data.ts
+},
+{
+category: 'react',
+title: 'Banking Finance App React',
+subItems: [
+{
+question: 'How do I build a “Banking Finance App” React app from scratch covering every core React concept, using an Indian storytelling format?',
+answerMd: `
+### The Banking Finance App: An Indian Tale
 
+In the thriving city of DhanPur, young banker Arjun dreamed of a digital “Banking Finance App” to serve villagers and merchants alike. Let’s journey with him through each lane of React as he builds accounts, transactions, and loan calculators.
+
+---
+
+#### 1. Opening the Bank (create-react-app)
+Arjun summons the village builder:
+
+\`\`\`bash
+npx create-react-app banking-hub
+cd banking-hub
+npm start
+\`\`\`
+
+This lays the foundation (\`public/index.html\`) and the main gate (\`src/index.js\`).
+
+---
+
+#### 2. Account Window: Functional Components
+Each customer’s account is a component:
+
+\`\`\`jsx
+// src/components/AccountCard.jsx
+import React from 'react';
+
+function AccountCard({ name, balance }) {
+return (
+<div className="account-card">
+<h3>{name}</h3>
+<p>Balance: ₹{balance}</p>
+</div>
+);
+}
+
+export default AccountCard;
+\`\`\`
+
+Props (\`name\`, \`balance\`) are the customer’s details.
+
+---
+
+#### 3. Counting Deposits: useState
+The teller tracks daily deposits:
+
+\`\`\`jsx
+import React, { useState } from 'react';
+
+function DepositCounter() {
+const [deposits, setDeposits] = useState(0);
+return (
+<div>
+<p>Deposits today: {deposits}</p>
+<button onClick={() => setDeposits(d => d + 1)}>
+New Deposit
+</button>
+</div>
+);
+}
+\`\`\`
+
+\`useState\` is the teller’s tally sheet.
+
+---
+
+#### 4. Fetching Transactions: useEffect
+Every dawn, transactions arrive from the central server:
+
+\`\`\`jsx
+import React, { useState, useEffect } from 'react';
+
+function TransactionsList() {
+const [txns, setTxns] = useState([]);
+
+useEffect(() => {
+fetch('/api/transactions')
+.then(r => r.json())
+.then(setTxns);
+}, []); // run only once each morning
+
+  return (
+<ul>
+{txns.map(t => (
+<li key={t.id}>{t.date}: ₹{t.amount}</li>
+))}
+</ul>
+);
+}
+\`\`\`
+
+\`useEffect\` simulates the postman delivering records.
+
+---
+
+#### 5. A Custom Ritual: useFetch Hook
+To reuse any data fetch:
+
+\`\`\`jsx
+// src/hooks/useFetch.js
+import { useState, useEffect } from 'react';
+
+export function useFetch(url) {
+const [data, setData] = useState(null);
+useEffect(() => {
+fetch(url).then(r => r.json()).then(setData);
+}, [url]);
+return data;
+}
+\`\`\`
+
+Call \`const accounts = useFetch('/api/accounts')\` anywhere.
+
+---
+
+#### 6. The Bank Vault: Context API
+Share authentication and user info:
+
+\`\`\`jsx
+// src/AuthContext.js
+import React, { createContext, useState, useContext } from 'react';
+
+const AuthContext = createContext();
+
+export function AuthProvider({ children }) {
+const [user, setUser] = useState(null);
+return (
+<AuthContext.Provider value={{ user, setUser }}>
+{children}
+</AuthContext.Provider>
+);
+}
+
+export function useAuth() {
+return useContext(AuthContext);
+}
+\`\`\`
+
+Wrap in \`src/index.js\`:
+\`<AuthProvider><App/></AuthProvider>\`.
+
+---
+
+#### 7. Balancing the Books: useReducer
+A complex ledger demands a reducer:
+
+\`\`\`js
+// src/ledgerReducer.js
+export function ledgerReducer(state, action) {
+switch (action.type) {
+case 'ADD_TXN':    return [...state, action.txn];
+case 'REMOVE_TXN': return state.filter(t => t.id !== action.id);
+default:           return state;
+}
+}
+\`\`\`
+
+Use \`useReducer(ledgerReducer, [])\` to manage transactions.
+
+---
+
+#### 8. Loading Spinner: Higher-Order Component
+Wrap modules with a spinner:
+
+\`\`\`jsx
+function withSpinner(Component) {
+return function Wrapped({ isLoading, ...props }) {
+return isLoading
+? <p>Loading…</p>
+: <Component {...props} />;
+};
+}
+\`\`\`
+
+Use: \`const TxnWithSpinner = withSpinner(TransactionsList);\`
+
+---
+
+#### 9. Flexible Calculations: Render Props
+A dynamic loan calculator:
+
+\`\`\`jsx
+function LoanCalculator({ render }) {
+const rate = 0.08;
+return <div>{render(rate)}</div>;
+}
+
+// Usage:
+<LoanCalculator render={r => (
+<p>EMI for ₹10000 at {r*100}%: ₹{(10000*r)/(1-Math.pow(1+r, -12)).toFixed(2)}</p>
+)} />
+\`\`\`
+
+---
+
+#### 10. Vault Tabs: Compound Components
+Build “Accounts” / “Transactions” tabs sharing the activeTab context.
+
+---
+
+#### 11. Safety Net: Error Boundaries
+
+\`\`\`jsx
+class TransactionErrorBoundary extends React.Component {
+state = { hasError: false };
+static getDerivedStateFromError() { return { hasError: true }; }
+componentDidCatch(err) { console.error(err); }
+render() {
+return this.state.hasError
+? <p>Failed to load transactions.</p>
+: this.props.children;
+}
+}
+\`\`\`
+
+Wrap:
+\`<TransactionErrorBoundary><TransactionsList/></TransactionErrorBoundary>\`.
+
+---
+
+#### 12. Secret Safe: Code Splitting
+
+\`\`\`jsx
+const Accounts     = React.lazy(() => import('./Accounts'));
+const Transactions = React.lazy(() => import('./Transactions'));
+
+function App() {
+return (
+<Suspense fallback={<p>Loading module…</p>}>
+<Accounts />
+<Transactions />
+</Suspense>
+);
+}
+\`\`\`
+
+---
+
+#### 13. Walking the Ledger: React Router
+
+\`\`\`bash
+npm install react-router-dom
+\`\`\`
+
+\`\`\`jsx
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+
+function App() {
+return (
+<BrowserRouter>
+<nav>
+<Link to="/">Dashboard</Link>
+<Link to="/accounts">Accounts</Link>
+<Link to="/transactions">Transactions</Link>
+</nav>
+<Routes>
+<Route path="/"               element={<Dashboard />} />
+<Route path="/accounts"       element={<Accounts />} />
+<Route path="/transactions"   element={<Transactions />} />
+</Routes>
+</BrowserRouter>
+);
+}
+\`\`\`
+
+---
+
+#### 14. Performance Tuning: useMemo & useCallback
+
+\`\`\`jsx
+const highValueTxns = useMemo(
+() => txns.filter(t => t.amount > 10000),
+[txns]
+);
+const handleAddTxn = useCallback(
+txn => dispatch({ type: 'ADD_TXN', txn }),
+[]
+);
+\`\`\`
+
+---
+
+#### 15. The Grand Ledger: Bringing It All Together
+
+\`\`\`jsx
+// src/App.jsx
+import React, { lazy, Suspense } from 'react';
+import { useAuth } from './AuthContext';
+import TransactionErrorBoundary from './TransactionErrorBoundary';
+
+const Dashboard    = lazy(() => import('./Dashboard'));
+const Accounts     = lazy(() => import('./Accounts'));
+const Transactions = lazy(() => import('./Transactions'));
+
+function App() {
+const { user } = useAuth();
+return (
+<div>
+<h1>Welcome to Banking Hub{user ? \`, \${user.name}\` : ''}</h1>
+<TransactionErrorBoundary>
+<Suspense fallback={<p>Loading banking modules…</p>}>
+<Dashboard />
+<Accounts />
+<Transactions />
+</Suspense>
+</TransactionErrorBoundary>
+</div>
+);
+}
+
+export default App;
+\`\`\`
+
+Through components, props, state, effects, hooks, context, reducers, HOCs, render props, compound components, error boundaries, code splitting, routing, and performance hooks, Arjun’s Banking Finance App became the digital heart of DhanPur—balancing every ledger with precision and care.
+`
+}
+]
+},
+
+{
+category: 'react',
+title: 'Healthcare App React',
+subItems: [
+{
+question: 'How do I build a “Healthcare Hub” React app from scratch covering every core React concept, using an Indian storytelling format?',
+answerMd: `
+### The Healthcare Hub React App: An Indian Tale
+
+In the bustling village of AarogyaPur, Dr. Kavya dreamed of a digital “Healthcare Hub” to serve every patient. Let’s walk with her through each lane of React, as she builds clinics, patient cards, and appointment counters.
+
+---
+
+#### 1. Laying the Foundation (create-react-app)
+Dr. Kavya calls upon her module-maker:
+
+\`\`\`bash
+npx create-react-app healthcare-hub
+cd healthcare-hub
+npm start
+\`\`\`
+
+This scaffolds the main temple (\`public/index.html\`) and entry gate (\`src/index.js\`).
+
+---
+
+#### 2. Consultation Room: Functional Components
+Each patient gets a card:
+
+\`\`\`jsx
+// src/components/PatientCard.jsx
+import React from 'react';
+
+function PatientCard({ name, age }) {
+return (
+<div className="patient-card">
+<h3>{name}</h3>
+<p>Age: {age}</p>
+</div>
+);
+}
+
+export default PatientCard;
+\`\`\`
+
+Props (\`name\`, \`age\`) are the patient’s details.
+
+---
+
+#### 3. Counting Appointments: useState
+The receptionist tracks daily bookings:
+
+\`\`\`jsx
+import React, { useState } from 'react';
+
+function AppointmentCounter() {
+const [count, setCount] = useState(0);
+return (
+<div>
+<p>Appointments booked: {count}</p>
+<button onClick={() => setCount(c => c + 1)}>
+Book Appointment
+</button>
+</div>
+);
+}
+\`\`\`
+
+State holds the appointment tally.
+
+---
+
+#### 4. Fetching Records: useEffect
+Each morning, records arrive from the health server:
+
+\`\`\`jsx
+import React, { useState, useEffect } from 'react';
+
+function MedicalRecords() {
+const [records, setRecords] = useState([]);
+
+useEffect(() => {
+fetch('/api/records')
+.then(r => r.json())
+.then(setRecords);
+}, []); // once at dawn
+
+  return (
+<ul>
+{records.map(r => (
+<li key={r.id}>{r.patientName}: {r.diagnosis}</li>
+))}
+</ul>
+);
+}
+\`\`\`
+
+\`useEffect\` is the daily records delivery.
+
+---
+
+#### 5. A Reusable Ritual: useFetch Hook
+To fetch any resource:
+
+\`\`\`jsx
+// src/hooks/useFetch.js
+import { useState, useEffect } from 'react';
+
+export function useFetch(url) {
+const [data, setData] = useState(null);
+useEffect(() => {
+fetch(url).then(r => r.json()).then(setData);
+}, [url]);
+return data;
+}
+\`\`\`
+
+Now call \`const records = useFetch('/api/records')\` anywhere.
+
+---
+
+#### 6. Shared Clinic: Context API
+A shared authentication context for staff:
+
+\`\`\`jsx
+// src/AuthContext.js
+import React, { createContext, useState, useContext } from 'react';
+
+const AuthContext = createContext();
+
+export function AuthProvider({ children }) {
+const [user, setUser] = useState(null);
+return (
+<AuthContext.Provider value={{ user, setUser }}>
+{children}
+</AuthContext.Provider>
+);
+}
+
+export function useAuth() {
+return useContext(AuthContext);
+}
+\`\`\`
+
+Wrap at \`src/index.js\`:
+\`<AuthProvider><App/></AuthProvider>\`.
+
+---
+
+#### 7. Managing Schedules: useReducer
+The scheduler’s ledger grows complex:
+
+\`\`\`js
+// src/scheduleReducer.js
+export function scheduleReducer(state, action) {
+switch (action.type) {
+case 'ADD':    return [...state, action.appointment];
+case 'REMOVE': return state.filter(a => a.id !== action.id);
+default:       return state;
+}
+}
+\`\`\`
+
+Use \`useReducer(scheduleReducer, [])\` to manage appointments.
+
+---
+
+#### 8. Loading Spinner: Higher-Order Component
+Wrap heavy modules with a spinner:
+
+\`\`\`jsx
+function withSpinner(Component) {
+return function Wrapped({ isLoading, ...props }) {
+return isLoading
+? <p>Loading…</p>
+: <Component {...props} />;
+};
+}
+\`\`\`
+
+Use: \`const RecordsWithSpinner = withSpinner(MedicalRecords);\`
+
+---
+
+#### 9. Customizable Banner: Render Props
+Display dynamic health alerts:
+
+\`\`\`jsx
+function AlertBox({ render }) {
+const style = { border: '1px solid red', padding: '10px' };
+return <div style={style}>{render()}</div>;
+}
+
+// Usage:
+<AlertBox render={() => <p>Flu season alert!</p>} />
+\`\`\`
+
+---
+
+#### 10. Clinic Tabs: Compound Components
+To build “Patients” / “Appointments” tabs, share activeTab context among TabList, Tab, and TabPanel.
+
+---
+
+#### 11. Safety Net: Error Boundaries
+
+\`\`\`jsx
+class ErrorBoundary extends React.Component {
+state = { hasError: false };
+static getDerivedStateFromError() { return { hasError: true }; }
+componentDidCatch(err) { console.error(err); }
+render() {
+return this.state.hasError
+? <p>Component failed to load.</p>
+: this.props.children;
+}
+}
+\`\`\`
+
+Wrap risky components, e.g. \`<ErrorBoundary><MedicalRecords/></ErrorBoundary>\`.
+
+---
+
+#### 12. Code Splitting: React.lazy & Suspense
+
+\`\`\`jsx
+const Patients = React.lazy(() => import('./Patients'));
+const Appointments = React.lazy(() => import('./Appointments'));
+
+function App() {
+return (
+<Suspense fallback={<p>Loading module…</p>}>
+<Patients />
+<Appointments />
+</Suspense>
+);
+}
+\`\`\`
+
+---
+
+#### 13. Navigating Wards: React Router
+
+\`\`\`bash
+npm install react-router-dom
+\`\`\`
+
+\`\`\`jsx
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+
+function App() {
+return (
+<BrowserRouter>
+<nav>
+<Link to="/">Home</Link>
+<Link to="/patients">Patients</Link>
+<Link to="/appointments">Appointments</Link>
+</nav>
+<Routes>
+<Route path="/"               element={<Home />} />
+<Route path="/patients"       element={<Patients />} />
+<Route path="/appointments"   element={<Appointments />} />
+</Routes>
+</BrowserRouter>
+);
+}
+\`\`\`
+
+---
+
+#### 14. Performance Tuning: useMemo & useCallback
+
+\`\`\`jsx
+const sortedPatients = useMemo(() => sortByName(patients), [patients]);
+const handleBook = useCallback((id) => bookAppointment(id), []);
+\`\`\`
+
+---
+
+#### 15. The Grand Opening: Bringing It All Together
+
+\`\`\`jsx
+// src/App.jsx
+import React, { lazy, Suspense } from 'react';
+import { useAuth } from './AuthContext';
+import ErrorBoundary from './ErrorBoundary';
+
+const Patients     = lazy(() => import('./Patients'));
+const Appointments = lazy(() => import('./Appointments'));
+
+function App() {
+const { user } = useAuth();
+return (
+<div>
+<h1>Welcome to Healthcare Hub{user ? \`, Dr. \${user.name}\` : ''}</h1>
+<ErrorBoundary>
+<Suspense fallback={<p>Loading content…</p>}>
+<Patients />
+<Appointments />
+</Suspense>
+</ErrorBoundary>
+</div>
+);
+}
+
+export default App;
+\`\`\`
+
+Through components, props, state, effects, hooks, context, reducers, HOCs, render props, compound components, error boundaries, code splitting, routing, and performance hooks, Dr. Kavya’s Healthcare Hub served every patient with seamless care—proving that React can heal and transform any village.
+`
+}
+]
+},
+
+{
+category: 'react',
+title: 'Village Market React App',
+subItems: [
+{
+question: 'How do I build a “Village Market” React app from scratch covering every core React concept, using an Indian storytelling format?',
+answerMd: `
+### The Village Market React App: An Indian Tale
+
+Once upon a time in the dusty lanes of Reactpur, young Aanya set out to build a “Village Market” web app that would teach every core React concept. Let’s walk with her as she lays each brick and thatches every roof.
+
+---
+
+#### 1. Bootstrapping the Village
+Aanya starts by calling the village architect:
+
+\`\`\`bash
+npx create-react-app village-market
+cd village-market
+npm start
+\`\`\`
+
+This scaffolds the map (\`public/index.html\`) and the main gate (\`src/index.js\`).
+
+---
+
+#### 2. Houses and Cottages: Functional Components
+Each shop is a React component:
+
+\`\`\`jsx
+// src/components/Shop.jsx
+import React from 'react';
+
+function Shop({ name }) {
+return <h2>Welcome to {name} Shop</h2>;
+}
+
+export default Shop;
+\`\`\`
+
+Props like \`name\` are the shop’s signboard.
+
+---
+
+#### 3. Inside the Shop: State with useState
+To count mangoes sold:
+
+\`\`\`jsx
+import React, { useState } from 'react';
+
+function MangoCounter() {
+const [count, setCount] = useState(0);
+return (
+<div>
+<p>Mangoes sold: {count}</p>
+<button onClick={() => setCount(c => c + 1)}>
+Sell one more
+</button>
+</div>
+);
+}
+\`\`\`
+
+\`useState\` is the shopkeeper’s ledger.
+
+---
+
+#### 4. Fetching Supplies: Side Effects with useEffect
+
+\`\`\`jsx
+import React, { useState, useEffect } from 'react';
+
+function PriceBoard() {
+const [price, setPrice] = useState(null);
+
+useEffect(() => {
+fetch('/api/mango-price')
+.then(res => res.json())
+.then(data => setPrice(data.price));
+}, []); // run once at dawn
+
+  return <p>Current price: ₹{price ?? 'loading…'}</p>;
+}
+\`\`\`
+
+\`useEffect\` is the daily trip to the city market.
+
+---
+
+#### 5. A Custom Ritual: useFetch Hook
+Aanya crafts a reusable data-fetching ritual:
+
+\`\`\`jsx
+// src/hooks/useFetch.js
+import { useState, useEffect } from 'react';
+
+export function useFetch(url) {
+const [data, setData] = useState(null);
+useEffect(() => {
+fetch(url).then(r => r.json()).then(setData);
+}, [url]);
+return data;
+}
+\`\`\`
+
+Now any shop calls \`const items = useFetch('/api/items')\`.
+
+---
+
+#### 6. The Village Council: Context API
+A shared cart across shops:
+
+\`\`\`jsx
+// src/CartContext.js
+import React, { createContext, useState, useContext } from 'react';
+
+const CartContext = createContext();
+
+export function CartProvider({ children }) {
+const [items, setItems] = useState([]);
+return (
+<CartContext.Provider value={{ items, setItems }}>
+{children}
+</CartContext.Provider>
+);
+}
+
+export function useCart() {
+return useContext(CartContext);
+}
+\`\`\`
+
+Wrap \`<CartProvider><App/></CartProvider>\` in \`src/index.js\`.
+
+---
+
+#### 7. Complex Accounting: useReducer
+When the ledger grows:
+
+\`\`\`js
+// src/cartReducer.js
+export function cartReducer(state, action) {
+switch (action.type) {
+case 'ADD':    return [...state, action.item];
+case 'REMOVE': return state.filter(i => i.id !== action.id);
+default:       return state;
+}
+}
+\`\`\`
+
+In the provider use \`useReducer(cartReducer, [])\`.
+
+---
+
+#### 8. Decorating Shops: HOCs
+Show a spinner around shops:
+
+\`\`\`jsx
+function withSpinner(Component) {
+return function Wrapped({ isLoading, ...rest }) {
+return isLoading
+? <p>Loading shop…</p>
+: <Component {...rest} />;
+};
+}
+\`\`\`
+
+Use: \`const ShopWithSpinner = withSpinner(Shop);\`
+
+---
+
+#### 9. Flexible Gifts: Render Props
+Wrap any gift dynamically:
+
+\`\`\`jsx
+function GiftWrapper({ render }) {
+const style = { border: '2px dotted green', padding: 10 };
+return <div style={style}>{render()}</div>;
+}
+
+// Usage:
+<GiftWrapper render={() => <p>Your mango gift pack!</p>} />
+\`\`\`
+
+---
+
+#### 10. Seasonal Offers: Compound Components
+Build a tab system with shared context—just like grouping villagers at a festival.
+
+---
+
+#### 11. Saving Honor: Error Boundaries
+
+\`\`\`jsx
+class ShopErrorBoundary extends React.Component {
+state = { hasError: false };
+static getDerivedStateFromError() { return { hasError: true }; }
+componentDidCatch(err) { console.error(err); }
+render() {
+return this.state.hasError
+? <p>Sorry, this shop is closed.</p>
+: this.props.children;
+}
+}
+\`\`\`
+
+---
+
+#### 12. Secret Scrolls: Code Splitting
+
+\`\`\`jsx
+const Shop = React.lazy(() => import('./Shop'));
+
+function App() {
+return (
+<Suspense fallback={<p>Loading village…</p>}>
+<Shop name="Mango" />
+</Suspense>
+);
+}
+\`\`\`
+
+---
+
+#### 13. Navigating Lanes: React Router
+Stroll between Home, Market, Cart:
+
+\`\`\`bash
+npm install react-router-dom
+\`\`\`
+
+\`\`\`jsx
+import {
+BrowserRouter,
+Routes,
+Route,
+Link
+} from 'react-router-dom';
+
+function App() {
+return (
+<BrowserRouter>
+<nav>
+<Link to="/">Home</Link>
+<Link to="/market">Market</Link>
+<Link to="/cart">Cart</Link>
+</nav>
+<Routes>
+<Route path="/"      element={<Home />} />
+<Route path="/market" element={<Market />} />
+<Route path="/cart"   element={<Cart />} />
+</Routes>
+</BrowserRouter>
+);
+}
+\`\`\`
+
+---
+
+#### 14. Spices & Performance: useMemo & useCallback
+
+\`\`\`jsx
+const expensiveValue = useMemo(() => computeBlend(items), [items]);
+const handleClick    = useCallback(() => addToCart(item), [item]);
+\`\`\`
+
+---
+
+#### 15. The Grand Feast: Bringing It All Together
+
+\`\`\`jsx
+// src/App.jsx
+import React, { lazy, Suspense } from 'react';
+import { useCart } from './CartContext';
+import ShopErrorBoundary from './ShopErrorBoundary';
+
+const Market = lazy(() => import('./Market'));
+const Cart   = lazy(() => import('./Cart'));
+
+function App() {
+const { items } = useCart();
+return (
+<div>
+<h1>Welcome to Village Market</h1>
+<p>In cart: {items.length} items</p>
+<ShopErrorBoundary>
+<Suspense fallback={<p>Loading section…</p>}>
+<Market />
+<Cart />
+</Suspense>
+</ShopErrorBoundary>
+</div>
+);
+}
+
+export default App;
+\`\`\`
+
+Through functional and class components, props, state, effects, hooks, context, reducers, HOCs, render props, error boundaries, code splitting, routing, and performance optimizations, Aanya’s Village Market became the most vibrant bazaar in all the web lands.
+`
+}
+]
+},
 {
 category: 'react',
 title: 'React Basic Concepts',
@@ -3041,47 +3983,161 @@ const element = React.createElement(
 `
 },
 {
-question: 'How do you create and compose React components?',
+question: 'What is a React component, and how do you define one?',
 answerMd: `
-### Components & Composition
+Imagine you’re building a house out of Lego. Each Lego brick is a small, self-contained piece that has its own shape and color. In React, a “component” is like one of those bricks—it’s a standalone building block of your UI.
 
-\`\`\`mermaid
-flowchart TD
-App["<App />"] --> Header["<Header />"]
-App --> Content["<Content />"]
-Content --> Article["<Article />"]
-Content --> Sidebar["<Sidebar />"]
-\`\`\`
-
-React apps are built by composing components. A component is a JavaScript function or class that returns JSX.
+- You define it by writing a JavaScript function or class that takes inputs (props) and returns a description of what it should look like (JSX).
+- Just as you can snap bricks together to form walls or towers, you compose React components to form your complete app.
+`
+},
+{
+question: 'How do you create a functional component?',
+answerMd: `
+Think of a functional component as a Lego instruction card that just says “take these bricks (props) and snap them together this way (JSX).”
 
 \`\`\`jsx
-// Functional components
-function Header(props) {
-return <header>{props.title}</header>;
+function Greeting({ name }) {
+return <h1>Hello, {name}!</h1>;
 }
+export default Greeting;
+\`\`\`
 
-function Article() {
-return <p>This is an article.</p>;
-}
+- Props are like the colors or shapes you choose on the instruction card.
+- Hooks (useState, useEffect) are like little timers or sticky notes you attach to track state or side-jobs without changing the instructions themselves.
+`
+},
+{
+question: 'When and how would you use a class component?',
+answerMd: `
+A class component is like an elaborate, old-school factory machine with on/off switches, status lights, and maintenance callbacks. You use it when you need lifecycle hooks—points where you want the machine to:
 
-function Content() {
-return (
-<main>
-<Article />
-<Sidebar />
-</main>
-);
-}
+- power up (\`componentDidMount\`)
+- check safety pre-flight (\`shouldComponentUpdate\`)
+- handle breakdowns (\`componentDidCatch\`)
 
-function App() {
+\`\`\`jsx
+class Counter extends React.Component {
+state = { count: 0 };
+increment = () => this.setState({ count: this.state.count + 1 });
+render() {
 return (
 <div>
-<Header title="My App" />
-<Content />
+<p>{this.state.count}</p>
+<button onClick={this.increment}>+1</button>
 </div>
 );
 }
+}
+\`\`\`
+`
+},
+{
+question: 'What is the role of props and the `children` prop in composition?',
+answerMd: `
+Picture a gift box (the parent component) that you can customize with a ribbon color and gift tag (props). Inside the box you can drop any gift you like—chocolates, a toy car, or jewelry (children).
+
+\`\`\`jsx
+function Card({ title, children }) {
+return (
+<div className="card">
+<h2>{title}</h2>
+<div>{children}</div>
+</div>
+);
+}
+\`\`\`
+
+- \`title\` is like the label on the box.
+- \`children\` is whatever you choose to put inside—pure flexibility for nesting content.
+`
+},
+{
+question: 'How do Higher-Order Components (HOCs) share logic?',
+answerMd: `
+Imagine a gift-wrapping service: you hand them any gift (component) and they wrap it in fancy paper and ribbon (added behavior), then hand it back. That’s exactly what an HOC does.
+
+\`\`\`jsx
+function withLoading(WrappedComponent) {
+return function Loader({ isLoading, ...props }) {
+return isLoading
+? <p>Loading…</p>
+: <WrappedComponent {...props} />;
+};
+}
+\`\`\`
+
+- You never change the original gift—you just enhance it externally.
+`
+},
+{
+question: 'What are render props, and how do they work?',
+answerMd: `
+Think of a theme park ride where at the end you get a “design your own souvenir” token. The ride operator (parent component) passes you your ride stats (state) and you use that to craft your own souvenir (render function).
+
+\`\`\`jsx
+<MouseTracker render={({ x, y }) => (
+<p>You moved to {x}, {y}</p>
+)} />
+\`\`\`
+
+- The parent doesn’t know exactly what you’ll build, but it provides the raw data and you decide how to present it.
+`
+},
+{
+question: 'What are compound components, and when should you use them?',
+answerMd: `
+Imagine a restaurant: you have a Menu (Tabs), MenuItems (Tab buttons), and Dishes (TabPanels). They share the same table reservation (context) so when you pick a MenuItem, the right Dish shows up—no waiter (prop-drilling) needed.
+
+\`\`\`jsx
+<Tabs>
+<TabList>
+<Tab index={0}>Starters</Tab>
+<Tab index={1}>Mains</Tab>
+</TabList>
+<TabPanels>
+<div>Soup & Salad</div>
+<div>Steak & Potatoes</div>
+</TabPanels>
+</Tabs>
+\`\`\`
+
+- They work as a group, sharing state invisibly via context—just like everyone at your table knows your reservation code.
+`
+},
+{
+question: 'How do you manage global or deeply nested state?',
+answerMd: `
+Picture a building’s central air-conditioning system (Context). Instead of running a tiny cooler in every room (passing props down dozens of levels), you wire each room to the central unit and just flip a switch (useContext).
+
+\`\`\`jsx
+const AuthContext = React.createContext();
+function AuthProvider({ children }) {
+const [user, setUser] = useState(null);
+return (
+<AuthContext.Provider value={{ user, setUser }}>
+{children}
+</AuthContext.Provider>
+);
+}
+\`\`\`
+
+- Any component can call \`useContext(AuthContext)\` and get the current “temperature” (user).
+`
+},
+{
+question: 'How can you visualize component composition?',
+answerMd: `
+Think of your UI as a skyscraper blueprint—each floor (component) contains rooms (sub-components), and rooms contain furniture (leaf components).
+
+\`\`\`mermaid
+graph TD
+App --> Header
+App --> Main
+Main --> Sidebar
+Main --> Content
+Content --> WidgetA
+Content --> WidgetB
 \`\`\`
 `
 },
