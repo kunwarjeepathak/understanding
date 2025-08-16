@@ -16,47 +16,141 @@ category: 'java',
 title: 'Multithreading',
 subItems: [
 {
-question: 'Thread Lifecycle?',
-answerMd: `
-### Thread Lifecycle Explained
+      question: 'Explain Java Thread Lifecycle in depth',
+      answerMd: `
+# Detailed Java Thread Lifecycle
 
-Understanding Thread Lifecycle is crucial for building robust, high-performance concurrent applications. We'll explore both OS-level and JVM perspectives.
+## 👥 Core States & Their Roles
 
-\`\`\`mermaid
-stateDiagram-v2
-[*] --> NEW
-NEW --> RUNNABLE: start()
-RUNNABLE --> BLOCKED: lock contention
-BLOCKED --> RUNNABLE: lock release
-RUNNABLE --> WAITING: wait()/join()/park()
-WAITING --> RUNNABLE: notify()/timeout/unpark
-RUNNABLE --> TERMINATED: run() completes
+| State         | Description                                                   |
+|---------------|---------------------------------------------------------------|
+| New           | Thread instance created but \`start()\` not invoked           |
+| Runnable      | Ready to run; queued for CPU scheduling                       |
+| Running       | Actively executing on a CPU core                              |
+| Blocked       | Waiting to acquire a monitor lock                             |
+| Waiting       | Waiting indefinitely (\`wait()\`, \`join()\`, \`park()\`)     |
+| Timed Waiting | Waiting with timeout (\`sleep()\`, \`wait(timeout)\`, \`join(timeout)\`) |
+| Terminated    | Completed execution or stopped due to an uncaught exception   |
+
+---
+
+## 🗂️ State Details & Actions
+
+1. **New**  
+   - Occurs when \`new Thread()\` is called.  
+   - No system resources allocated until \`start()\`.
+
+2. **Runnable**  
+   - After \`start()\`, thread is eligible; OS scheduler may dispatch it.  
+   - Represents both ready and running states at JVM level.
+
+3. **Running**  
+   - Thread is executing instructions on a CPU.  
+   - Moves back to Runnable when time slice ends or on \`yield()\`.
+
+4. **Blocked**  
+   - Attempting to enter a synchronized block held by another thread.  
+   - Transitions back to Runnable once the lock is released.
+
+5. **Waiting**  
+   - Invoked via \`Object.wait()\`, \`Thread.join()\` without timeout, or \`LockSupport.park()\`.  
+   - Returns to Runnable on \`notify()/notifyAll()\` or thread interruption.
+
+6. **Timed Waiting**  
+   - Methods: \`sleep()\`, \`wait(timeout)\`, \`join(timeout)\`, \`parkNanos()\`.  
+   - Automatically returns to Runnable after timeout expiry.
+
+7. **Terminated**  
+   - Occurs when \`run()\` completes normally or an uncaught exception is thrown.  
+   - Thread cannot be restarted once terminated.
+
+---
+
+## 🔄 State Transitions
+
+| From          | To             | Trigger                                         |
+|---------------|----------------|-------------------------------------------------|
+| New           | Runnable       | \`start()\`                                     |
+| Runnable      | Running        | OS scheduler dispatch                           |
+| Running       | Runnable       | Time slice end or \`yield()\`                    |
+| Running       | Blocked        | Contention on a synchronized lock               |
+| Running       | Waiting        | \`wait()\`, \`join()\`, \`park()\`               |
+| Running       | Timed Waiting  | \`sleep()\`, \`wait(timeout)\`, \`join(timeout)\` |
+| Blocked       | Runnable       | Lock becomes available                          |
+| Waiting       | Runnable       | \`notify()/notifyAll()\` or interrupt            |
+| Timed Waiting | Runnable       | Timeout expiration                              |
+| Running       | Terminated     | \`run()\` finishes or uncaught exception       |
+
+---
+
+## 🗺️ Lifecycle Diagram (ASCII)
+
+\`\`\`plaintext
+    New
+     |
+     v
+  Runnable <--> Running --> Terminated
+      |           |
+      |           +--> Blocked --> Runnable
+      |           |
+      |           +--> Waiting --> Runnable
+      |           |
+      |           +--> Timed Waiting --> Runnable
 \`\`\`
 
-🚦 **State Transitions**
+---
 
-| From    | To             | Trigger                              |
-|---------|----------------|--------------------------------------|
-| NEW     | RUNNABLE       | \`start()\` called                   |
-| RUNNABLE| RUNNING        | Scheduler selects thread             |
-| RUNNING | BLOCKED        | synchronized block contention        |
-| BLOCKED | RUNNABLE       | lock released                        |
-| RUNNING | WAITING        | wait()/join() (no timeout)/park()    |
-| RUNNING | TIMED_WAITING  | sleep(), wait(timeout), parkNanos()  |
-| WAITING | RUNNABLE       | notify(), notifyAll(), unpark()      |
-| RUNNING | TERMINATED     | run() completes or exception thrown  |
+## 🚀 Practical Considerations & Pitfalls
 
-### Common APIs by State
+| Aspect            | Pitfall                                            | Best Practice                                     |
+|-------------------|----------------------------------------------------|---------------------------------------------------|
+| Thread.start()    | IllegalThreadStateException if started twice       | Use a fresh Thread instance for each start        |
+| Synchronization   | Deadlocks, contention                             | Minimize lock scope; apply consistent lock ordering |
+| wait/notify       | Missed notifications, spurious wakeups             | Always call \`wait()\` inside a loop checking condition |
+| sleep()           | InterruptedException                               | Catch and restore interrupt status                |
+| join()            | Potential indefinite wait                          | Use timed join and handle \`InterruptedException\` |
+| Thread priorities | Platform-dependent, may be ignored                 | Avoid relying on priorities for correctness       |
 
-- **Creating thread**: \`new Thread(runnable)\`
-- **Starting**: \`thread.start()\`
-- **Blocking on lock**: \`synchronized(obj)\`, \`ReentrantLock.lock()\`
-- **Waiting**: \`obj.wait()\`, \`LockSupport.park()\`
-- **Timed wait**: \`Thread.sleep(ms)\`, \`obj.wait(ms)\`
-- **Notify**: \`obj.notify()\`, \`LockSupport.unpark(thread)\`
-- **Termination**: thread finishes \`run()\` or throws uncaught exception.
+---
+
+## 💻 Example Code
+
+\`\`\`java
+public class ThreadLifecycleDemo {
+    public static void main(String[] args) throws InterruptedException {
+        Thread t = new Thread(() -> {
+            System.out.println("State: " + Thread.currentThread().getState());
+            try {
+                Thread.sleep(100);
+                synchronized (ThreadLifecycleDemo.class) {
+                    ThreadLifecycleDemo.class.wait(50);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            System.out.println("Completed");
+        });
+
+        System.out.println("State before start: " + t.getState()); // NEW
+        t.start();
+        System.out.println("State after start: " + t.getState()); // RUNNABLE/RUNNING
+        t.join();
+        System.out.println("State after join: " + t.getState()); // TERMINATED
+    }
+}
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- Thread pools (\`ExecutorService\`) for efficient thread reuse  
+- Fork/Join framework for divide-and-conquer parallelism  
+- Virtual threads (Project Loom) for lightweight, scalable concurrency  
+- ThreadLocal for thread-confined state without synchronization  
+- Reactive, non-blocking paradigms (\`CompletableFuture\`, reactive streams\`)
 `
-},
+    },
 // Find the “Multithreading” topic in your src/qa-data.ts and append this entry
 {
 question: "Why Executor Framework came into picture? What problem was there in JDK 4 which it solved?",
@@ -987,6 +1081,144 @@ System.out.println("Sum: " + sum);
 category: 'java',
 title: 'JVM Memory Model',
 subItems: [
+   {
+      question: 'Explain the JVM architectural model in depth',
+      answerMd: `
+# Detailed JVM Architecture
+
+## 👥 Core Components & Their Roles
+
+| Component                   | Role                                                                 |
+|-----------------------------|----------------------------------------------------------------------|
+| ClassLoader Subsystem       | Loads, links, and initializes Java classes and interfaces            |
+| Bytecode Verifier           | Validates bytecode for security, type safety, and correctness        |
+| Runtime Data Areas          | In-memory regions: Method Area, Heap, JVM Stacks, PC Registers, Native Stacks |
+| Execution Engine            | Interprets bytecode and hands off hot methods to the JIT compiler    |
+| Just-In-Time (JIT) Compiler | Translates frequently executed bytecode into optimized native code    |
+| Native Method Interface     | Provides bridge between Java and native libraries via JNI            |
+| Operating System & Hardware | Supplies threads, memory management, and CPU execution resources     |
+
+---
+
+## 🗂️ ClassLoader Subsystem
+
+1. **Loading**  
+   - Bootstrap Loader reads core classes from \`<java.home>/lib/rt.jar\`.  
+   - Extension Loader picks up optional libraries.  
+   - Application Loader handles user classes on the classpath.
+
+2. **Linking**  
+   - **Verification:** Sanity-check bytecode format and references.  
+   - **Preparation:** Allocate and zero-out static fields in the Method Area.  
+   - **Resolution:** Replace symbolic references with direct memory pointers.
+
+3. **Initialization**  
+   - Execute static initializers (\`<clinit>\`) in dependency order.  
+   - Populate constant pool entries and finalize class metadata.
+
+---
+
+## ✅ Bytecode Verifier
+
+- **Pass 1: File Format Check**  
+  Ensures the class file conforms to JVM spec (magic number, version).
+
+- **Pass 2: Semantic Analysis**  
+  Checks constant pool entries, inheritance hierarchy, and access modifiers.
+
+- **Pass 3: Control-Flow & Data-Flow Analysis**  
+  - Validates operand stack consistency.  
+  - Enforces type safety for fields and method calls.
+
+- **Outcome**  
+  Rejects malformed or malicious bytecode before execution.
+
+---
+
+## 🏗 Runtime Data Areas
+
+| Area                | Contents                                   | Thread-Local? | Purpose                                       |
+|---------------------|--------------------------------------------|---------------|-----------------------------------------------|
+| Method Area         | Class metadata, static variables, constant pool | Shared        | Holds class definitions and bytecode          |
+| Heap                | All Java objects and arrays                | Shared        | Dynamic memory allocation                     |
+| JVM Stacks          | Frames (local variables, operand stack)    | Per thread    | Manages method calls and returns              |
+| PC Registers        | Address of current instruction             | Per thread    | Tracks execution point within bytecode        |
+| Native Method Stacks| Native function calls                      | Per thread    | Supports JNI method frames                    |
+
+### Heap Generations
+
+- **Young Generation**  
+  - **Eden Space:** New object allocation.  
+  - **Survivor Spaces:** Objects that survive minor GCs.
+
+- **Old (Tenured) Generation**  
+  Holds long-lived objects; subject to major GCs.
+
+---
+
+## 🚀 Execution Engine & JIT Compiler
+
+- **Interpreter**  
+  Reads bytecodes instruction by instruction via a switch-dispatch loop.
+
+- **JIT Compilation Pipeline**  
+  1. **Profiling:** Interpreter counts method invocations and branch frequency.  
+  2. **Compilation:** Hot methods are compiled into native code in the Code Cache.  
+  3. **Optimization Tiers:**  
+     - *C1 (Client):* Fast compilation, moderate optimizations.  
+     - *C2 (Server):* Slower, high-throughput native code.
+
+- **Code Cache**  
+  Stores generated native code linked back to Java call sites.
+
+---
+
+## 🔗 Java Native Interface (JNI)
+
+- **Declaration**  
+  Java methods marked \`native\`, body implemented in C/C++.
+
+- **Linking & Invocation**  
+  - Load libraries via \`System.loadLibrary()\`.  
+  - JNI wrappers convert between Java and native types.
+
+- **Native Stacks**  
+  Each thread has a separate C/C++ call stack.
+
+---
+
+## 🖥 OS & Hardware Integration
+
+- **Threads Mapping**  
+  Each Java \`Thread\` maps 1:1 to an OS-level thread.
+
+- **Memory Mapping**  
+  JVM reserves virtual memory for Heap and Code Cache; OS commits pages on demand.
+
+- **Safepoints & Signals**  
+  JVM uses OS signals (e.g., \`SIGTRAP\`) to trigger safepoints for GC and deoptimization.
+
+---
+
+## 🗺️ Architectural Diagram
+
+\`\`\`plaintext
++----------------------+   +----------------------+   +--------------------+
+| ClassLoader Subsystem|-->| Bytecode Verifier    |-->| Runtime Data Areas |
+| (Bootstrap, Ext, App)|   |                      |   | (Method, Heap,     |
++----------+-----------+   +----------+-----------+   |  Stacks, PCReg)    |
+           |                          |                 +-------+------------+
+           v                          v                         |
+      Execution Engine        JIT Compiler            Native Method Interface
+      (Interpreter)              (C1, C2)                   (JNI, Native Stacks)
+           |                          |                         |
+           +-----------+--------------+-------------------------+
+                       |
+                 OS & Hardware
+         (Threads, Memory, CPU Cores)
+\`\`\`
+`
+    },
 {
 question: 'What are the key changes to JVM memory regions in Java 8 versus Java 7?',
 answerMd: `
@@ -1061,175 +1293,174 @@ category: 'java',
 title: 'HashMap Internals & Java 8 Improvements',
 subItems: [
 {
-question: 'How does HashMap work internally?',
-answerMd: `
-# 🗝️ Java HashMap Internals — Story-Driven Guide
+      question: 'Explain Java HashMap internals in depth',
+      answerMd: `
+# Detailed Java HashMap Internals
 
-## 👥 Main Participants & Their Roles
+## 👥 Core Components & Their Roles
 
-| Participant        | Role                                                                     |
-|--------------------|--------------------------------------------------------------------------|
-| HashMap<K,V>       | The main container with an array of buckets                              |
-| Node<K,V>          | Internal linked-list node holding key, value, hash, and next pointer     |
-| TreeNode<K,V>      | Red-black tree node used when collisions in a bucket exceed threshold    |
-| key.hashCode()     | Computes an int hash for distributing keys                               |
-| index              | Bucket position calculated as \`(table.length - 1) & hash\`              |
-| loadFactor         | Controls when the table resizes (default 0.75)                           |
-| threshold          | \`capacity * loadFactor\`, triggers resize when size exceeds it          |
-
----
-
-## 📖 Narrative
-
-Imagine a **Library Archive** with numbered shelves (buckets). Each **Book** (key/value) has a Dewey code (hashCode) that guides it to a specific shelf slot (index). When multiple books map to the same slot, they queue up on a linked cart (linked list). If the queue grows too long, they reorganize into a balanced index (tree) for faster lookup. The Archivist watches occupancy (loadFactor) and, when shelves overflow (threshold), expands the archive (resize) to maintain swift access.
+| Component               | Role                                                                       |
+|-------------------------|----------------------------------------------------------------------------|
+| table (Node<K,V>[] )    | Internal array of buckets holding linked lists or tree nodes               |
+| Node<K,V>               | Entry object storing key, value, hash, and pointer to next node            |
+| TreeNode<K,V>           | Red-black tree node for bins with high collision, ensures balanced trees    |
+| hash                    | Integer hash of the key, spread to reduce collisions                       |
+| loadFactor              | Threshold ratio (default 0.75) to trigger resizing                         |
+| threshold               | Maximum number of entries before resizing (capacity * loadFactor)          |
+| size                    | Current count of key-value mappings                                        |
+| modCount                | Modification count for fail-fast iterators                                  |
+| TREEIFY_THRESHOLD       | Bin length above which to convert list to tree (default 8)                 |
+| MIN_TREEIFY_CAPACITY    | Minimum capacity before treeification (default 64)                         |
 
 ---
 
-## 🎯 Goals & Guarantees
+## 🗂️ Data Structures & Layout
 
-| Goal                     | Detail                                                            |
-|--------------------------|-------------------------------------------------------------------|
-| ⚡ Average O(1) Access   | Fast get/put by direct bucket indexing                            |
-| 🔄 Collision Handling    | Graceful chaining or treeify to manage conflicting hashes         |
-| 📈 Dynamic Resizing      | Automate capacity growth to maintain performance                 |
-| 🌳 Treeify Threshold     | Convert long chains to trees when bucket length ≥ 8              |
-| 🔍 Predictable Behavior  | Deterministic indexing and stable iteration order                 |
+1. **Bucket Array**  
+   - \`Node<K,V>[] table\` initialized to \`DEFAULT_INITIAL_CAPACITY\` (16).  
+   - Each index holds either \`null\`, a single \`Node\`, a linked list of \`Node\`, or a \`TreeNode\` root.
+
+2. **Node Structure**  
+   - Fields: \`final int hash\`, \`final K key\`, \`V value\`, \`Node<K,V> next\`.  
+   - Forms the linked list for buckets with collisions.
+
+3. **TreeNode Structure**  
+   - Extends \`Node\` with parent, left, right pointers and a color bit.  
+   - Implements red-black tree invariants for O(log n) access.
 
 ---
 
-## 🗺️ Architecture at a Glance (ASCII)
+## ✅ Hashing & Index Calculation
 
+1. **Hash Computation**  
+   - Original hash: \`int h = key.hashCode();\`  
+   - Spread: \`h ^ (h >>> 16)\` to incorporate higher bits into lower ones.
+
+2. **Index Determination**  
+   - Compute bucket index: \`(n - 1) & h\` where \`n\` is table length (power of two).  
+   - Ensures even distribution and fast bitwise modulo.
+
+---
+
+## 🔄 Collision Handling
+
+- **Linked List**  
+  - Until chain length \< \`TREEIFY_THRESHOLD\`, new nodes appended.  
+  - \`putVal\` traverses list; replaces value if key matches existing one.
+
+- **Treeification**  
+  - When chain length ≥ \`TREEIFY_THRESHOLD\` and table size ≥ \`MIN_TREEIFY_CAPACITY\`, bin transforms into red-black tree.  
+  - Ensures O(log n) operations under high collision.
+
+- **Untreeification**  
+  - During resizing or removal, if tree shrinks below \`UNTREEIFY_THRESHOLD\`, converts back to linked list.
+
+---
+
+## 🏗 Resizing Mechanism
+
+1. **Resize Trigger**  
+   - On \`put\`, if \`size > threshold\`, call \`resize()\`.
+
+2. **Capacity Doubling**  
+   - New capacity = old capacity × 2.  
+   - New \`threshold = newCapacity * loadFactor\`.
+
+3. **Rehash & Transfer**  
+   - Iterate old table; for each non-null bucket:  
+     - Single node → place in new table at new index.  
+     - Linked list → split nodes into low/high lists based on \`hash & oldCapacity\`.  
+     - Tree → split into two trees or lists accordingly.
+
+4. **Lazy Initialization**  
+   - If table is uninitialized, first \`put\` triggers allocation to \`DEFAULT_INITIAL_CAPACITY\`.
+
+---
+
+## 🗺️ Architectural Diagram
+
+\`\`\`plaintext
+   +-----------------------------+
+   | Node<K,V>[] table           |
+   | (buckets, length = power of 2) |
+   +---------+---------+---------+
+             |         |        
+  bucket[3]  v         v bucket[5]
+  [A:Node]  → [B:Node]            null
+             |
+         treeified
+             v
+     [TreeNode Root]
+        /       \
+    [TreeNode][TreeNode]
 \`\`\`
-HashMap.table (Node<K,V>[])
-
-[0] ─▶ null
-[1] ─▶ Node(A,1) ─▶ Node(C,3) ─▶ Node(F,6)
-[2] ─▶ TreeNode(B,2)
-[3] ─▶ Node(D,4)
-[4] ─▶ null
-...
-
-put(key,value):
-compute hash ─▶ index ─▶ insert/update node ─▶ maybe resize or treeify
-get(key):
-compute hash ─▶ index ─▶ traverse list/tree ─▶ return value
-\`\`\`
 
 ---
 
-## 🔄 Core Patterns & Pitfalls
+## 🚀 Performance Characteristics & Pitfalls
 
-| Pattern             | Problem Solved                       | What to Verify                                  | Fix / Best Practice                                      |
-|---------------------|--------------------------------------|-------------------------------------------------|----------------------------------------------------------|
-| Hash Spreading      | Uniform bucket distribution          | Poor \`hashCode()\` implementations              | Apply \`h ^ (h >>> 16)\` mixing; use immutable keys      |
-| Collision Chaining  | Handling same-index keys            | Long linked lists degrade lookup to O(n)         | Resize early; tune loadFactor; rely on treeify          |
-| Treeification       | Balancing heavy collision buckets    | Too few nodes to justify a tree                  | Default threshold = 8; adjust \`TREEIFY_THRESHOLD\`     |
-| Resize              | Maintaining load factor              | Expensive O(n) rehash; high latency spikes      | Pre-size map for known data size; use power-of-two cap  |
-| Iteration Order     | Unpredictable across resizes         | Breaking code that relies on order               | Use \`LinkedHashMap\` for predictable iteration          |
-
----
-
-## 🛠️ Step-by-Step Implementation Guide
-
-1. Initialize table
-- On first put, \`table\` is initialized to default capacity (16).
-- Compute \`threshold = capacity * loadFactor\`.
-
-2. Inserting a new key/value
-- Compute \`hash = spread(key.hashCode())\`.
-- Derive \`index = (table.length - 1) & hash\`.
-- If \`table[index]\` is null, insert \`newNode(hash, key, value, null)\`.
-- Else traverse chain:
-- If a node with the same key exists, replace its value.
-- Else append at end and if chain length ≥ 8, invoke \`treeifyBin()\`.
-
-3. Retrieving a value
-- Compute \`hash, index\` as above.
-- If bucket head matches key, return immediately.
-- Else traverse linked nodes or tree to find matching key.
-
-4. Resizing the table
-- When \`size > threshold\`, double capacity.
-- Recompute \`threshold\` and rehash each node into new buckets.
-- Preserve tree nodes or split them across new bins.
-
-5. Treeify a bucket
-- If bucket node count ≥ \`TREEIFY_THRESHOLD\` and capacity ≥ \`MIN_TREEIFY_CAPACITY\`,
-convert linked nodes into a red-black tree via \`TreeNode\`.
+| Aspect               | Benefit                             | Pitfall                                    | Best Practice                           |
+|----------------------|-------------------------------------|--------------------------------------------|-----------------------------------------|
+| Load Factor (0.75)   | Balances space-time tradeoff        | High memory usage if too low               | Tune based on memory and access patterns|
+| Resizing             | Maintains O(1) amortized access     | Expensive O(n) during resize               | Pre-size via constructor if size known  |
+| Collisions           | Simple fallback to linked list      | Degraded to O(n) lookup in worst case      | Use tree bins; use good hash functions  |
+| Treeification        | Ensures O(log n) under collision    | Overhead for small bins                    | Only treeify when chain ≥ 8 and capacity sufficient |
+| Key Immutability     | Stable hash codes                   | Changing key fields breaks invariants      | Use immutable keys (String, Integer)    |
 
 ---
 
-## 💻 Code Examples
+## 💻 Code Snippets
 
-### 1. Node and TreeNode classes
+### 1. Hash & Index Function
 \`\`\`java
-static class Node<K,V> implements Map.Entry<K,V> {
-final int hash;
-final K key;
-V value;
-Node<K,V> next;
-Node(int hash, K key, V value, Node<K,V> next) {
-this.hash = hash; this.key = key; this.value = value; this.next = next;
-}
-public final K getKey()   { return key; }
-public final V getValue() { return value; }
-public final V setValue(V v) {
-V old = value; value = v; return old;
-}
+static final int hash(Object key) {
+    int h;
+    return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
 }
 
-static final class TreeNode<K,V> extends Node<K,V> {
-TreeNode<K,V> left, right, parent;
-boolean red;
-// red-black tree insertion, deletion, balancing logic
+static int indexFor(int hash, int length) {
+    return hash & (length - 1);
 }
 \`\`\`
 
-### 2. spread(hash) helper
+### 2. Simplified putVal Logic
 \`\`\`java
-static final int spread(int h) {
-return (h ^ (h >>> 16)) & (table.length - 1);
-}
-\`\`\`
-
-### 3. putVal method excerpt
-\`\`\`java
-final V putVal(int hash, K key, V value, boolean onlyIfAbsent) {
-Node<K,V>[] tab = table;
-if (tab == null || tab.length == 0) tab = resize();
-int idx = (tab.length - 1) & hash;
-Node<K,V> p = tab[idx];
-if (p == null) {
-tab[idx] = newNode(hash, key, value, null);
-} else {
-Node<K,V> e; K k;
-if (p.hash == hash && ((k = p.key) == key || key.equals(k))) {
-e = p;
-} else if (p instanceof TreeNode) {
-e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
-} else {
-int binCount = 0;
-for (; ; ++binCount) {
-if ((e = p.next) == null) {
-p.next = newNode(hash, key, value, null);
-if (binCount >= TREEIFY_THRESHOLD - 1)
-treeifyBin(tab, idx);
-break;
-}
-if (e.hash == hash && ((k = e.key) == key || key.equals(k)))
-break;
-p = e;
-}
-}
-if (e != null) {
-V oldValue = e.value;
-if (!onlyIfAbsent) e.value = value;
-return oldValue;
-}
-}
-++size;
-if (size > threshold) resize();
-return null;
+final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict) {
+    Node<K,V>[] tab; Node<K,V> p; int n, i;
+    if ((tab = table) == null || (n = tab.length) == 0)
+        n = (tab = resize()).length;
+    if ((p = tab[i = (n - 1) & hash]) == null)
+        tab[i] = newNode(hash, key, value, null);
+    else {
+        Node<K,V> e; K k;
+        if (p.hash == hash && ((k = p.key) == key || key.equals(k)))
+            e = p;
+        else if (p instanceof TreeNode)
+            e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+        else {
+            for (int binCount = 0; ; ++binCount) {
+                if ((e = p.next) == null) {
+                    p.next = newNode(hash, key, value, null);
+                    if (binCount >= TREEIFY_THRESHOLD - 1)
+                        treeifyBin(tab, i);
+                    break;
+                }
+                if (e.hash == hash && ((k = e.key) == key || key.equals(k)))
+                    break;
+                p = e;
+            }
+        }
+        if (e != null) {
+            V oldValue = e.value;
+            if (!onlyIfAbsent)
+                e.value = value;
+            return oldValue;
+        }
+    }
+    ++modCount;
+    if (++size > threshold)
+        resize();
+    return null;
 }
 \`\`\`
 
@@ -1237,14 +1468,11 @@ return null;
 
 ## 🚀 Beyond the Basics
 
-- ConcurrentHashMap uses lock-free segments and avoids treeify for thread safety.
-- Alternative schemes: open addressing, cuckoo hashing for constant eviction.
-- Custom key classes must be immutable and implement robust \`hashCode()\` and \`equals()\`.
-- Tuning \`loadFactor\` for memory vs speed trade-offs.
-- Serialization rehash cost: watch out for large maps.
-- JDK 8 onward improvements: tree bins, bulk operations, parallel streams.
+- Explore ConcurrentHashMap internals for thread-safe operations.  
+- Investigate Guava’s ImmutableMap for fixed-size, memory-efficient maps.  
+- Consider alternative collision strategies like Cuckoo or hopscotch hashing.  
 `
-},
+    },
 {
 question: 'What are the key improvements to HashMap in Java 8?',
 answerMd: `
