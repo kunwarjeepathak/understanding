@@ -7298,6 +7298,124 @@ return false;
 }
 ]
 },{
+  category: 'systemDesign',
+  title: 'System Design Basics — Story + Pillars + Patterns',
+  subItems: [
+    {
+      question: 'What are the basics of system design?',
+      answerMd: `
+# 🧱 System Design Basics — Story-Driven Primer
+
+## 👥 Main Participants & Their Roles
+
+| Participant         | Role                                                                 |
+|---------------------|----------------------------------------------------------------------|
+| Client              | Initiates requests (e.g., browser, mobile app)                       |
+| Load Balancer       | Distributes traffic across servers                                   |
+| Application Server  | Handles business logic and APIs                                      |
+| Database            | Stores structured or unstructured data                              |
+| Cache               | Speeds up reads by storing frequently accessed data                  |
+| Message Queue       | Decouples services and handles asynchronous tasks                    |
+| Storage             | Persists files, logs, backups                                        |
+| Monitoring System   | Tracks health, performance, and failures                             |
+
+---
+
+## 📖 Narrative
+
+Imagine building **BookBazaar**, an online bookstore. Users browse books, add to cart, and checkout. Behind the scenes, your system juggles traffic, stores data, handles payments, and scales during flash sales. System design is the blueprint that ensures **BookBazaar** runs smoothly, even when a million users show up.
+
+---
+
+## 🎯 Core Pillars of System Design
+
+| Pillar               | Description                                                                 |
+|----------------------|-----------------------------------------------------------------------------|
+| 🧠 Scalability        | Can the system handle increasing load gracefully?                          |
+| 🛡️ Reliability        | Does it work correctly even under failure or stress?                       |
+| ⚡ Performance        | Is it fast and responsive for users?                                       |
+| 🔐 Security           | Is data protected from unauthorized access?                                |
+| 🔄 Maintainability    | Can developers easily update, debug, and extend the system?                |
+| 📊 Observability      | Can you monitor and understand system behavior in real time?               |
+
+---
+
+## 🗺️ Typical Architecture (ASCII)
+
+\`\`\`
+Client
+  │
+  ▼
+Load Balancer ──▶ App Servers ──▶ Cache ──▶ Database
+                                │
+                                └──▶ Message Queue ──▶ Worker Services
+\`\`\`
+
+---
+
+## 🔄 Common Design Patterns
+
+| Pattern             | Purpose                                           | Example Use Case                          |
+|---------------------|---------------------------------------------------|-------------------------------------------|
+| Load Balancing      | Distribute traffic evenly                         | Round-robin across app servers            |
+| Caching             | Reduce latency and DB load                        | Redis for product catalog                 |
+| Sharding            | Split DB into partitions                         | User data split by region                 |
+| Replication         | Increase availability and read throughput         | Read replicas for analytics               |
+| Asynchronous Queue  | Decouple slow tasks                               | Email sending via RabbitMQ                |
+| Rate Limiting       | Prevent abuse                                     | API gateway throttling                    |
+| Circuit Breaker     | Avoid cascading failures                          | Fallback when payment service fails       |
+
+---
+
+## 🛠️ Step-by-Step Design Approach
+
+1. **Clarify Requirements**  
+   - Functional: What should the system do?  
+   - Non-functional: Scale, latency, availability, etc.
+
+2. **Estimate Scale**  
+   - Users per day, requests per second, data size.
+
+3. **Define APIs & Data Models**  
+   - REST endpoints, request/response formats, DB schema.
+
+4. **Choose Architecture**  
+   - Monolith vs Microservices, cloud vs on-prem.
+
+5. **Design Components**  
+   - Load balancer, app servers, DB, cache, queue, etc.
+
+6. **Plan for Failures**  
+   - Redundancy, retries, backups, disaster recovery.
+
+7. **Add Observability**  
+   - Logs, metrics, alerts, dashboards.
+
+---
+
+## 💡 Tips for Interviews
+
+- Start with requirements and constraints.  
+- Use diagrams to explain architecture.  
+- Justify trade-offs (e.g., SQL vs NoSQL).  
+- Discuss bottlenecks and mitigation.  
+- Mention scaling strategies (vertical vs horizontal).  
+- Think about real-world edge cases.
+
+---
+
+## 🚀 Beyond the Basics
+
+- CAP Theorem: Consistency, Availability, Partition Tolerance.  
+- Event-driven architecture with Kafka or Pulsar.  
+- Service mesh for observability and traffic control.  
+- Multi-region deployments for global scale.  
+- Zero-downtime deployments and blue-green strategies.  
+- Chaos engineering to test resilience.  
+`
+    }
+  ]
+},{
 category: 'systemDesign',
 title: 'Design shortUrl in Java with architectural diagram (story + implementation)',
 subItems: [
@@ -8866,7 +8984,330 @@ public double calculateFee(LocalDateTime entry, LocalDateTime exit, VehicleType 
 `
     }
   ]
+},{
+  category: 'database',
+  title: 'SQL vs NoSQL & Aurora vs DynamoDB — In-Depth Use Cases & Scenarios',
+  subItems: [
+    {
+      question: 'When should you choose SQL vs NoSQL?',
+      answerMd: `
+# 🗄️ SQL vs NoSQL — Use Case Scenarios
+
+## 👥 Main Participants & Their Roles
+
+| Participant    | Role                                                      |
+|----------------|-----------------------------------------------------------|
+| Developer      | Defines data model and access patterns                    |
+| SQL Database   | Enforces ACID, fixed schema                               |
+| NoSQL Database | Offers flexible schema and horizontal scale               |
+| Analytics Team | Queries large volumes of semi-structured or unstructured data |
+| Operations     | Manages scaling, backups, and migrations                   |
+
+---
+
+## 📖 Narrative
+
+You’re building two services for **Acme Corp**:
+1. An **Order Processing** system handling payments and inventory updates.
+2. A **Telemetry Collector** ingesting millions of IoT events per hour.
+
+Each demands a different database approach.
+
+---
+
+## 🎯 Use Case Scenarios
+
+| Scenario                    | Workload                          | Requirements                                 | Recommended DB    |
+|-----------------------------|-----------------------------------|----------------------------------------------|-------------------|
+| 1. Financial Transactions   | 500 TPS, multi-table transactions | Strong ACID, joins, strict schema            | SQL (Postgres)    |
+| 2. Evolving Product Catalog | 100 RPS, frequent attribute changes | Flexible schema, dynamic fields             | NoSQL (MongoDB)   |
+| 3. IoT Telemetry Aggregation| 50k EPS, append-only writes       | High write throughput, eventual consistency  | NoSQL (Cassandra) |
+
+**Scenario 1: Financial Transactions**  
+We need atomic transfers between accounts and inventory updates. Multi-row transactions and foreign keys guarantee correctness. Schema changes are rare.
+
+**Scenario 2: Evolving Product Catalog**  
+New product attributes (e.g., dimensions, tags) appear weekly. A document store lets you add fields without downtime or migrations.
+
+**Scenario 3: IoT Telemetry Aggregation**  
+Sensors push JSON blobs at 10K EPS. Data is mostly append-only and queried later in batch. Horizontal partitioning (sharding) across nodes handles scale.
+
+---
+
+## 🔄 Comparative Patterns & Pitfalls
+
+| Factor            | SQL                                                | NoSQL                                               |
+|-------------------|----------------------------------------------------|-----------------------------------------------------|
+| Schema            | Rigid: ALTER TABLE, migrations                     | Flexible: add fields per document                   |
+| Transactions      | ACID: safe multi-row updates                       | BASE: eventual consistency, lighter transactional support |
+| Scaling           | Vertical (bigger instance), read-replicas          | Horizontal (add nodes, auto-sharding)               |
+| Query Power       | Rich joins & aggregates                            | Primary-key lookups, map-reduce, secondary indexes  |
+| Evolution Speed   | Slower (migrations)                                | Faster (schema-on-read)                             |
+
+---
+
+## 🛠️ Decision Flow
+
+1. List access patterns (joins vs key-value lookups).  
+2. Measure RPS/EPS and data growth rate.  
+3. Identify consistency vs availability trade-off.  
+4. Prototype critical queries and benchmark.  
+5. Choose SQL when transactions and complex queries dominate; choose NoSQL when schema flexibility and scale dominate.
+
+---
+
+## 💻 Quick Code Examples
+
+### SQL Transaction (Postgres)
+\`\`\`sql
+BEGIN;
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+COMMIT;
+\`\`\`
+
+### NoSQL Insert (MongoDB)
+\`\`\`js
+db.products.insertOne({
+  sku: 'X123',
+  name: 'Widget',
+  attributes: { color: 'red', weight: '2kg', warranty: '2 years' }
+});
+\`\`\`  
+`
+    },
+    {
+      question: 'Aurora vs DynamoDB: which for which workload?',
+      answerMd: `
+# ☁️ Aurora vs DynamoDB — Workload-Driven Scenarios
+
+## 👥 Main Participants & Their Roles
+
+| Participant         | Role                                               |
+|---------------------|----------------------------------------------------|
+| Application         | Issues reads/writes                                |
+| Aurora Cluster      | Relational storage with MySQL/PostgreSQL engine    |
+| DynamoDB Table      | Serverless key-value/document store                |
+| DevOps              | Configures scaling policies and backups            |
+| Data Analyst        | Queries large datasets for reporting               |
+
+---
+
+## 📖 Narrative
+
+Your team at **StreamFlix** needs two services:
+1. A **Subscription Billing** engine with complex joins and reports.
+2. A **Global Activity Log** capturing every click or playback event.
+
+They steer you toward Aurora for one and DynamoDB for the other.
+
+---
+
+## 🎯 Workload Scenarios
+
+| Scenario                   | RPS / Storage            | Access Pattern                              | Recommended Service  |
+|----------------------------|--------------------------|----------------------------------------------|----------------------|
+| 1. Subscription Billing    | 1k RPS, 5 TB             | Complex joins, ad-hoc reporting              | Aurora Serverless    |
+| 2. Real-Time Leaderboard   | 50k RPS, 200 GB          | Single-key reads/writes, atomic counters     | DynamoDB (DAX)       |
+| 3. Global Event Store      | 100M events/day, 50 TB   | Append-only, event replay                    | DynamoDB Streams     |
+
+**Scenario 1: Subscription Billing**  
+Monthly billing runs complex SQL queries, joins between users, plans, payments. Aurora’s read replicas offload reporting; strong ACID ensures invoice accuracy.
+
+**Scenario 2: Real-Time Leaderboard**  
+Leaderboards increment counters on each game result. DynamoDB with atomic UpdateItem calls and DAX accelerator gives microsecond latency at any scale.
+
+**Scenario 3: Global Event Store**  
+Every user interaction is logged. DynamoDB Streams triggers Lambda consumers for ETL pipelines. Unlimited scale and point-in-time recovery simplify operations.
+
+---
+
+## 🔄 Comparative Table
+
+| Aspect             | Aurora                                                       | DynamoDB                                                 |
+|--------------------|--------------------------------------------------------------|----------------------------------------------------------|
+| Data Model         | Relational (tables, joins)                                   | Key-value / document                                     |
+| Scaling            | Auto-scale storage to 128 TiB, read-replicas                 | Virtually unlimited, auto-sharding                       |
+| Latency            | Single-digit ms                                               | Single-digit ms, accelerated by DAX                      |
+| Consistency        | Strong, configurable via session settings                    | Eventual by default, transactional API for strong reads  |
+| Pricing            | Pay per ACU & I/O                                            | Pay per RCUs/WCUs & storage                              |
+
+---
+
+## 🛠️ Selection Checklist
+
+1. Do you need SQL features (joins, window functions)? → Choose Aurora.  
+2. Is schema evolving or access pattern known upfront? → DynamoDB for fixed keys, Aurora otherwise.  
+3. Can you tolerate eventual consistency? → DynamoDB, else Aurora.  
+4. What latency SLA do you target? → Both single-digit ms, but DAX gives microseconds with DynamoDB.
+
+---
+
+## 🚀 Advanced Tips
+
+- Use **Aurora Global Database** for cross-region reads with < 100 ms lag.  
+- Combine **DynamoDB + Aurora**: hot paths in Dynamo, heavy analytics in Aurora.  
+- Leverage **Serverless Aurora** for unpredictable workloads.  
+- Enable **Time-to-Live** on Dynamo tables to purge old events automatically.  
+`
+    }
+  ]
+},{
+category: 'systemDesign',
+title: 'Caching & Redis vs Memcached Caching Strategies — Story + Use Cases + Patterns',
+subItems: [
+{
+question: 'What are the common caching strategies?',
+answerMd: `
+# ⚡ Caching Strategies — Story-Driven Guide
+
+## 👥 Main Participants & Their Roles
+
+| Participant      | Role                                                      |
+|------------------|-----------------------------------------------------------|
+| Client App       | Issues read/write requests                                |
+| Cache Layer      | Stores and serves in-memory data for fast access          |
+| Primary Database | Source of truth                                          |
+| Cache Manager    | Applies caching patterns (e.g., lazy, write-through)      |
+| Eviction Policy  | Decides which items to remove when cache memory is full   |
+| Monitoring       | Tracks cache hit/miss rates and performance              |
+
+---
+
+## 📖 Narrative
+
+In **CacheCity**, the **Client App** races to fetch product details during flash sales. The **Cache Layer** stands ready like a fast-track lane, serving hot data at lightning speed. The **Cache Manager** applies the right strategy—lazy loading for on-demand entries or write-through to keep data fresh—while the **Eviction Policy** patrols memory limits to keep only the most valuable items on the fast lane.
+
+---
+
+## 🎯 Use Case Scenarios
+
+| Strategy          | When to Use                                  | Pros                                     | Cons                                      |
+|-------------------|----------------------------------------------|------------------------------------------|-------------------------------------------|
+| Cache-Aside       | Read-heavy, unpredictable keys               | Simple, cost-effective                   | Cold-start penalty on cache miss          |
+| Write-Through     | High write consistency needs                 | Data always fresh in cache               | Write latency adds to database operations |
+| Write-Back        | Write-heavy workloads with batch updates     | Fast writes to cache                     | Risk of data loss if cache fails          |
+| Refresh-Ahead     | Predictable hot keys (e.g., homepage stats)  | Avoids cache misses                      | Complex to schedule and prefetch logic    |
+
+**Scenario 1: E-Commerce Product Catalog (Cache-Aside)**
+Users browse products; each page request checks cache first. On a miss, data is loaded from the database and cached. Miss penalties are acceptable, but a high cache hit rate keeps page load snappy.
+
+**Scenario 2: User Profiles (Write-Through)**
+Profile updates must reflect immediately. Every profile update writes to both the database and cache in one atomic step, ensuring reads always fetch fresh data.
+
+**Scenario 3: Analytics Counter (Write-Back)**
+High-frequency event counters increment in cache and flush to the database in batches every minute. Write-back reduces database load but requires careful flush and failure handling.
+
+**Scenario 4: Leaderboard Refresh (Refresh-Ahead)**
+Top scores are recalculated every few seconds and pushed into cache before users request them, eliminating cold starts during traffic spikes.
+
+---
+
+## 🔄 Common Pitfalls & Mitigations
+
+| Pitfall                 | Impact                          | Mitigation                                   |
+|-------------------------|---------------------------------|----------------------------------------------|
+| Stale Data              | Serving outdated info           | Invalidate on write or set short TTL         |
+| Cache Stampede          | Many misses stampede database   | Use locks or request coalescing              |
+| Memory Exhaustion       | Evicts critical entries         | Choose LRU/LFU, monitor usage, scale memory  |
+| Inconsistent Writes     | Writes missing in cache/DB      | Use atomic writes or transactions            |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+Client App
+│
+▼
+Cache Layer ────▶ Primary Database
+│   ▲
+│   └─ Eviction Policy & TTL
+└─ Cache Manager applies patterns
+\`\`\`
+`
+},
+{
+question: 'When should you choose Redis vs Memcached?',
+answerMd: `
+# 🗃️ Redis vs Memcached — Use Case Scenarios
+
+## 👥 Main Participants & Their Roles
+
+| Participant       | Role                                                      |
+|-------------------|-----------------------------------------------------------|
+| Application       | Reads/writes cache via client library                     |
+| Redis Server      | In-memory data store with rich data structures            |
+| Memcached Server  | Simple in-memory key-value store                          |
+| Persistence Layer | Optional disk backing (Redis only)                        |
+| Cluster Manager   | Manages sharding and replication                          |
+| Monitoring        | Tracks memory usage, operations, and evictions            |
+
+---
+
+## 📖 Narrative
+
+In **VelocityVille**, your **Application** needs a caching engine. On one side, **Redis** offers lists, sets, sorted sets and persistence—like a Swiss Army knife. On the other, **Memcached** excels at pure key-value speed—the nitro boost for web assets. You pick your champion based on feature needs and workload patterns.
+
+---
+
+## 🎯 Workload Scenarios
+
+| Scenario                    | Workload Characteristics                           | Recommended Choice  |
+|-----------------------------|-----------------------------------------------------|---------------------|
+| Session Store               | User sessions with TTL, small simple keys           | Memcached           |
+| Leaderboards & Queues       | Sorted scores, push/pop operations                  | Redis               |
+| Full-Page Caching           | HTML pages, string blobs                            | Memcached           |
+| Analytics & Counters        | Atomic increments, time-series, hyperloglog         | Redis               |
+| Distributed Locks           | Locks with expiration                               | Redis (SETNX)       |
+| Short-Lived Feature Flags   | Boolean flags, low volume                           | Memcached           |
+
+---
+
+## 🔄 Comparative Table
+
+| Aspect             | Redis                                                                 | Memcached                             |
+|--------------------|-----------------------------------------------------------------------|---------------------------------------|
+| Data Structures    | Strings, Lists, Sets, Sorted Sets, Hashes, Bitmaps                    | Simple key-value strings              |
+| Persistence        | RDB, AOF, hybrid modes                                                | In-memory only                        |
+| Eviction Policies  | LRU, LFU, TTL-based                                                   | LRU, configurable                     |
+| Scaling            | Redis Cluster, Sentinel for HA                                        | Client-side consistent hashing        |
+| Throughput & Latency | Slightly higher latency, rich ops                                 | Ultra-low latency, simpler ops        |
+| Memory Efficiency  | Stores metadata per entry, slightly more overhead                     | More compact, less overhead           |
+
+---
+
+## 🛠️ Code Snippets
+
+### Redis Leaderboard (Sorted Set)
+\`\`\`js
+// Add or update score
+redis.zadd('leaderboard', score, userId);
+// Get top 10
+redis.zrevrange('leaderboard', 0, 9, 'WITHSCORES');
+\`\`\`
+
+### Memcached Session Store (Node.js)
+\`\`\`js
+const memjs = require('memjs');
+const client = memjs.Client.create();
+client.set('session123', JSON.stringify(sessionData), { expires: 3600 });
+client.get('session123', (err, val) => { /* ... */ });
+\`\`\`
+
+---
+
+## 🚀 Advanced Tips
+
+- Use Redis Modules (e.g., RedisJSON, RediSearch) for specialized workloads.
+- Combine Memcached for ephemeral cache and Redis for stateful structures.
+- Tune TTLs and eviction policies based on access patterns.
+- Monitor keyspace notifications in Redis for cache invalidation events.
+- Horizontally scale via Redis Cluster or Memcached consistent hashing.
+`
 }
+]
+},
 
 ];
 
