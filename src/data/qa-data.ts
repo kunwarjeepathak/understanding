@@ -8368,6 +8368,504 @@ spec:
 `
     }
   ]
+},{
+  category: 'systemDesign',
+  title: 'Designing a High-Scale Video Streaming Platform — In-Depth Guide',
+  subItems: [
+    {
+      question: 'Design a video streaming app for 100 countries, 100M users, 10M active users, 1M uploaders (video sizes 200 MB–2 GB). What are the key challenges and mitigations while maintaining all core NFRs?',
+      answerMd: `
+# High-Scale Video Streaming Platform
+
+## 👥 Main Participants & Their Roles
+
+| Participant               | Role                                                                            |
+|---------------------------|---------------------------------------------------------------------------------|
+| Viewer Client             | Requests video playback, adaptive streaming chunks                              |
+| Uploader Client           | Initiates chunked uploads (200 MB–2 GB)                                          |
+| API Gateway               | Routes requests, enforces auth, rate limits                                     |
+| Authentication Service    | Issues and validates JWT/OAuth tokens                                           |
+| Upload Service            | Coordinates chunked uploads, assembles files, writes to object storage          |
+| Message Queue (Kafka)     | Buffers upload events for asynchronous processing                               |
+| Transcoding Service       | Converts source video into multiple bitrates/formats (HLS/DASH)                 |
+| Object Storage (S3/GCS)   | Stores original and transcoded video segments, durable and geo-replicated       |
+| Metadata Database (NoSQL) | Stores video metadata, user info, upload status                                 |
+| Streaming Service         | Serves manifest files and video segments to CDN                                 |
+| CDN (Edge Cache)          | Caches and delivers video segments globally with low latency                    |
+| Monitoring & Analytics    | Tracks QoS, errors, throughput, user engagement                                 |
+| Recommendation Engine     | Suggests videos based on watch history and ML models                            |
+
+---
+
+## 📖 Narrative
+
+In **StreamVille**, millions of **Viewers** across 100 countries tune in to watch HD and 4K content, while **Uploaders** send large master files in chunks. The **Upload Service** stitches uploads and emits events to **Kafka**, waking up **Transcoding Workers** to generate ABR streams. Once segments land in **Object Storage**, the **Streaming Service** publishes manifests for **CDN Edges**. Behind the scenes, **Auth Guards** protect content, and **Monitors** alert on any performance drift, ensuring a smooth experience in every region.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                   | Detail                                                                                 |
+|------------------------|----------------------------------------------------------------------------------------|
+| Scalability            | Support 10 M concurrent viewers and 1 M monthly uploaders                              |
+| Availability           | 99.99% uptime with active-active multi-region deployments                              |
+| Performance            | < 2 s startup latency, < 100 ms chunk delivery to user’s player                          |
+| Durability             | 11 9’s object durability for master and transcoded segments                            |
+| Consistency            | Strong metadata consistency, eventual consistency for caches and replicas              |
+| Security               | Encrypted transport (TLS), signed URLs, DRM integration                                |
+| Observability          | End-to-end tracing (OpenTelemetry), real-time metrics, alerts on SLA breaches          |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`plaintext
+       [Viewer]
+          │
+          ▼
+      API Gateway ──▶ Auth Service
+          │
+          ▼
+    Streaming Service ──▶ CDN Edges ──▶ Viewer
+          │
+    (Manifests & Segments)
+          
+[Uploader]
+     │
+     ▼
+ Upload Service ──▶ Kafka Topic
+          │          │
+          ▼          ▼
+ Object Storage   Transcoding Service
+   (masters,       │
+   segments)       ▼
+               Object Storage
+\`\`\`
+
+---
+
+## 🔄 Core Challenges & Mitigations
+
+| Challenge                          | Impact                                              | Mitigation                                     |
+|------------------------------------|-----------------------------------------------------|------------------------------------------------|
+| High Concurrent Viewers            | API overload, origin stress                          | Auto-scale fleets, load balance at edge        |
+| Large File Uploads                 | Slow, failed uploads                                 | Chunked uploads with resumable protocol         |
+| Transcoding Throughput             | Backlog causes playback delays                       | Elastic worker pool, GPU acceleration           |
+| Global Delivery Latency            | Buffering and rebuffering for distant users          | Multi-CDN, geo-DNS routing, edge prefetch       |
+| Storage Cost & Durability          | High egress, long-term retention                     | Lifecycle policies, tiered storage, erasure coding |
+| Metadata Consistency               | Stale manifests or missing segments                  | Region-wide database replication, leader election |
+| CDN Cache Invalidation             | Viewers see old segments after update                | Versioned manifests, cache-invalid hooks        |
+| DRM & Content Protection           | Unauthorized access or piracy                        | Signed URLs, tokenized DRM, watermarking        |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide
+
+1. Build Chunked Upload API  
+   - Client splits file into N chunks, uploads via \`PUT /videos/{id}/chunks\`.  
+   - Track progress in Metadata DB; support resume on failure.
+
+2. Orchestrate Transcoding  
+   - On upload completion, push event to Kafka.  
+   - Worker pool picks up tasks, transcodes into ABR renditions (H.264/H.265).  
+   - Store segments in Object Storage using manifest-driven paths.
+
+3. Deploy Streaming Service  
+   - Generate HLS/DASH manifests referencing segment URLs.  
+   - Sign URLs with short-lived tokens for secure delivery.
+
+4. Integrate with CDN  
+   - Purge or version manifests on new uploads.  
+   - Leverage edge prefetch for trending videos.
+
+5. Scale Globally  
+   - Deploy microservices in multiple regions (AWS/GCP).  
+   - Use geo-DNS to route clients to nearest region/CDN.
+
+6. Implement Observability  
+   - Instrument services with OpenTelemetry.  
+   - Aggregate logs/metrics in Prometheus/Grafana; set SLIs/SLOs.
+
+---
+
+## 💻 Infrastructure as Code Snippet
+
+\`\`\`yaml
+resources:
+  - name: videoBucket
+    type: storage.v1.bucket
+    properties:
+      location: GLOBAL
+      versioning:
+        enabled: true
+      lifecycle:
+        rule:
+          - action: { type: Delete }
+            condition: { age: 365 }
+  - name: transcoderCloudFunction
+    type: cloudfunctions.v1.function
+    properties:
+      entryPoint: transcodeHandler
+      runtime: nodejs18
+      trigger:
+        eventType: google.storage.object.finalize
+        resource: "$(videoBucket)"
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- Live streaming with low-latency protocols (WebRTC, CMAF-LL).  
+- AI-driven encoding optimizations (scene detection, bitrate ladder).  
+- Personalized CDN edge caching using ML for popular segments.  
+- Offline downloads & DRM-managed secure download packages.  
+- Real-time recommendation integration in player.  
+- Chaos engineering on streaming pipeline to validate resilience.  
+`
+    }
+  ]
+},{
+  category: 'database',
+  title: 'Key Database Design Q&A for a Global Video Streaming Platform',
+  subItems: [
+    {
+      question: 'Which database technologies (relational, document, key–value, time–series) make sense for storing video metadata, user profiles, watch history, and analytics—and what are the trade-offs?',
+      answerMd: `
+# 🗄️ Choosing the Right Database Technology — Story-Driven Guide
+
+## 👥 Main Participants & Their Roles
+
+| Participant         | Role                                                                         |
+|---------------------|------------------------------------------------------------------------------|
+| Video Metadata Store| Holds title, description, tags, upload date, owner, thumbnail URLs           |
+| User Profile Store  | Persists user credentials, preferences, subscription status                  |
+| Watch-History Store | Appends user view events, timestamps, progress markers                       |
+| Analytics Store     | Aggregates play, pause, buffer, error events keyed by video/user/timewindow  |
+| Cache Layer         | Serves hot metadata and trending lists with low-latency in-memory lookup      |
+| Search Index        | Provides full-text search and faceted filtering on titles and descriptions    |
+
+---
+
+## 📖 Narrative
+
+In **DataVille**, you’re the **Archivist** deciding where each record lives. You keep product facts (metadata) in a structured ledger (relational DB), user profiles in a schemaless scrollbook (document store), and a flood of click-streams (watch history, analytics) in specialized time-series vats. When editors request trending clips, an in-memory Cache Butler fetches summaries in milliseconds. When researchers run ad-hoc ad campaigns, a Search Maven uses the Search Index to quickly pinpoint videos by keyword.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                       | Detail                                                                                     |
+|----------------------------|--------------------------------------------------------------------------------------------|
+| Schema Flexibility         | Allow evolving metadata (new fields) without rigid migrations                              |
+| High Write Throughput      | Ingest millions of view events per minute for real-time analytics                          |
+| Low Read Latency           | Serve video pages and recommendations in <100 ms globally                                  |
+| Complex Queries            | Support joins (video→uploader), aggregations (views per day), and full-text search         |
+| Scalability & Sharding     | Horizontally partition across user/video dimensions to handle 100 M users, 1 M uploads     |
+| Consistency vs Availability| Balance strong user-profile consistency vs eventual consistency for global analytics       |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+                         +-------------------+
+                         |  User Profile DB  |
+                         |  (Document Store) |
+                         +---------+---------+
+                                   |
+                                   ▼
++---------+    +----------+    +--------+    +------------+
+| Metadata|<───|  Cache   |<───| Relational |    Search   |
+|   DB    |    | (Redis)  |    |   DB      |   Index     |
++----+----+    +----+-----+    +-----+-----+    (ES/Solr) |
+     |               |               |                   |
+     ▼               ▼               ▼                   ▼
+ Watch-History    Analytics      Recommendation        Discovery
+ (Time-Series)    (TSDB)         Service              Service
+\`\`\`
+
+---
+
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern               | Problem Solved                                    | Pitfall                                   | Fix / Best Practice                                    |
+|-----------------------|---------------------------------------------------|-------------------------------------------|--------------------------------------------------------|
+| Polyglot Persistence  | Use best-fit DB per data type                     | Operational complexity                    | Automate provisioning; unify monitoring & backup       |
+| CQRS                  | Separate write and read models                     | Data staleness on reads                   | Implement event-driven pub/sub for read model updates  |
+| Time-Series DB        | Optimized for high-cardinality, append-only writes | Querying across multiple tags             | Pre-aggregate metrics; shard by time + video/user      |
+| Document Store        | Flexible metadata schema                          | Large documents slow queries              | Keep docs small; embed vs reference based on access    |
+| Search Index          | Full-text and faceted search                       | Index lag vs source of truth              | Schedule incremental indexing; use RBAC on update paths|
+
+---
+
+## 🛠️ Step-by-Step Recommendation
+
+1. Deploy a Relational DB (PostgreSQL/MySQL) for core metadata –  
+   • Schema with video_id PK, uploader_id FK, genre, tags table for many-to-many.  
+   • Read replicas for scaling reads; partition by upload date.  
+
+2. Use a Document DB (MongoDB/CosmosDB) for user profiles –  
+   • Store JSON user settings and preferences; evolve schema freely.  
+   • Shard by user_id; TTL collections for ephemeral sessions.  
+
+3. Ingest watch events into a Time-Series DB (InfluxDB/TimescaleDB) –  
+   • Batch or stream writes via Kafka; shard by region+video_id.  
+   • Build continuous aggregates for daily/week view counts.  
+
+4. Cache hot metadata in Redis –  
+   • Key pattern: \`video:meta:\${video_id}\`; expire 1 hr or on update.  
+
+5. Index searchable fields into Elasticsearch –  
+   • Use a change-data-capture pipeline from relational DB.  
+   • Provide autocomplete and faceted browse on tags, categories.  
+
+6. Aggregate analytics in BigQuery/ClickHouse –  
+   • Export enriched events nightly; archive raw feeds in object storage.  
+
+---
+
+## 💻 Code Snippet: Metadata Table DDL (PostgreSQL)
+
+\`\`\`sql
+CREATE TABLE video_metadata (
+  video_id      UUID PRIMARY KEY,
+  uploader_id   UUID NOT NULL,
+  title         TEXT NOT NULL,
+  description   TEXT,
+  upload_date   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  privacy       VARCHAR(10)  NOT NULL,
+  thumbnail_url TEXT,
+  tags          TEXT[]      -- GIN index for array ops
+);
+
+CREATE INDEX idx_video_tags ON video_metadata USING GIN (tags);
+CREATE INDEX idx_upload_date ON video_metadata (upload_date);
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- Introduce a graph database (Neo4j/Dgraph) for social–video networks and recommendations.  
+- Implement per-user event buffering with Redis Streams for multi-region write tolerance.  
+- Leverage cloud-native serverless databases (Aurora Serverless, DynamoDB) for auto-scaling.  
+- GDPR-compliant data partitioning and on-demand erasure workflows.  
+- Unified observability with OpenTelemetry across all data stores.  
+`
+    },
+    // stubs for further questions; fill in using the same story-driven format
+    {
+      question: 'How do you model video metadata (title, description, tags, upload date, owner) to support both point-lookups (by video ID) and secondary queries (by tag, category, uploader)?',
+      answerMd: `\n# 🎨 Modeling Video Metadata — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+    },
+    {
+      question: 'What sharding or partitioning strategy will you apply to the metadata store to handle 100 M users and 1 M monthly uploads, and how will you rebalance shards as data grows?',
+      answerMd: `\n# 📐 Sharding & Partitioning Strategy — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+    },
+    {
+      question: 'How will you replicate and cache metadata across 100 countries to achieve low-latency reads while maintaining acceptable consistency—master/slave, multi-master, or geo-distributed NoSQL?',
+      answerMd: `\n# 🌍 Global Replication & Caching — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+    },
+    {
+      question: 'What consistency model will you choose for user-centric data (watch history, likes, comments)? Strong consistency, eventual consistency, or a hybrid—and why?',
+      answerMd: `\n# 🔗 Consistency Models — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+    },
+    {
+      question: 'How do you ensure transactional integrity when a video upload transaction spans object storage (for chunks) and the metadata database?',
+      answerMd: `\n# 🔄 Cross-System Transactions — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+    },
+    {
+      question: 'How will you design the schema and indexing for user watch history and engagement events to power real-time analytics and recommendations at scale?',
+      answerMd: `\n# 📈 Watch History & Engagement Schema — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+    },
+    {
+      question: 'What archival and data-lifecycle policies will you enforce on the metadata database and analytics store to control storage costs and meet compliance (e.g., GDPR)?',
+      answerMd: `\n# 🗄️ Archival & Data-Lifecycle Policies — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+    },
+    {
+      question: 'How will you handle schema migrations and versioning across millions of records and multiple regions without downtime?',
+      answerMd: `\n# 🔧 Zero-Downtime Migrations — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+    },
+    {
+      question: 'What caching layer (Redis, Memcached, in-memory) and invalidation strategy will you use to reduce load on the primary database for high-frequency queries (e.g., “trending now”)?',
+      answerMd: `\n# ⚡ Caching & Invalidation Strategy — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+    },
+    {
+      question: 'How do you design the comments, ratings, and playlist tables (or collections) to optimize for frequent writes, reads, and pagination?',
+      answerMd: `\n# 📝 Comments, Ratings & Playlists Schema — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+    },
+    {
+      question: 'What backup, restore, and disaster-recovery plan will you implement to meet a 99.99% availability SLA for your metadata store?',
+      answerMd: `\n# 🚨 Backup, Restore & Disaster Recovery — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+    },
+    {
+      question: 'How do you monitor database health and performance (throughput, latency, error rates) and alert on anomalies for proactive scaling and tuning?',
+      answerMd: `\n# 🔍 Monitoring & Alerting — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+    },
+    {
+      question: 'How will you secure the metadata and analytics databases—encryption at rest/in transit, role-based access control, audit logging—to protect user and content data?',
+      answerMd: `\n# 🔐 Database Security — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+    },
+    {
+      question: 'When and how would you introduce a specialized search engine (Elasticsearch, Solr) alongside your primary database for full-text search on video titles/descriptions?',
+      answerMd: `\n# 🔎 Full-Text Search Integration — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+    }
+  ]
+},{
+  category: 'systemDesign',
+  title: 'Designing a Parking Garage System — Story + Patterns + Code',
+  subItems: [
+    {
+      question: 'How would you design a Parking Garage system?',
+      answerMd: `
+# 🚗 Designing a Parking Garage System — Story-Driven Guide
+
+## 👥 Main Participants & Their Roles
+
+| Participant         | Role                                                                 |
+|---------------------|----------------------------------------------------------------------|
+| Vehicle             | Enters and exits the garage                                          |
+| Entry/Exit Gate     | Controls access, scans tickets or license plates                     |
+| Parking Spot        | Assigned to vehicles based on availability and type                  |
+| Parking Floor       | Contains multiple spots, may be categorized (compact, large, EV)     |
+| Ticketing System    | Issues entry tickets or logs license plate with timestamp            |
+| Payment Processor   | Calculates fees based on duration and vehicle type                   |
+| Garage Controller   | Central brain managing availability, assignments, and billing        |
+| Display System      | Shows available spots per floor or section                           |
+| Admin Dashboard     | Tracks occupancy, revenue, and alerts                                |
+
+---
+
+## 📖 Narrative
+
+In **Parkopolis**, vehicles arrive at the **Entry Gate**, where they’re issued a **Ticket** or scanned via license plate recognition. The **Garage Controller** checks for available spots and guides the vehicle to a suitable **Parking Spot**. When exiting, the **Payment Processor** calculates the fee based on time and vehicle type. The **Admin Dashboard** monitors real-time occupancy, alerts for full floors, and tracks revenue trends.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                     | Detail                                                                 |
+|--------------------------|------------------------------------------------------------------------|
+| 🅿️ Efficient Allocation  | Assign spots quickly based on type and availability                    |
+| 💳 Accurate Billing      | Calculate fees based on entry/exit timestamps and pricing rules        |
+| 📊 Real-Time Monitoring  | Track occupancy, spot status, and alerts                               |
+| 🔐 Secure Access         | Prevent unauthorized entry or exit                                     |
+| 🔄 Scalability           | Support multi-floor, multi-garage deployments                          |
+| 🧠 Extensibility         | Add support for EV charging, reservations, valet, etc.                 |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+Vehicle
+  │
+  ▼
+Entry Gate ──▶ Ticketing System ──▶ Garage Controller
+                                │
+                                ▼
+                        Parking Spot Assignment
+                                │
+                                ▼
+                          Payment Processor
+                                │
+                                ▼
+                            Exit Gate
+                                │
+                                ▼
+                          Admin Dashboard
+\`\`\`
+
+---
+
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern                  | Problem Solved                                  | Pitfall                                | Fix / Best Practice                                  |
+|--------------------------|--------------------------------------------------|----------------------------------------|------------------------------------------------------|
+| Spot Allocation          | Prevents overbooking or inefficient usage        | Race conditions in concurrent entries  | Use atomic spot reservation; lock per floor          |
+| Time-Based Billing       | Ensures fair pricing                             | Clock drift or missed exit scans       | Sync time sources; fallback to manual override       |
+| License Plate Recognition| Enables ticketless entry                         | OCR errors or duplicate plates         | Combine with RFID or QR fallback                     |
+| Multi-Floor Management   | Scales across large garages                      | Uneven distribution of vehicles        | Balance load via smart assignment                    |
+| Real-Time Display        | Guides drivers efficiently                       | Stale or lagging data                  | Use push updates via WebSocket or MQTT               |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide
+
+1. **Model the Entities**  
+   - Vehicle, ParkingSpot, ParkingFloor, Ticket, PaymentRecord.  
+   - Define enums for spot type (COMPACT, LARGE, EV) and status (AVAILABLE, OCCUPIED).
+
+2. **Design Spot Allocation Logic**  
+   - On entry, assign nearest available spot matching vehicle type.  
+   - Lock spot during assignment to prevent race conditions.
+
+3. **Implement Ticketing System**  
+   - Generate ticket with entry timestamp and spot ID.  
+   - For license plate mode, store plate and timestamp.
+
+4. **Build Payment Processor**  
+   - On exit, calculate duration and apply pricing rules.  
+   - Support hourly, daily, and flat rate models.
+
+5. **Create Admin Dashboard**  
+   - Show occupancy per floor, revenue reports, alerts.  
+   - Enable manual overrides and spot reservation.
+
+6. **Add Real-Time Display System**  
+   - Push updates to LED boards or mobile apps.  
+   - Show available spots per section/floor.
+
+---
+
+## 💻 Code Snippets
+
+### 1. Parking Spot Model (Java)
+\`\`\`java
+public class ParkingSpot {
+  private String id;
+  private SpotType type;
+  private boolean isAvailable;
+  private String assignedVehicleId;
+}
+\`\`\`
+
+### 2. Spot Allocation Logic
+\`\`\`java
+public ParkingSpot assignSpot(Vehicle vehicle) {
+  List<ParkingSpot> available = spotRepo.findAvailableByType(vehicle.getType());
+  if (available.isEmpty()) throw new RuntimeException("No spots available");
+  ParkingSpot spot = available.get(0);
+  spot.setAvailable(false);
+  spot.setAssignedVehicleId(vehicle.getId());
+  spotRepo.save(spot);
+  return spot;
+}
+\`\`\`
+
+### 3. Billing Calculation
+\`\`\`java
+public double calculateFee(LocalDateTime entry, LocalDateTime exit, VehicleType type) {
+  long minutes = Duration.between(entry, exit).toMinutes();
+  double rate = pricingService.getRate(type);
+  return Math.ceil(minutes / 60.0) * rate;
+}
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- Reservation system for pre-booked spots via mobile app.  
+- EV charging integration with usage-based billing.  
+- Valet mode with spot reassignment and tracking.  
+- Dynamic pricing based on occupancy and time of day.  
+- Integration with license plate databases for enforcement.  
+- Predictive analytics for peak hours and staffing.  
+`
+    }
+  ]
 }
 
 ];
