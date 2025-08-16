@@ -1063,44 +1063,311 @@ subItems: [
 {
 question: 'How does HashMap work internally?',
 answerMd: `
-### HashMap Internal Mechanics
+# 🗝️ Java HashMap Internals — Story-Driven Guide
 
-- Underlying Data Structure
-- Array of buckets, each bucket holds a linked list or tree of \`Node<K,V>\` entries.
+## 👥 Main Participants & Their Roles
 
-- Hashing and Index Calculation
-- Key’s \`hashCode()\` is mixed and then masked:
-\`index = (capacity – 1) & hash\`.
+| Participant        | Role                                                                     |
+|--------------------|--------------------------------------------------------------------------|
+| HashMap<K,V>       | The main container with an array of buckets                              |
+| Node<K,V>          | Internal linked-list node holding key, value, hash, and next pointer     |
+| TreeNode<K,V>      | Red-black tree node used when collisions in a bucket exceed threshold    |
+| key.hashCode()     | Computes an int hash for distributing keys                               |
+| index              | Bucket position calculated as \`(table.length - 1) & hash\`              |
+| loadFactor         | Controls when the table resizes (default 0.75)                           |
+| threshold          | \`capacity * loadFactor\`, triggers resize when size exceeds it          |
 
-- Collision Resolution
-- Prior to Java 8, collisions form a singly linked list.
-- Lookups, insertions, and deletions traverse that list.
+---
 
-- Resizing
-- Triggered when \`size > loadFactor * capacity\` (default loadFactor = 0.75).
-- Capacity doubles and entries are rehashed into the new bucket array.
+## 📖 Narrative
+
+Imagine a **Library Archive** with numbered shelves (buckets). Each **Book** (key/value) has a Dewey code (hashCode) that guides it to a specific shelf slot (index). When multiple books map to the same slot, they queue up on a linked cart (linked list). If the queue grows too long, they reorganize into a balanced index (tree) for faster lookup. The Archivist watches occupancy (loadFactor) and, when shelves overflow (threshold), expands the archive (resize) to maintain swift access.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                     | Detail                                                            |
+|--------------------------|-------------------------------------------------------------------|
+| ⚡ Average O(1) Access   | Fast get/put by direct bucket indexing                            |
+| 🔄 Collision Handling    | Graceful chaining or treeify to manage conflicting hashes         |
+| 📈 Dynamic Resizing      | Automate capacity growth to maintain performance                 |
+| 🌳 Treeify Threshold     | Convert long chains to trees when bucket length ≥ 8              |
+| 🔍 Predictable Behavior  | Deterministic indexing and stable iteration order                 |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+HashMap.table (Node<K,V>[])
+
+[0] ─▶ null
+[1] ─▶ Node(A,1) ─▶ Node(C,3) ─▶ Node(F,6)
+[2] ─▶ TreeNode(B,2)
+[3] ─▶ Node(D,4)
+[4] ─▶ null
+...
+
+put(key,value):
+compute hash ─▶ index ─▶ insert/update node ─▶ maybe resize or treeify
+get(key):
+compute hash ─▶ index ─▶ traverse list/tree ─▶ return value
+\`\`\`
+
+---
+
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern             | Problem Solved                       | What to Verify                                  | Fix / Best Practice                                      |
+|---------------------|--------------------------------------|-------------------------------------------------|----------------------------------------------------------|
+| Hash Spreading      | Uniform bucket distribution          | Poor \`hashCode()\` implementations              | Apply \`h ^ (h >>> 16)\` mixing; use immutable keys      |
+| Collision Chaining  | Handling same-index keys            | Long linked lists degrade lookup to O(n)         | Resize early; tune loadFactor; rely on treeify          |
+| Treeification       | Balancing heavy collision buckets    | Too few nodes to justify a tree                  | Default threshold = 8; adjust \`TREEIFY_THRESHOLD\`     |
+| Resize              | Maintaining load factor              | Expensive O(n) rehash; high latency spikes      | Pre-size map for known data size; use power-of-two cap  |
+| Iteration Order     | Unpredictable across resizes         | Breaking code that relies on order               | Use \`LinkedHashMap\` for predictable iteration          |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide
+
+1. Initialize table
+- On first put, \`table\` is initialized to default capacity (16).
+- Compute \`threshold = capacity * loadFactor\`.
+
+2. Inserting a new key/value
+- Compute \`hash = spread(key.hashCode())\`.
+- Derive \`index = (table.length - 1) & hash\`.
+- If \`table[index]\` is null, insert \`newNode(hash, key, value, null)\`.
+- Else traverse chain:
+- If a node with the same key exists, replace its value.
+- Else append at end and if chain length ≥ 8, invoke \`treeifyBin()\`.
+
+3. Retrieving a value
+- Compute \`hash, index\` as above.
+- If bucket head matches key, return immediately.
+- Else traverse linked nodes or tree to find matching key.
+
+4. Resizing the table
+- When \`size > threshold\`, double capacity.
+- Recompute \`threshold\` and rehash each node into new buckets.
+- Preserve tree nodes or split them across new bins.
+
+5. Treeify a bucket
+- If bucket node count ≥ \`TREEIFY_THRESHOLD\` and capacity ≥ \`MIN_TREEIFY_CAPACITY\`,
+convert linked nodes into a red-black tree via \`TreeNode\`.
+
+---
+
+## 💻 Code Examples
+
+### 1. Node and TreeNode classes
+\`\`\`java
+static class Node<K,V> implements Map.Entry<K,V> {
+final int hash;
+final K key;
+V value;
+Node<K,V> next;
+Node(int hash, K key, V value, Node<K,V> next) {
+this.hash = hash; this.key = key; this.value = value; this.next = next;
+}
+public final K getKey()   { return key; }
+public final V getValue() { return value; }
+public final V setValue(V v) {
+V old = value; value = v; return old;
+}
+}
+
+static final class TreeNode<K,V> extends Node<K,V> {
+TreeNode<K,V> left, right, parent;
+boolean red;
+// red-black tree insertion, deletion, balancing logic
+}
+\`\`\`
+
+### 2. spread(hash) helper
+\`\`\`java
+static final int spread(int h) {
+return (h ^ (h >>> 16)) & (table.length - 1);
+}
+\`\`\`
+
+### 3. putVal method excerpt
+\`\`\`java
+final V putVal(int hash, K key, V value, boolean onlyIfAbsent) {
+Node<K,V>[] tab = table;
+if (tab == null || tab.length == 0) tab = resize();
+int idx = (tab.length - 1) & hash;
+Node<K,V> p = tab[idx];
+if (p == null) {
+tab[idx] = newNode(hash, key, value, null);
+} else {
+Node<K,V> e; K k;
+if (p.hash == hash && ((k = p.key) == key || key.equals(k))) {
+e = p;
+} else if (p instanceof TreeNode) {
+e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+} else {
+int binCount = 0;
+for (; ; ++binCount) {
+if ((e = p.next) == null) {
+p.next = newNode(hash, key, value, null);
+if (binCount >= TREEIFY_THRESHOLD - 1)
+treeifyBin(tab, idx);
+break;
+}
+if (e.hash == hash && ((k = e.key) == key || key.equals(k)))
+break;
+p = e;
+}
+}
+if (e != null) {
+V oldValue = e.value;
+if (!onlyIfAbsent) e.value = value;
+return oldValue;
+}
+}
+++size;
+if (size > threshold) resize();
+return null;
+}
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- ConcurrentHashMap uses lock-free segments and avoids treeify for thread safety.
+- Alternative schemes: open addressing, cuckoo hashing for constant eviction.
+- Custom key classes must be immutable and implement robust \`hashCode()\` and \`equals()\`.
+- Tuning \`loadFactor\` for memory vs speed trade-offs.
+- Serialization rehash cost: watch out for large maps.
+- JDK 8 onward improvements: tree bins, bulk operations, parallel streams.
 `
 },
 {
 question: 'What are the key improvements to HashMap in Java 8?',
 answerMd: `
-### Java 8 Enhancements
+# 🌟 Java 8 HashMap Improvements — Story-Driven Guide
 
-- Treeification of Buckets
-- When a bucket’s linked list length exceeds 8 **and** table capacity ≥ 64, it converts the list into a red-black tree.
-- Improves worst-case lookups from \`O(n)\` to \`O(log n)\`.
+## 👥 Main Participants & Their Roles
 
-- Balanced Bin Trees
-- Tree nodes implement red-black balancing for faster searches, insertions, and deletions.
+| Participant       | Role                                                              |
+|-------------------|-------------------------------------------------------------------|
+| HashMap<K,V>      | The main map container, now enhanced for heavy hash collisions    |
+| Node<K,V>         | Linked-list bucket entry                                         |
+| TreeNode<K,V>     | Red-black tree node for buckets with many entries                |
+| spread()          | Improved hash mixer to better distribute keys                    |
+| computeIfAbsent() | Lazily computes and inserts a value if key is missing            |
+| merge()           | Atomically combines a new value with an existing one             |
+| forEach()         | Lambda-friendly iteration over entries                           |
+| remove(key, val)  | Conditional removal only if key maps to specified value          |
 
-- Improved Hash Spreading
-- Better bit-mixing of \`hashCode()\` reduces collision probability.
+---
 
-- New Compute Methods
-- \`computeIfAbsent\`, \`computeIfPresent\`, and \`merge\` allow atomic, lambda-driven updates.
+## 📖 Narrative
 
-- Overall Performance Gains
-- Better distribution, shorter collision chains, and faster read operations in high-collision scenarios.
+In the **Hashland Library**, every book (entry) goes to a shelf slot (bucket) based on its Dewey code (hash). In Java 8, if too many books crowd one slot, the librarian rebuilds that shelf into a mini index (red-black tree) so lookups stay fast. Librarians also get new tools: they can summon a missing book on demand (\`computeIfAbsent\`), merge two volumes into one (\`merge\`), and stroll through every aisle with a single command (\`forEach\`).
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                          | Detail                                                         |
+|-------------------------------|----------------------------------------------------------------|
+| ⚡ Maintain O(1) get/put       | Treeify at threshold to bound worst-case to O(log n)           |
+| 🔀 Better Collision Spread    | Use \`h ^ (h >>> 16)\` mixer for high-bit mixing                |
+| 🔄 Atomic Bulk Operations     | \`computeIfAbsent\`, \`computeIfPresent\`, \`merge\` reduce races|
+| 🧩 Functional Iteration       | \`forEach\`, \`replaceAll\` let you apply lambdas safely        |
+| 🚫 Conditional Removal        | \`remove(key, value)\` enforces precise entry deletion         |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+Buckets[] (length = power-of-2)
+
+[i] → Node(A) → Node(C) → Node(F)
+[j] → TreeNode(B) ──▶ red-black links ──▶ TreeNode(D)
+[k] → null
+
+On collisions ≥ TREEIFY_THRESHOLD (default 8), linked Nodes transform to TreeNodes
+\`\`\`
+
+---
+
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern                 | Problem Solved                                    | What to Verify                   | Fix / Best Practice                                    |
+|-------------------------|---------------------------------------------------|----------------------------------|--------------------------------------------------------|
+| Tree Bins               | Long linked lists degrade to O(n) lookups         | Chain length, table size        | Rely on default threshold (8) and MIN_TREEIFY_CAPACITY (64) |
+| Improved Hash Mixing   | Poor dispersion of \`hashCode()\` bits            | High collision rate             | Use \`spread(int h)\` that xors high bits before index  |
+| Lazy Computation        | Boilerplate checks for absent keys                | Null checks and concurrency     | Use \`computeIfAbsent\` with side-effect-free remapping function |
+| Atomic Merge            | Race conditions updating existing entries         | Inconsistent map state          | Use \`merge(key, value, BiFunction)\` for thread-safe combines |
+| Lambda Iteration        | Verbose loops                                      | Concurrent modifications         | Use \`forEach\`, \`replaceAll\`, \`compute\` safely     |
+| Conditional Removal     | Unintentional deletions with \`remove(key)\`       | Key-value mismatch              | Use \`remove(key, value)\` to guard against stale values |
+
+---
+
+## 🛠️ Step-by-Step Usage Guide
+
+1. Leverage tree bins automatically
+- Rely on default thresholds; no code changes needed.
+
+2. Use computeIfAbsent
+- \`map.computeIfAbsent(key, k -> createDefault())\`
+
+3. Merge entries atomically
+- \`map.merge(key, newValue, (oldV, newV) -> combine(oldV, newV))\`
+
+4. Iterate with lambdas
+- \`map.forEach((k, v) -> System.out.println(k +": "+ v));\`
+
+5. Conditional removal
+- \`map.remove(someKey, expectedValue);\`
+
+6. Bulk replace
+- \`map.replaceAll((k, v) -> transform(v));\`
+
+---
+
+## 💻 Code Examples
+
+### 1. computeIfAbsent for caching
+\`\`\`java
+Map<String, List<String>> index = new HashMap<>();
+List<String> authors = index.computeIfAbsent(isbn, key -> new ArrayList<>());
+authors.add("New Author");
+\`\`\`
+
+### 2. merge to sum counts
+\`\`\`java
+Map<String, Integer> counts = new HashMap<>();
+counts.merge("apple", 1, Integer::sum);
+counts.merge("apple", 1, Integer::sum);  // apple → 2
+\`\`\`
+
+### 3. forEach and replaceAll
+\`\`\`java
+map.forEach((k, v) -> System.out.println(k + " = " + v));
+map.replaceAll((k, v) -> v.toUpperCase());
+\`\`\`
+
+### 4. Conditional removal
+\`\`\`java
+boolean removed = map.remove("tempKey", "tempValue");
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- Explore \`computeIfPresent\` for updating existing entries.
+- Tune \`loadFactor\` and initial capacity to reduce resizing.
+- For multi-threaded contexts, consider \`ConcurrentHashMap\`’s Java 8 optimizations.
+- Investigate alternative hash schemes (Cuckoo, Hopscotch) for special workloads.
+- Profile collision rates and tweak custom \`hashCode()\` implementations.
 `
 }
 ]
@@ -2801,78 +3068,350 @@ category: 'aws',
 title: 'AWS Core Services: Networking & Security',
 subItems: [
 {
-question: 'What is an AWS VPC and how is it structured?',
+question: 'What is AWS VPC and how it is structured?',
 answerMd: `
-### AWS VPC Overview
+# 🌐 AWS VPC Architecture & Structure — Story-Driven Guide
 
-\`\`\`mermaid
-flowchart TB
-VPC[VPC: 10.0.0.0/16]
-subgraph Public
-IGW[Internet Gateway]
-RT-Pub[Route Table (0.0.0.0/0 → IGW)]
-Subnet-Pub1[Subnet A (10.0.1.0/24)]
-Subnet-Pub2[Subnet B (10.0.2.0/24)]
-end
-subgraph Private
-NAT[NAT Gateway]
-RT-Priv[Route Table (0.0.0.0/0 → NAT)]
-Subnet-Priv1[Subnet C (10.0.3.0/24)]
-Subnet-Priv2[Subnet D (10.0.4.0/24)]
-end
-VPC --> Public
-VPC --> Private
-Subnet-Pub1 --> RT-Pub
-Subnet-Pub2 --> RT-Pub
-Subnet-Priv1 --> RT-Priv
-Subnet-Priv2 --> RT-Priv
-RT-Pub --> IGW
-RT-Priv --> NAT
+## 👥 Main Participants & Their Roles
+
+| Participant         | Role                                                        |
+|---------------------|-------------------------------------------------------------|
+| AWS Account         | Owner of VPCs and networking resources                      |
+| VPC                 | Logical isolated network container                          |
+| Subnet              | CIDR-based segment of a VPC (public or private)             |
+| Internet Gateway    | Bidirectional link between VPC and the Internet             |
+| NAT Gateway         | Outbound Internet access for resources in private subnets   |
+| Route Table         | Collection of routing rules associated with subnets         |
+| Security Group      | Stateful, instance-level firewall                           |
+| Network ACL (NACL)  | Stateless, subnet-level firewall                            |
+| VPC Endpoint        | Private connectivity to AWS services (S3, DynamoDB, etc.)   |
+| Bastion Host        | Secure jump server into private subnets                     |
+| VPC Flow Logs       | Captures IP traffic metadata for monitoring & troubleshooting |
+
+---
+
+## 📖 Narrative
+
+Picture **Cloud Village**, a gated community. You, the **Network Architect**, draw its walls (the VPC) and carve out neighborhoods (subnets). The **Village Gate** (Internet Gateway) lets guests in and out of public areas. Private lanes rely on a **NAT Guard** to sneak out for supplies. Every road’s signpost is a **Route Table**, while neighborhood watch teams (Security Groups and NACLs) keep unwanted traffic at bay. Observers log every car’s journey with **Flow Logs**.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                        | Detail                                                      |
+|-----------------------------|-------------------------------------------------------------|
+| 🔒 Isolation                | Separate workloads into their own VPCs and subnets         |
+| 🌍 Controlled Access        | Expose only public subnets to the Internet                  |
+| 🚦 Traffic Management       | Route public vs private traffic through correct gateways    |
+| 🛡 Security                | Enforce fine-grained firewall rules at instance and subnet levels |
+| 🔍 Observability            | Capture and analyze network flow with VPC Flow Logs         |
+| 🔗 Service Integration      | Connect privately to AWS services via VPC Endpoints         |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+Internet
+▲
+IGW│
+▼
++----------------------------------+
+|              VPC                 |
+|  CIDR: 10.0.0.0/16               |
+|                                  |
+|  +--------+   +----------------+ |
+|  |Public  |   |  Private       | |
+|  |SubnetA |   |  SubnetA       | |
+|  |10.0.1.0/24 |10.0.2.0/24    | |
+|  +---+----+   +----+----------+ |
+|      │             │            |
+|      ▼             ▼            |
+|     IGW          NAT GW         |
+|                                  |
++----------------------------------+
 \`\`\`
 
-- A VPC is your isolated network container.
-- Public subnets route directly to an Internet Gateway (IGW).
-- Private subnets route outbound via a NAT Gateway.
-- Security Groups (instance-level) and Network ACLs (subnet-level) control traffic.
+---
 
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern                 | Problem Solved                                 | What to Verify                              | Fix                                                     |
+|-------------------------|------------------------------------------------|---------------------------------------------|---------------------------------------------------------|
+| Public vs Private Subnet| Exposing sensitive resources to the Internet   | Route table associations                    | Ensure private subnets route 0.0.0.0/0 via NAT Gateway  |
+| NAT Gateway             | Private hosts can’t reach Internet             | Single-AZ single point of failure           | Provision NAT per Availability Zone                    |
+| Security Group vs NACL  | Overlapping firewall rules                     | Stateful vs. stateless behavior             | Use SGs for instance rules; NACLs for coarse subnet ACL |
+| VPC Endpoints           | Data egress through Internet cost and latency  | Endpoint policy and type (interface vs gateway) | Create gateway endpoints for S3/DynamoDB; lock down policies |
+| Overlapping CIDRs       | Peering/VPN connectivity failures              | Unique CIDR blocks across VPCs              | Plan non-overlapping IP ranges                          |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide
+
+1. **Create the VPC**
+- Navigate to VPC console or use AWS CLI:
 \`\`\`bash
-# CLI: create VPC, subnets, IGW, route tables
-VPC_ID=$(aws ec2 create-vpc --cidr-block 10.0.0.0/16 --query 'Vpc.VpcId' --output text)
-aws ec2 create-subnet --vpc-id $VPC_ID --cidr-block 10.0.1.0/24
-aws ec2 create-internet-gateway
-aws ec2 attach-internet-gateway --vpc-id $VPC_ID --internet-gateway-id igw-123456
-aws ec2 create-route-table --vpc-id $VPC_ID
+aws ec2 create-vpc --cidr-block 10.0.0.0/16
 \`\`\`
+- Tag it and enable DNS hostnames.
+
+2. **Provision Subnets**
+- Create public (e.g., 10.0.1.0/24) and private (e.g., 10.0.2.0/24) subnets in each AZ.
+- Enable auto-assign IPv4 public IP for public subnets.
+
+3. **Attach an Internet Gateway**
+- Create and attach IGW to your VPC:
+\`\`\`bash
+aws ec2 create-internet-gateway
+aws ec2 attach-internet-gateway --vpc-id vpc-1234abcd --internet-gateway-id igw-5678efgh
+\`\`\`
+
+4. **Configure Route Tables**
+- Public RT: default route to IGW.
+- Private RT: default route to NAT Gateway (create NAT in each AZ).
+
+5. **Deploy NAT Gateways**
+- In each public subnet:
+\`\`\`bash
+aws ec2 create-nat-gateway --subnet-id subnet-1a2b3c4d --allocation-id eipalloc-12345678
+\`\`\`
+
+6. **Setup Security Groups & NACLs**
+- SG: allow inbound SSH from Bastion, app ports.
+- NACL: deny known bad IP ranges, allow ephemeral ports.
+
+7. **Add VPC Endpoints**
+- Gateway endpoints for S3/DynamoDB:
+\`\`\`bash
+aws ec2 create-vpc-endpoint --vpc-id vpc-1234abcd --service-name com.amazonaws.us-east-1.s3 --route-table-ids rtb-1111aaaa
+\`\`\`
+
+8. **Enable VPC Flow Logs**
+- Capture to CloudWatch or S3:
+\`\`\`bash
+aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-1234abcd --traffic-type ALL --log-group-name VPCFlowLogs
+\`\`\`
+
+9. **Harden & Monitor**
+- Review SG/NACL overlap.
+- Alert on unusual traffic via CloudWatch Alarms.
+- Rotate NAT Elastic IPs if needed.
+
+---
+
+## 💻 Code Examples
+
+### 1. CloudFormation Snippet (VPC + Subnets)
+\`\`\`yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+MyVPC:
+Type: AWS::EC2::VPC
+Properties:
+CidrBlock: 10.0.0.0/16
+EnableDnsSupport: true
+EnableDnsHostnames: true
+PublicSubnetA:
+Type: AWS::EC2::Subnet
+Properties:
+VpcId: !Ref MyVPC
+CidrBlock: 10.0.1.0/24
+AvailabilityZone: us-east-1a
+MapPublicIpOnLaunch: true
+PrivateSubnetA:
+Type: AWS::EC2::Subnet
+Properties:
+VpcId: !Ref MyVPC
+CidrBlock: 10.0.2.0/24
+AvailabilityZone: us-east-1a
+\`\`\`
+
+### 2. Terraform HCL (Route & IGW)
+\`\`\`hcl
+resource "aws_internet_gateway" "igw" {
+vpc_id = aws_vpc.main.id
+}
+resource "aws_route_table" "public" {
+vpc_id = aws_vpc.main.id
+route {
+cidr_block = "0.0.0.0/0"
+gateway_id = aws_internet_gateway.igw.id
+}
+}
+resource "aws_route_table_association" "pub_assoc" {
+subnet_id      = aws_subnet.public.id
+route_table_id = aws_route_table.public.id
+}
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- VPC Peering vs Transit Gateway for multi-VPC connectivity.
+- AWS PrivateLink for secure service-to-service calls.
+- Hybrid connectivity: Site-to-Site VPN & Direct Connect.
+- IPv6 addressing and dual-stack deployments.
+- Service Mesh (App Mesh) within your VPC.
+- Automated drift detection with AWS Config rules.
+- Multi-account VPC design using AWS Organizations.
+
 `
 },
 {
 question: 'How do IAM users, roles, and policies work together?',
 answerMd: `
-### IAM Entities & Trust
+# 🔐 AWS IAM: Users, Roles & Policies — Story-Driven Guide
 
-\`\`\`mermaid
-flowchart LR
-User[User] --uses--> Policy{Inline & Managed Policies}
-Role[Role] --assume--> Policy
-Role --trusted by--> Service[EC2 / Lambda / STS]
-User & Role --grant permissions--> AWS_Resources
+## 👥 Main Participants & Their Roles
+
+| Participant               | Role                                                                             |
+|---------------------------|----------------------------------------------------------------------------------|
+| IAM User                  | A person or service account with long-term credentials                           |
+| IAM Group                 | A collection of IAM users for easier policy assignment                           |
+| IAM Role                  | An identity you can assume to obtain temporary credentials                       |
+| IAM Policy                | A JSON document defining allowed/denied actions                                  |
+| AWS STS (Security Token Service) | Issues temporary security tokens when roles are assumed                 |
+| Resource-Based Policy     | Permissions attached directly to AWS resources (S3 buckets, SQS queues, etc.)    |
+| Identity Provider (IdP)   | External SAML/OIDC provider for federated access                                 |
+| Permissions Boundary      | Maximum permissions an IAM principal can ever have                               |
+
+---
+
+## 📖 Narrative
+
+Imagine **Castle Cloud**. Your **Citizens** (IAM Users) have badges (passwords/keys) giving them basic access. To perform special tasks—like commanding the **Armory** or inspecting the **Treasury**—they don a **Costume** (IAM Role) that grants elevated rights for a short time. The rules of every costume and badge are written on **Scrolls** (IAM Policies). When a Citizen dresses up, the castle’s **Guard** (STS) issues a temporary pass (token) and enforces those scrolls. Once their mission ends, the costume is returned and the temporary pass expires.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                              | Detail                                                               |
+|-----------------------------------|----------------------------------------------------------------------|
+| 🔒 Least Privilege                | Grant only the permissions required for each actor                   |
+| 🕒 Temporary Credentials          | Use short-lived tokens for elevated access                           |
+| 🔁 Reusable Policy Definitions    | Write policies once and attach to users, groups, or roles           |
+| 🔗 Separation of Duties           | Use roles to isolate high-risk operations from daily tasks          |
+| 🔍 Auditable Access               | Central logs of who assumed which role and when                      |
+| 🌐 Federated Access               | Let external identities assume roles without creating IAM users      |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
++-------------+                     +-----------------------+
+| IAM User    |                     | Identity Provider     |
+| (or AWS svc)|                     | (SAML/OIDC)           |
++------+------+                     +----------+------------+
+|                                     |
+| 1. Present creds / federated token  |
+v                                     v
++---+-------------+                +------+-----------+
+| Assume Role     |--(STS Validate)->| Trust Policy    |
++---+-------------+                +-----------------+
+|
+| 2. STS issues temporary creds
+v
++---+-------------+
+| Call AWS API    |
++-----------------+
+|
+| 3. Enforce Permissions
+v
++-----------------+
+| IAM Policy Eval |
++-----------------+
 \`\`\`
 
-- **Users**: long-term credentials (console/API).
-- **Roles**: assumable identities for services or federated users.
-- **Policies**: JSON documents that allow or deny actions on resources.
+---
 
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern                  | Problem Solved                                    | What to Verify                          | Fix / Best Practice                                        |
+|--------------------------|---------------------------------------------------|-----------------------------------------|------------------------------------------------------------|
+| User & Group Policies    | Managing dozens of user-level permissions         | Overly permissive wildcards             | Scope actions and resources; use AWS managed policies      |
+| Role Assumption          | Granting temporary privilege without long-term keys| Missing trust relationship              | Define least-privilege trust policy with \`sts:AssumeRole\`|
+| Resource-Based Policies  | Letting other accounts or services access a resource| Unrestricted principals                | Constrain with \`Principal\`, \`Condition\`, SourceArn     |
+| Permissions Boundaries   | Prevent IAM principal from escalating rights       | Boundary not enforced                   | Attach boundary to User/Role; test with policy simulator   |
+| Inline vs Managed Policy | Fragmented permissions or policy sprawl            | Hard to audit inline policies           | Favor reusable customer-managed policies                   |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide
+
+1. Create an IAM User
+\`\`\`bash
+aws iam create-user --user-name app-developer
+\`\`\`
+
+2. Create a Group and Attach a Policy
+\`\`\`bash
+aws iam create-group --group-name Developers
+aws iam attach-group-policy --group-name Developers \
+--policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+\`\`\`
+
+3. Add User to Group
+\`\`\`bash
+aws iam add-user-to-group --user-name app-developer --group-name Developers
+\`\`\`
+
+4. Write a Custom Policy (policy.json)
 \`\`\`json
-// Example IAM policy granting S3 read-only
 {
 "Version": "2012-10-17",
 "Statement": [{
 "Effect": "Allow",
-"Action": ["s3:GetObject", "s3:ListBucket"],
-"Resource": ["arn:aws:s3:::my-bucket", "arn:aws:s3:::my-bucket/*"]
+"Action": ["dynamodb:Query","dynamodb:UpdateItem"],
+"Resource": "arn:aws:dynamodb:us-east-1:123456789012:table/Orders"
 }]
 }
 \`\`\`
+
+5. Create and Attach IAM Role with Trust Policy (trust.json)
+\`\`\`json
+{
+"Version": "2012-10-17",
+"Statement": [{
+"Effect": "Allow",
+"Principal": { "Service": "ec2.amazonaws.com" },
+"Action": "sts:AssumeRole"
+}]
+}
+\`\`\`
+\`\`\`bash
+aws iam create-role --role-name EC2DynamoRole --assume-role-policy-document file://trust.json
+   aws iam attach-role-policy --role-name EC2DynamoRole \
+--policy-arn arn:aws:iam::123456789012:policy/YourCustomPolicy
+\`\`\`
+
+6. EC2 Instance Assumes Role
+- Assign \`EC2DynamoRole\` to your instance profile.
+- SDK/CLI calls automatically use temporary creds.
+
+7. (Optional) Set a Permissions Boundary
+\`\`\`bash
+aws iam put-user-permissions-boundary \
+--user-name app-developer \
+--permissions-boundary arn:aws:iam::123456789012:policy/BoundaryPolicy
+\`\`\`
+
+8. Audit and Monitor
+- Enable CloudTrail to log all IAM actions.
+- Use IAM Access Advisor and AWS Config rules.
+
+---
+
+## 🚀 Beyond the Basics
+
+- Attribute-Based Access Control (ABAC) with tags and \`aws:RequestTag\`.
+- AWS Organizations Service Control Policies (SCPs) for account-wide guardrails.
+- Cross-account roles for secure resource sharing.
+- SAML/OIDC federation for single sign-on (SSO).
+- IAM Access Analyzer to detect public/external access.
+- Policy Simulator to test and validate permission sets.
+- Session policies and tags for fine-grained temporary controls.
 `
 }
 ]
@@ -5281,7 +5820,224 @@ Integrate these into your CI pipeline to catch errors before merge.
 }
 ]
 },// Add these as the next cards in your src/qa-data.ts
+{
+category: 'angular',
+title: 'Developing a Banking Application with Angular — Story + Patterns + Code',
+subItems: [
+{
+question: 'How do you develop a banking application using Angular?',
+answerMd: `
+# 🏦 Building a Banking Application with Angular — Story-Driven Guide
 
+## 👥 Main Participants & Their Roles
+
+| Participant             | Role                                                                                 |
+|-------------------------|--------------------------------------------------------------------------------------|
+| User                    | Customer interacting with the banking UI                                            |
+| Angular App             | Single-Page Application coordinating components, services, and routing               |
+| Components              | UI building blocks (LoginForm, Dashboard, AccountDetails, TransferForm, HistoryList) |
+| Services                | Business logic and HTTP communication (AuthService, AccountService, TransactionService) |
+| HTTP Interceptors       | Inject auth tokens, handle errors, show loaders                                     |
+| State Management        | Centralized store (NgRx or RxJS BehaviorSubjects) for shared data                    |
+| Routing & Guards        | Lazy-loaded modules, AuthGuard, RoleGuard to protect routes                          |
+| Forms & Validation      | ReactiveFormsModule for secure and robust form handling                              |
+| Environment Config      | \`environment.ts\` for API endpoints, feature toggles                                |
+| UI Library              | Angular Material or Bootstrap for consistent styling                                 |
+| Testing Tools           | Jasmine/Karma for unit tests, Protractor/Cypress for end-to-end tests                 |
+| CI/CD Pipeline          | GitHub Actions/GitLab CI for build, test, lint, and deploy                           |
+| Monitoring & Logging     | Sentry or Elasticsearch/Kibana for runtime errors and usage analytics                |
+
+---
+
+## 📖 Narrative
+
+Imagine **Bankopolis**, a grand digital bank. You, the **Frontend Architect**, design a sleek **Lobby** (Angular App) with tellers (Components) and vault managers (Services). When a customer logs in, the **Security Guard** (AuthGuard + Interceptor) checks their badge (JWT). Account balances and transaction histories flow through secure channels (HTTP Services), and every deposit or transfer is validated by your meticulous **Form Validator**. Behind the scenes, a centralized **Ledger** (State Store) keeps everything in sync.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                          | Detail                                                          |
+|-------------------------------|-----------------------------------------------------------------|
+| ⚡ Fast & Responsive UI       | OnPush change detection, lazy loading, and optimized bundle size |
+| 🔒 Robust Security            | JWT-based auth, route guards, input sanitization, HTTPS only    |
+| 📐 Modular & Maintainable     | Feature modules, shared modules, clear folder structure         |
+| 🔄 Reactive Data Flow         | RxJS streams, NgRx store or service subjects                   |
+| ✔️ Form Accuracy              | ReactiveForms with custom validators for financial rules       |
+| 🧪 Testability                | Comprehensive unit and e2e tests with high coverage            |
+| 🌐 Cross-Browser & Accessibility | WCAG compliance, responsive layouts using Material/Grid        |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+User
+│
+▼
+Angular App ──▶ Router ──▶ Feature Modules (Auth, Accounts, Transactions)
+│                       │              │
+│                       ▼              ▼
+├─ HTTP Interceptor ──▶ AuthService  TransactionService
+│                       │              │
+▼                       ▼              ▼
+State Store ──────────────▶ AccountService
+│
+▼
+LocalStorage / SessionStorage
+\`\`\`
+
+---
+
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern                   | Problem Solved                                      | What to Verify                            | Fix / Best Practice                                     |
+|---------------------------|-----------------------------------------------------|-------------------------------------------|---------------------------------------------------------|
+| Modular Architecture      | Monolithic codebase, slow builds                    | Cross-module dependencies                 | Create feature and shared modules; lazy load features   |
+| Reactive State Management | Inconsistent UI state across components             | Overfetching, stale data                  | Use NgRx or BehaviorSubject services; selectors & effects|
+| HTTP Interception         | Repetitive token injection and error handling       | Silent token expiration, unhandled errors | Global interceptor for auth, retry logic, loaders       |
+| Reactive Forms            | Complex validation and dynamic form needs           | Uncaught invalid states                   | Custom validators, async validation, form groups        |
+| Route Guards              | Unauthorized access to sensitive routes             | Incomplete guard checks                   | AuthGuard + RoleGuard with clear fallback redirects     |
+| Code Splitting            | Large initial bundle, slow first paint               | Missing chunk preloading                  | Lazy-load modules; prefetch important routes            |
+| Accessibility             | Inaccessible UI elements                            | Low contrast, missing ARIA labels         | Use Angular Material, run axe audits                    |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide
+
+1. Scaffold the Project
+- \`ng new banking-app --routing --style=scss\`
+- Install Angular Material: \`ng add @angular/material\`.
+
+2. Set Up Environment Configuration
+- Define \`apiBaseUrl\` and feature flags in \`environment.ts\` and \`environment.prod.ts\`.
+
+3. Create Core & Shared Modules
+- \`ng generate module core\` for services and interceptors.
+- \`ng generate module shared\` for common components, pipes, directives.
+
+4. Implement Authentication
+- AuthService: login(), logout(), refreshToken().
+- HTTP Interceptor: attach JWT, handle 401 by redirecting to login.
+- AuthGuard + RoleGuard for route protection.
+
+5. Build Feature Modules
+- Accounts Module: AccountDashboardComponent, AccountService, AccountEffects (if NgRx).
+- Transactions Module: TransferFormComponent (Reactive Form), TransactionService, TransactionHistoryComponent.
+
+6. Design Reactive Forms
+- Use FormBuilder, FormGroup, Validators for account transfers:
+\`\`\`typescript
+this.transferForm = this.fb.group({
+fromAccount: ['', Validators.required],
+toAccount: ['', Validators.required],
+amount: [
+'',
+[Validators.required, Validators.min(1), this.currencyValidator]
+]
+});
+\`\`\`
+
+7. Integrate State Management
+- Define Actions, Reducers, Effects (NgRx) or BehaviorSubject-based services.
+- Selectors to fetch account balance, transaction list.
+
+8. Implement Routing & Lazy Loading
+- Define route config:
+\`\`\`typescript
+{ path: 'accounts', loadChildren: () => import('./accounts/accounts.module').then(m => m.AccountsModule), canActivate: [AuthGuard] }
+\`\`\`
+
+9. Add UI & Styling
+- Use Angular Material components (mat-table, mat-form-field, mat-button).
+- Responsive grid layout with Flex Layout or CSS Grid.
+
+10. Testing & CI/CD
+- Unit tests for services and components: \`ng test\`.
+- e2e tests with Cypress: \`ng e2e\`.
+- GitHub Actions: install dependencies, run lint/test/build, deploy to Firebase/Netlify.
+
+---
+
+## 💻 Code Examples
+
+### 1. HTTP Interceptor for Auth & Errors
+\`\`\`typescript
+@Injectable()
+export class AuthInterceptor implements HttpInterceptor {
+constructor(private auth: AuthService, private router: Router) {}
+
+intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+let cloned = req.clone({
+setHeaders: { Authorization: \`Bearer \${this.auth.token}\` }
+});
+return next.handle(cloned).pipe(
+catchError(err => {
+if (err.status === 401) this.router.navigate(['/login']);
+return throwError(() => err);
+})
+);
+}
+}
+\`\`\`
+
+### 2. Reactive Transfer Form Component
+\`\`\`typescript
+@Component({ selector: 'app-transfer', templateUrl: './transfer.component.html' })
+export class TransferComponent implements OnInit {
+transferForm!: FormGroup;
+constructor(private fb: FormBuilder, private txService: TransactionService) {}
+ngOnInit() {
+this.transferForm = this.fb.group({
+fromAccount: ['', Validators.required],
+toAccount: ['', Validators.required],
+amount: ['', [Validators.required, Validators.min(1)]]
+});
+}
+
+onSubmit() {
+if (this.transferForm.valid) {
+this.txService.transfer(this.transferForm.value).subscribe({
+next: () => alert('Transfer successful'),
+error: err => console.error(err)
+});
+}
+}
+}
+\`\`\`
+
+### 3. Account Service with RxJS State
+\`\`\`typescript
+@Injectable({ providedIn: 'root' })
+export class AccountService {
+private balanceSubject = new BehaviorSubject<number>(0);
+balance$ = this.balanceSubject.asObservable();
+
+constructor(private http: HttpClient) {}
+
+loadBalance(accountId: string) {
+this.http.get<AccountBalance>(\`\${apiBase}/accounts/\${accountId}/balance\`)
+.subscribe(res => this.balanceSubject.next(res.amount));
+}
+}
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- Progressive Web App (PWA) support for offline banking.
+- WebSocket or SSE for real-time balance and transaction updates.
+- Multi-factor authentication (MFA) and biometric login.
+- Feature flags for gradual rollouts using ngx-launchdarkly.
+- Internationalization (i18n) and currency formatting with Angular i18n.
+- Accessibility audit and WCAG compliance.
+- Integration with micro-frontend architecture for scaling large teams.
+- End-to-end encryption of sensitive data in forms and storage.
+`
+}
+]
+},
 {
 category: 'javascript',
 title: 'JavaScript Fundamental Concepts',
@@ -5576,150 +6332,507 @@ category: 'cloud',
 title: 'Spring Cloud Architecture & Microservices Patterns',
 subItems: [
 {
-question: 'What is the Spring Cloud architecture for microservices?',
+question: 'What is spring cloud architecture in microservices?',
 answerMd: `
-### Spring Cloud Architecture for Microservices
+# ☁️ Spring Cloud Architecture in Microservices — Story-Driven Guide
 
-\`\`\`mermaid
-flowchart LR
-Config["Config Server"] -->|serves config| ServiceA["Service A"]
-Config --> ServiceB["Service B"]
-Eureka["Service Registry (Eureka)"] --> ServiceA
-Eureka --> ServiceB
-Gateway["API Gateway"] --> Eureka
-Gateway --> Clients["Clients"]
-ServiceA --> CircuitBreaker["Resilience4j CircuitBreaker"]
-ServiceB --> CircuitBreaker
-ServiceA -->|publishes| Bus["Spring Cloud Bus"]
-ServiceB --> Bus
+## 👥 Main Participants & Their Roles
+
+| Participant                 | Role                                                               |
+|-----------------------------|--------------------------------------------------------------------|
+| Client App                  | Initiates requests to the system                                   |
+| Spring Cloud Gateway        | Central entry point: routing, filtering, authentication            |
+| Config Server               | Externalizes and centralizes application configuration             |
+| Service Registry (Eureka)   | Maintains dynamic list of service instances for discovery          |
+| API Consumers (Feign, Rest) | Clients with built-in load balancing (Ribbon / Spring LoadBalancer)|
+| Microservices               | Business domain services, each with its own data store and logic   |
+| Circuit Breaker             | Fails fast on unhealthy instances and provides fallback           |
+| Distributed Tracing         | Tracks and correlates requests across services (Sleuth + Zipkin)   |
+| Message Broker              | Enables asynchronous communication (RabbitMQ / Kafka)              |
+| Monitoring & Logging        | Actuator, Prometheus, Grafana for health metrics and logs          |
+
+---
+
+## 📖 Narrative
+
+Imagine **Cloud City**, a bustling metropolis of tiny shops (microservices). Travellers (requests) arrive at the **Grand Gateway**, where guards check their credentials and direct them to the right district. To remember every shop’s address, there’s a **Registry Hall** that keeps the map up to date. Each shop consults the **Config Library** for its custom rules and can call on helpers (Circuit Breakers) when lanes get congested. Observers (Tracing & Monitoring) watch every step, ensuring harmony across the city.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                        | Detail                                                                       |
+|-----------------------------|------------------------------------------------------------------------------|
+| 🔍 Service Discoverability  | New instances automatically register and deregister without hard-coding URLs |
+| 🛠️ Centralized Config       | Change properties at runtime for all environments from one Config Server     |
+| 🚦 Load Balancing           | Distribute client calls evenly across healthy instances                     |
+| 🛡️ Fault Tolerance          | Short-circuit failing calls, provide fallback responses                      |
+| 📊 Observability            | Trace, metric-collect, and log every request flow throughout services        |
+| 🔐 Security                 | Enforce authentication and SSL/TLS at the gateway                           |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+Client App
+│
+▼
+Spring Cloud Gateway ──▶ Config Server
+│                    ▲
+│                    │
+▼                    │
+Service Registry ◀───────┘
+│
+▼
+┌──────────────┐     ┌──────────────┐
+│  Service A   │     │  Service B   │
+│ (Feign + CB) │     │ (Rest + MQ)  │
+└──────────────┘     └──────────────┘
+│                    │
+│                    ▼
+│               Message Broker
+│                    │
+▼                    ▼
+Distributed Tracing → Monitoring & Logging
 \`\`\`
 
-- Config Server centralizes configuration for all services.
-- Service Registry (Eureka/Consul) enables dynamic discovery.
-- API Gateway (Spring Cloud Gateway/Zuul) routes requests and applies filters.
-- Circuit breakers, retries, and rate limiters provided via Resilience4j.
-- Spring Cloud Bus propagates config changes over a message broker (RabbitMQ/Kafka).
+---
 
-\`\`\`java
-// Config Server
-@SpringBootApplication
-@EnableConfigServer
-public class ConfigServiceApplication { }
+## 🔄 Core Patterns & Pitfalls
 
-// Eureka Client & Config Client
-@SpringBootApplication
-@EnableEurekaClient
-@EnableConfigClient
-public class ServiceAApplication {
-public static void main(String[] args) {
-SpringApplication.run(ServiceAApplication.class, args);
-}
-}
+| Pattern                | Problem Solved                                  | What to Verify                              | Fix                                                         |
+|------------------------|-------------------------------------------------|---------------------------------------------|-------------------------------------------------------------|
+| Config Server          | Hard-coded or inconsistent configuration        | Refresh scope, security of config data      | Enable \`spring.cloud.config.refresh\`, encrypt sensitive keys |
+| Service Registry       | Static endpoints causing tight coupling         | Health checks, TTL on registrations         | Use Eureka with heartbeats and metadata                     |
+| Client-Side Load-Balancing | Overloading single instance                    | Version skew, sticky sessions              | Leverage Ribbon or Spring LoadBalancer with metadata rules  |
+| Circuit Breaker        | Cascading failures across services              | Threshold too low or high                   | Tune failure rate, sliding window size, fallback logic      |
+| Distributed Tracing    | Blind spots in request flow                     | High overhead with full sampling            | Apply sampling strategy, tag important spans               |
+| Messaging              | Tight sync coupling leading to latency          | Message ordering, duplicates                  | Use ack, dead-letter queues, idempotent consumers           |
 
-// API Gateway routes definition
-@Bean
-public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
-return builder.routes()
-.route("service-a", r -> r.path("/a/**").uri("lb://SERVICE-A"))
-.route("service-b", r -> r.path("/b/**").uri("lb://SERVICE-B"))
-.build();
-}
-\`\`\`
-`
-},
-{
-question: 'What are the core microservices design patterns?',
-answerMd: `
-### Core Microservices Design Patterns
+---
 
-\`\`\`mermaid
-flowchart LR
-Client --> Gateway["API Gateway"]
-Gateway --> Service1["Service 1"]
-Gateway --> Service2["Service 2"]
-Service1 --> DB1["Database 1"]
-Service2 --> DB2["Database 2"]
-SagaOrch["Saga Orchestrator"] --> Service1
-SagaOrch --> Service2
-\`\`\`
+## 🛠️ Step-by-Step Implementation Guide
 
-| Pattern            | Purpose                                              |
-|--------------------|------------------------------------------------------|
-| Service Discovery  | Dynamic registration and lookup of service instances |
-| API Gateway        | Single entry point for routing, auth, and rate limit|
-| Circuit Breaker    | Fail fast and prevent cascading failures             |
-| Bulkhead           | Isolate resources to limit failure blast radius      |
-| Retry & Fallback   | Automatic retries and graceful degradation           |
-| Saga               | Manage distributed transactions                      |
-| CQRS               | Separate read/write models for scalability           |
-| Sidecar            | Package auxiliary features (logging, proxy) per service |
+1. **Bootstrap the Config Server**
+- Create a Spring Boot app with \`@EnableConfigServer\`.
+- Point \`spring.cloud.config.server.git.uri\` to your repo.
+- Secure endpoints and enable auto-refresh.
 
-\`\`\`java
-// Example: Saga orchestrator using Spring State Machine
-@Configuration
-public class OrderSagaConfig {
-@Bean
-public StateMachine<OrderState, OrderEvent> orderSagaMachine(
-StateMachineFactory<OrderState, OrderEvent> factory) {
-return factory.getStateMachine("order-saga");
-}
-}
-\`\`\`
-`
-},
-{
-question: 'How do you implement rate limiting, retry, and fallback mechanisms?',
-answerMd: `
-### Rate Limiting, Retry & Fallback
+2. **Deploy the Eureka Service Registry**
+- Annotate with \`@EnableEurekaServer\`.
+- Configure health-check URLs and instance eviction.
+- Protect with basic auth or token.
 
-\`\`\`mermaid
-flowchart LR
-Client -->|HTTP request| Gateway
-Gateway -->|RateLimiter| Service
-Service -->|Retry| ExternalAPI
-ExternalAPI -->|failure| CircuitBreaker
-CircuitBreaker --> Fallback["Fallback Method"]
-\`\`\`
+3. **Set Up Spring Cloud Gateway**
+- Add routes in \`application.yml\`.
+- Apply global filters (auth, rate limit, retry).
+- Integrate with Eureka for dynamic routing.
 
+4. **Build Your Microservices**
+- Include \`spring-cloud-starter-netflix-eureka-client\`.
+- Annotate with \`@EnableDiscoveryClient\`.
+- Use Feign clients or RestTemplate with LoadBalancer.
+
+5. **Integrate Circuit Breakers**
+- Add \`spring-cloud-starter-circuitbreaker-resilience4j\`.
+- Annotate service methods with \`@CircuitBreaker\` and \`@Retry\`.
+- Define fallback handlers for degraded responses.
+
+6. **Implement Distributed Tracing**
+- Add \`spring-cloud-starter-sleuth\` and Zipkin server.
+- Correlate spans across Gateway and services.
+- Visualize traces in Zipkin UI.
+
+7. **Incorporate Asynchronous Messaging**
+- Add RabbitMQ/Kafka starters.
+- Define producers and consumers with idempotent handling.
+- Monitor queue depth and DLQs.
+
+8. **Secure, Monitor & Scale**
+- Expose Actuator endpoints and collect metrics in Prometheus.
+- Dashboard in Grafana; set alerts on anomalies.
+- Horizontally scale services; Kubernetes is a natural fit.
+
+---
+
+## 💻 Code Examples
+
+### 1. Config Server (application.yml)
 \`\`\`yaml
-# application.yml
+server:
+port: 8888
+spring:
+cloud:
+config:
+server:
+git:
+uri: https://github.com/your-org/config-repo
+          search-paths: '{application}'
+heartbeat:
+enabled: true
+management:
+endpoints:
+web:
+exposure:
+include: refresh, health
+\`\`\`
+
+### 2. Eureka Client & Feign (pom.xml + annotations)
+\`\`\`xml
+<dependency>
+<groupId>org.springframework.cloud</groupId>
+<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+</dependency>
+<dependency>
+<groupId>org.springframework.cloud</groupId>
+<artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
+\`\`\`
+
+\`\`\`java
+@SpringBootApplication
+@EnableDiscoveryClient
+@EnableFeignClients
+public class OrderServiceApp { }
+
+@FeignClient(name = "inventory-service")
+public interface InventoryClient {
+@GetMapping("/inventory/{sku}")
+Inventory checkStock(@PathVariable String sku);
+}
+\`\`\`
+
+### 3. Circuit Breaker & Retry
+\`\`\`yaml
 resilience4j:
-retry:
-instances:
-backendService:
-maxAttempts: 3
-waitDuration: 500ms
-ratelimiter:
-instances:
-gatewayLimit:
-limitForPeriod: 10
-limitRefreshPeriod: 1s
 circuitbreaker:
 instances:
-backendService:
-slidingWindowSize: 5
-failureRateThreshold: 50
+paymentCB:
+sliding-window-size: 20
+failure-rate-threshold: 50
+wait-duration-in-open-state: 30s
+retry:
+instances:
+paymentRetry:
+max-attempts: 3
+wait-duration: 1s
 \`\`\`
 
 \`\`\`java
 @Service
-public class MyService {
-@Retry(name = "backendService")
-@RateLimiter(name = "gatewayLimit")
-@CircuitBreaker(name = "backendService", fallbackMethod = "fallback")
-public String callExternalApi() {
-return restTemplate.getForObject("http://external/api", String.class);
+public class PaymentService {
+
+@CircuitBreaker(name = "paymentCB", fallbackMethod = "fallbackPay")
+@Retry(name = "paymentRetry")
+public Receipt processPayment(PaymentRequest req) {
+return restTemplate.postForObject("/payments", req, Receipt.class);
 }
 
-public String fallback(Exception ex) {
-return "Default fallback response";
+public Receipt fallbackPay(PaymentRequest req, Throwable t) {
+return Receipt.builder()
+.status("PENDING")
+.message("Service unavailable, payment queued")
+.build();
 }
 }
 \`\`\`
 
-- RateLimiter controls request throughput to protect downstream services.
-- Retry automatically re-attempts failed calls before throwing an error.
-- CircuitBreaker opens on repeated failures, routing calls to a fallback method.
+---
+
+## 🚀 Beyond the Basics
+
+- Dynamic routing and rate limiting with custom Gateway filters.
+- Config Server Git hooks for automated refresh on push.
+- Multi-region Eureka federations for global failover.
+- Canary and blue-green deployments via metadata tagging.
+- Service Mesh (Istio / Linkerd) for advanced traffic control.
+- Auto-scaling based on custom Actuator metrics.
+- Chaos engineering: inject latency/faults and verify resilience.
+
+`
+},
+{
+question: 'What are core microservices design patterns',
+answerMd: `
+# 🚧 Core Microservices Design Patterns — Story-Driven Guide
+
+## 👥 Main Participants & Their Roles
+
+| Participant                 | Role                                                          |
+|-----------------------------|---------------------------------------------------------------|
+| Client                      | Initiates HTTP/gRPC calls to your system                      |
+| API Gateway                 | Single entry for routing, auth, rate limiting                 |
+| Microservice                | Owns a single business capability and its private datastore   |
+| Service Registry & Discovery| Tracks service instances for dynamic lookups                  |
+| Resiliency Components       | Circuit Breakers, Bulkheads, Retries for fault isolation      |
+| Event Bus / Message Broker  | Supports async communication, sagas, and event sourcing       |
+| Saga Orchestrator           | Coordinates distributed transactions when needed              |
+
+---
+
+## 📖 Narrative
+
+In the kingdom of **Microville**, each business capability lives in its own cottage, speaking only its own language and owning its own garden of data. You’re the **Architect-King**, crafting pathways, messenger ravens, and safety nets so the villagers can cooperate without collapsing when storms hit.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal           | Detail                                                                 |
+|----------------|------------------------------------------------------------------------|
+| ⚡ Low latency  | Keep inter-service calls under 100 ms p95                              |
+| 📈 Scalability | Scale each service independently based on demand                       |
+| 💪 Resilience   | Contain failures—no single service can topple the entire system        |
+| 🔄 Consistency | Maintain eventual consistency across distributed data changes          |
+| 🔐 Security     | Authenticate at the edge, authorize per service, encrypt in transit   |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+Client
+│
+▼
+API Gateway ──▶ Auth Service
+│
+├──▶ Order Service ──▶ Circuit Breaker ──▶ Payment Service
+│                         │
+│                         └──▶ Bulkhead / Retry
+│
+└──▶ Inventory Service ──▶ Event Bus ──▶ Saga Orchestrator
+│
+└──▶ Shipping Service
+\`\`\`
+
+---
+
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern                          | Problem Solved                                              | What to Verify                                                | Fix                                                             |
+|----------------------------------|-------------------------------------------------------------|---------------------------------------------------------------|-----------------------------------------------------------------|
+| API Gateway                      | Centralizes routing, auth, rate-limiting                    | Single point of failure                                       | Run multiple gateway instances behind a load balancer           |
+| Database per Service             | Avoids shared-DB coupling                                   | Accidental cross-service joins                                | Enforce data ownership; use APIs/events for cross-service data |
+| Service Discovery                | Locates running service instances dynamically               | Hard-coded endpoints                                          | Use Consul/Eureka or DNS-based discovery                        |
+| Circuit Breaker                  | Prevents cascading failures                                 | Wrong timeout thresholds                                      | Tune thresholds; implement fallback logic                       |
+| Bulkhead                         | Isolates failures to a partition                            | Shared thread pools or connection pools                       | Allocate dedicated pools per service or feature                 |
+| Retry                            | Handles transient faults                                    | Retries blocking resources without backoff/jitter             | Add exponential backoff and random jitter                       |
+| Saga (Choreography/Orchestration)| Coordinates long-running transactions                       | Orphaned or out-of-order events                               | Define compensating actions; pick choreography vs orchestration|
+| Event Sourcing                   | Captures state changes as immutable events                  | Event schema evolution                                        | Implement versioned events; migration strategies                |
+| Strangler                         | Incrementally replaces a monolith                           | Dual writes causing data drift                                | Phase migration; route traffic gradually                        |
+| Externalized Configuration       | Centralizes service settings                                | Hard-coded configs                                            | Use Config Server or Vault for dynamic configurations           |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide
+
+1. Define service boundaries by mapping each business capability to one microservice.
+2. Select a private datastore per service (Database per Service) to ensure data encapsulation.
+3. Deploy an API Gateway to handle routing, authentication, and cross-cutting concerns.
+4. Implement service discovery with a registry (Consul, Eureka) or DNS for dynamic endpoint resolution.
+5. Wrap external calls in circuit breakers; partition resources with bulkheads; add retries with backoff.
+6. Choose a saga pattern for distributed workflows: choreography for loose coupling; orchestration for clarity.
+7. Externalize configuration and secrets using a config server or vault; enable hot reload.
+8. Build observability: instrument tracing (OpenTelemetry), centralize logs, and emit metrics.
+
+---
+
+## 🚀 Beyond the Basics
+
+- Sidecar/Ambassador patterns to offload networking, security, and logging.
+- Anti-Corruption Layer when integrating legacy systems.
+- CQRS + Cache-Aside for high-throughput read scenarios.
+- Feature Flags & Canary Releases for safe rollouts.
+- API Versioning & Backward Compatibility strategies.
+- Chaos Engineering to proactively test failure modes.
+`
+},
+{
+question: 'How do you implement rate limiting, retry and fallback mechanisms?',
+answerMd: `
+# 🛡️ Rate Limiting, Retries & Fallbacks — Story-Driven Guide
+
+## 👥 Main Participants & Their Roles
+
+| Participant           | Role                                                         |
+|-----------------------|--------------------------------------------------------------|
+| Client                | Makes API calls to your services                             |
+| API Gateway           | Enforces global rate limits and routes requests              |
+| Rate Limiter          | Throttles calls using token-bucket or leaky-bucket           |
+| Microservice          | Business logic, idempotent endpoints                         |
+| Resiliency Components | Retry logic, Circuit Breakers, Fallback handlers, Timeouts   |
+| Cache / Redis         | Holds counters/tokens for distributed limits                 |
+| Monitoring & Alerts   | Tracks limiter hits, retries, circuit-breaker events         |
+
+---
+
+## 📖 Narrative
+
+In **Microville**, the town gates (APIs) get swarmed at rush hour. You’re the **Gatekeeper**, issuing tickets (tokens) to control flow. When roads jam (services slow), you tell travellers to try again later (retries) and guide them to safe rest stops (fallbacks) so the town never grinds to a halt.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                    | Detail                                                              |
+|-------------------------|---------------------------------------------------------------------|
+| 🚦 Smooth Traffic       | Prevent API overload by throttling request rate                     |
+| 🔄 Robustness           | Retry transient failures with backoff and jitter                    |
+| 🛡️ Graceful Degradation | Offer safe defaults or cached data when downstream is unavailable   |
+| 📊 Observability        | Emit metrics on rate hits, retry attempts, and circuit states       |
+| 🔐 Fairness             | Enforce per-client or per-endpoint quotas to prevent abuse          |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+Client
+│
+▼
+API Gateway ──▶ Rate Limiter (Redis / In-Memory)
+│
+▼
+Microservice ──▶ Business Logic
+│
+└──▶ Resiliency Components
+├─ Retry (Exp. Backoff + Jitter)
+├─ Circuit Breaker ──▶ Fallback Handler
+└─ Timeout
+\`\`\`
+
+---
+
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern            | Problem Solved                                            | What to Verify                                         | Fix                                                        |
+|--------------------|-----------------------------------------------------------|--------------------------------------------------------|------------------------------------------------------------|
+| Rate Limiter       | Controls request spikes, prevents overload                | Clock skew, burst size, per-client vs global quotas    | Use distributed counters; align windows; tune bucket size  |
+| Retry              | Recovers from transient errors                            | Idempotency, retry storms, resource blocking           | Use exponential backoff; add random jitter; cap attempts   |
+| Circuit Breaker    | Stops cascading failures by short-circuiting calls         | Thresholds too sensitive or too lenient                | Tune error/slow thresholds; adjust reset timeout           |
+| Timeout            | Prevents hanging calls from tying up threads              | Missing or too-long deadlines                          | Set per-call timeouts on clients and servers               |
+| Fallback Handler   | Provides default or cached response when service fails     | Stale or incorrect fallback data                       | Define clear fallback logic; use fresh cache or defaults   |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide
+
+1. Implement a distributed rate limiter:
+- Choose an algorithm (fixed window, sliding window, token bucket).
+- Use Redis atomic INCR/EXPIRE or a library like Bucket4j.
+- Enforce at API Gateway and optionally at each service.
+
+2. Build retry logic:
+- Use Resilience4j, Spring Retry, or Polly.
+- Configure exponential backoff plus random jitter.
+- Ensure idempotent endpoints and cap max attempts.
+
+3. Add timeouts:
+- Define per-call timeouts for HTTP, DB, and downstream services.
+- Fail fast to free resources and trigger fallback logic.
+
+4. Configure circuit breakers:
+- Use Resilience4j, Hystrix, or a service mesh (Envoy).
+- Set sliding window, failure rate threshold, and wait duration.
+- On OPEN state, short-circuit calls and invoke fallback.
+
+5. Define fallback mechanisms:
+- Return cached or default data for read operations.
+- Queue or defer writes gracefully.
+- Log fallback events and emit metrics.
+
+6. Monitor and tune:
+- Collect metrics: limiter hits, retries, circuit-breaker states.
+- Visualize in dashboards; set alerts on anomalies.
+- Continuously adjust limits, backoff, and thresholds.
+
+---
+
+## 💻 Code Examples
+
+### 1. Resilience4j Configuration (application.yml)
+\`\`\`yaml
+resilience4j:
+retry:
+instances:
+externalApiRetry:
+max-attempts: 3
+wait-duration: 500ms
+retry-exceptions:
+- org.springframework.web.client.ResourceAccessException
+circuitbreaker:
+instances:
+externalApiCB:
+register-health-indicator: true
+sliding-window-size: 10
+failure-rate-threshold: 50
+wait-duration-in-open-state: 60s
+\`\`\`
+
+### 2. Java Service with Annotations
+\`\`\`java
+@Service
+public class ExternalApiService {
+
+@Autowired
+private RestTemplate restTemplate;
+
+@Retry(name = "externalApiRetry", fallbackMethod = "onRetryFailure")
+@CircuitBreaker(name = "externalApiCB", fallbackMethod = "onCircuitOpen")
+public String fetchData() {
+return restTemplate.getForObject("https://api.external.com/data", String.class);
+}
+
+// Called after retries are exhausted
+  public String onRetryFailure(Exception ex) {
+return "default-data-after-retry";
+}
+
+// Called when circuit breaker is open
+  public String onCircuitOpen(CallNotPermittedException ex) {
+return "default-data-from-circuit-breaker";
+}
+}
+\`\`\`
+
+### 3. Rate Limiting with Bucket4j in Spring Interceptor
+\`\`\`java
+@Component
+public class RateLimitInterceptor implements HandlerInterceptor {
+private final Bucket bucket;
+
+public RateLimitInterceptor() {
+Bandwidth limit = Bandwidth.simple(5, Duration.ofSeconds(1));
+this.bucket = Bucket.builder()
+.addLimit(limit)
+.build();
+}
+
+@Override
+public boolean preHandle(HttpServletRequest req,
+HttpServletResponse res,
+Object handler) throws IOException {
+if (bucket.tryConsume(1)) {
+return true;
+}
+res.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+res.getWriter().write("Rate limit exceeded");
+return false;
+}
+}
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- Stateful vs stateless rate limiting (Redis vs in-memory).
+- Dynamic per-user or per-tier limits loaded from configuration.
+- Distributed circuit-breakers sharing state via a central store.
+- Retry with idempotency keys for safe side-effects.
+- Adaptive backoff based on real-time service health.
+- Chaos tests: inject latency or forced open circuits to validate resilience.
 `
 }
 ]
@@ -5938,7 +7051,863 @@ return svc.resolve(alias)
 `
 }
 ]
-},
+},{
+  category: 'systemDesign',
+  title: 'Designing a Large-Scale E-Commerce Platform (Amazon/Flipkart) — Story + Patterns + Code',
+  subItems: [
+    {
+      question: 'How would you design Amazon.com/Flipkart?',
+      answerMd: `
+# 🛒 Designing Amazon.com/Flipkart — Story-Driven Guide
+
+## 👥 Main Participants & Their Roles
+
+| Participant             | Role                                                               |
+|-------------------------|--------------------------------------------------------------------|
+| User / Client App       | Browses products, adds to cart, places orders                      |
+| DNS & CDN               | Routes domain to nearest edge cache for static assets              |
+| Load Balancer           | Distributes inbound traffic across service instances               |
+| API Gateway             | Central entry point: routing, auth, throttling                     |
+| Service Discovery       | Enables services to register and locate each other                 |
+| Front-end Service       | Renders UI, aggregates APIs                                       |
+| Product Catalog Service | CRUD on product metadata, indexing for search                      |
+| Search Service          | Full-text and faceted search (e.g., Elasticsearch)                 |
+| Shopping Cart Service   | Manages user carts, stores transient data in Redis                 |
+| Order Service           | Orchestrates order placement, idempotency, saga coordination       |
+| Payment Service         | Integrates with payment gateways, handles retries & fallbacks      |
+| Inventory Service       | Tracks stock levels, reservations, publishes updates via messaging |
+| Notification Service    | Sends emails/SMS for order confirmations and alerts                |
+| Message Broker          | Asynchronous bus for events (Kafka / RabbitMQ)                     |
+| Relational Database     | ACID for transactions (orders, payments)                           |
+| NoSQL / Search Index    | High-throughput reads (catalog, sessions)                           |
+| Monitoring & Logging    | Metrics, logs, distributed tracing (Prometheus, Grafana, Jaeger)   |
+
+---
+
+## 📖 Narrative
+
+Imagine **Marketopolis**, a sprawling bazaar where millions of shoppers flood the gates every second. You play the role of the **Bazaar Architect**, carving lanes (services) for vendors (catalog, search, cart) and couriers (order, payment) to flow smoothly. When too many shoppers pile in, your **Load Balancer Guards** keep queues short. Orders are processed handshake-style through an **Event Bridge** (messaging), ensuring no purchase is lost. Observers (tracing & metrics) watch every stall, ready to raise the alarm at the first hiccup.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                          | Detail                                                            |
+|-------------------------------|-------------------------------------------------------------------|
+| ⚡ Scalability                | Auto-scale front-end, product catalog, search, and order services |
+| 🔄 High Availability          | Multi-AZ deployment, health checks, circuit breakers              |
+| 🎯 Consistent Shopping Cart   | Use Redis + persistence to prevent data loss                      |
+| 🛡️ Data Integrity             | ACID for order placement, idempotent APIs                         |
+| 📩 Loose Coupling             | Asynchronous flows via message broker for inventory & notifications |
+| 🔍 Fast Search & Discovery    | Real-time indexing in Elasticsearch                               |
+| 📊 Observability              | End-to-end tracing, metrics, alerts on anomalies                   |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+                     ┌────────────┐
+      Internet CDN → │    DNS     │
+                     └────┬───────┘
+                          │
+                   ┌──────▼──────┐
+                   │ Load Balancer│
+                   └──────┬──────┘
+                          │
+       ┌──────────────────▼───────────────────┐
+       │           API Gateway                │
+       └┬────────────────┬──────────────────┬─┘
+        │                │                  │
+  ┌─────▼─────┐    ┌─────▼─────┐      ┌─────▼─────┐
+  │CatalogSvc │    │SearchSvc  │      │CartSvc    │
+  └─────┬─────┘    └─────┬─────┘      └─────┬─────┘
+        │               │                 │
+        │               │                 ▼
+        │               │           ┌─────▼─────┐
+        │               │           │ Redis     │
+        │               │           │ (Cart)    │
+        │               │           └───────────┘
+        │               │                     
+        │               └─────┐               
+        │                     │               
+        │               ┌─────▼─────┐      
+        │               │Elasticsearch│      
+        │               └─────────────┘      
+        │                               
+        │                ┌───────────────┐
+        └────────────────► Order Service │
+                         ├───────────────┤
+                         │ InventorySvc  │
+                         └──────┬────────┘
+                                │
+                          ┌─────▼─────┐
+                          │ Message   │
+                          │ Broker    │
+                          └─────┬─────┘
+                                │
+                    ┌───────────▼───────────┐
+                    │ Payment, Notify, etc. │
+                    └───────────────────────┘
+\`\`\`
+
+---
+
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern                 | Problem Solved                                           | What to Verify                         | Fix / Best Practice                                     |
+|-------------------------|----------------------------------------------------------|----------------------------------------|---------------------------------------------------------|
+| API Gateway             | Centralized auth, routing, rate limiting                 | Single point of failure                | Deploy in pair; health checks; fail-open policies       |
+| Caching                 | Offload read traffic, accelerate product lookups          | Cache invalidation                     | Use short TTLs; publish invalidation events             |
+| CQRS & Event Sourcing   | Separate read/write load; audit trail of changes         | Event ordering, idempotency            | Partition topics; use deduplication logic               |
+| Sharding & Partitioning | Scale databases by key range                              | Hot partitions                         | Hash keys; monitor and rebalance shards                 |
+| Asynchronous Decoupling | Resilience under load, smooth peak processing            | Dead-letter queues, backpressure       | Configure DLQs; consumer concurrency limits             |
+| Circuit Breaker         | Fail fast on downstream issues                           | Too-sensitive thresholds               | Gradually tune failure rate and timeout                 |
+| Saga / Orchestration    | Long-running transactions across services                | Partial failures                       | Implement compensation logic; track saga state          |
+| Data Denormalization    | Fast composite reads (e.g., product + reviews)           | Stale data                             | Use change-data-capture; streaming updates              |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide
+
+1. **Foundation: Networking & Infra**  
+   - Provision VPC with public/private subnets, ALB/NLB, Route 53.  
+   - Deploy services on Kubernetes/ECS with auto-scaling groups.
+
+2. **Core Services**  
+   - **Catalog Service**: Spring Boot / Express; CRUD on products; persist in MySQL.  
+   - **Search Service**: Stream catalog updates to Elasticsearch via Logstash or Kafka Connect.
+
+3. **Shopping Cart**  
+   - Store cart in Redis with a TTL; persist snapshots to DynamoDB/MySQL for recovery.
+
+4. **Order Placement**  
+   - Expose idempotent REST endpoint; validate cart; begin saga; write to Order DB; publish \`OrderCreated\` event.
+
+5. **Inventory Management**  
+   - Consume \`OrderCreated\`; reserve stock in a transactional store; on failure, publish \`OrderFailed\`.
+
+6. **Payment Processing**  
+   - Listen to \`OrderReserved\`; call external gateway with retries + backoff; on success, publish \`PaymentConfirmed\`.
+
+7. **Sagas & Orchestration**  
+   - Use a lightweight orchestrator (AWS Step Functions / Camunda) or choreography via events.
+
+8. **Notifications**  
+   - Consume final events; send email/SMS; update order status.
+
+9. **Observability & Resilience**  
+   - Integrate OpenTelemetry, Prometheus, Grafana, Jaeger.  
+   - Configure alarms on error rates, queue depths, latency.
+
+10. **Performance Tuning & Scaling**  
+    - Enable auto-scale based on CPU, request rate, custom metrics.  
+    - Use read replicas, multi-AZ writes, caching layers.
+
+---
+
+## 💻 Code Examples
+
+### 1. Add Item to Cart (Node.js + Redis)
+\`\`\`javascript
+app.post('/cart/:userId/items', async (req, res) => {
+  const { userId } = req.params;
+  const { productId, qty } = req.body;
+  const key = \`cart:\${userId}\`;
+  // Redis hash: field = productId, value = qty
+  await redis.hincrby(key, productId, qty);
+  await redis.expire(key, 3600);
+  res.status(200).send({ message: 'Item added' });
+});
+\`\`\`
+
+### 2. Publish Order Event (Java + Kafka)
+\`\`\`java
+OrderCreated order = OrderCreated.builder()
+    .orderId(uuid).userId(userId).items(items).build();
+kafkaTemplate.send("orders", order.getOrderId(), order);
+\`\`\`
+
+### 3. Elasticsearch Indexing (Python + Kafka Consumer)
+\`\`\`python
+for msg in consumer:
+    doc = msg.value
+    es.index(index="products", id=doc["id"], body=doc)
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- Multi-region deployments with global DNS failover.  
+- Dynamic pricing engine driven by real-time analytics.  
+- Recommendation system powered by collaborative filtering.  
+- Feature flags and canary releases for safe rollout.  
+- GraphQL gateway for aggregated reads.  
+- Machine-learning inference at the edge for personalization.  
+- Chaos engineering: inject latency, fail primary databases, verify fallback.  
+- GDPR & PCI compliance: data encryption, tokenization, audit trails.  
+`
+    }
+  ]
+},{
+  category: 'systemDesign',
+  title: 'Designing Generative AI Systems — Story + Patterns + Code',
+  subItems: [
+    {
+      question: 'How would you design Generative AI Systems?',
+      answerMd: `
+# 🤖 Generative AI System Design — Story-Driven Guide
+
+## 👥 Main Participants & Their Roles
+
+| Participant               | Role                                                                  |
+|---------------------------|-----------------------------------------------------------------------|
+| Client / Frontend         | Sends user prompt and displays generated content                     |
+| API Gateway               | Authenticates, rate-limits, routes requests                           |
+| Orchestrator Service      | Coordinates pipeline: retrieval, inference, post-processing            |
+| Prompt Processor          | Sanitizes, templates, and augments user prompts                       |
+| Model Registry            | Stores model artifacts, metadata, versions                             |
+| Inference Service         | Loads LLMs (local or via managed API), runs forward passes            |
+| Retrieval Service         | Fetches relevant context via embeddings + vector store                |
+| Vector Store              | Performs similarity search over embeddings (e.g., Pinecone, FAISS)     |
+| Cache / Fallback Cache    | Caches recent prompts + responses to amortize costs                   |
+| Post-Processing Module    | Filters output: safety checks, formatting, token trimming             |
+| Logging & Monitoring      | Tracks usage, latency, errors, cost metrics                            |
+| Cost & Quota Manager      | Enforces budget limits and quota per user or tenant                   |
+
+---
+
+## 📖 Narrative
+
+In **AIropolis**, curious Citizens (users) approach the **Oracle Gateway** with a request. The **Master of Ceremonies** (Orchestrator) prepares their question, consults the **Archive** (vector store) for context, then summons the **Great Model** (LLM) to craft an answer. After a **Guardian** (post-processor) ensures safety and style, the finished scroll returns to the Citizen—all within a blink, backed by vigilant **Observers** (monitoring) and cost-watchers (quota manager).
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                         | Detail                                                              |
+|------------------------------|---------------------------------------------------------------------|
+| ⚡ Low Latency                | Optimize each stage for sub-second end-to-end response              |
+| 🎛️ Scalability               | Auto-scale retrieval and inference tiers based on concurrent load    |
+| 💲 Cost-Efficiency            | Cache frequent prompts, route to smaller models when possible       |
+| 🛡️ Safety & Guardrails       | Apply content filters and RLHF-informed policies                    |
+| 🔗 Contextual Coherence       | Retrieve and inject relevant context for factual consistency        |
+| 📊 Observability             | Emit metrics: token count, p99 latency, cost per request            |
+| 🔐 Multi-Tenant Isolation     | Enforce quotas, encrypt per-tenant data at rest and in motion       |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+User
+  │
+  ▼
+API Gateway ──▶ Auth / Rate Limit
+  │
+  ▼
+Orchestrator ──▶ Prompt Processor
+  │              │
+  │              ▼
+  │         Retrieval Service ──▶ Vector Store
+  │              │
+  │              ▼
+  │         Inference Service ──▶ Model Registry / LLM
+  │              │
+  │              ▼
+  │         Post-Processing
+  │              │
+  ▼              │
+Cache ◀──────────┘
+  │
+  ▼
+Logging & Monitoring → Dashboard / Alerts
+\`\`\`
+
+---
+
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern                 | Problem Solved                                | What to Verify                       | Fix / Best Practice                                     |
+|-------------------------|-----------------------------------------------|--------------------------------------|---------------------------------------------------------|
+| Retrieval-Augmented Gen | Prevent hallucinations by grounding LLM       | Context relevance, index freshness   | Vector embeddings + semantic filters; periodic reindex  |
+| Prompt Caching          | Reduce repeated inference costs               | Cache key collisions, TTLs           | Hash prompt + context; set eviction policies            |
+| Model Cascade           | Balance cost vs accuracy with multi-tier LLMs | Wrong model selection                | Route simple prompts to small LLM; escalate on failure  |
+| Safety Filters          | Block toxic or disallowed content             | Over-blocking, latency impact        | Lightweight classifiers pre- and post-inference         |
+| Autoscaling             | Handle sudden traffic spikes                  | Cold starts, resource exhaustion     | Warm pools; scale-to-zero for idle models               |
+| Cost Quota Enforcement  | Prevent runaway bills                         | Quota bypass by clients              | Embed usage metering in orchestrator; reject excess     |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide
+
+1. **Provision Core Infrastructure**  
+   - Deploy API Gateway, Orchestrator, and services in Kubernetes/ECS.  
+   - Configure autoscaling on CPU/GPU and queue depths.
+
+2. **Set Up Model Registry & Serving**  
+   - Store model binaries in an artifact repo (S3, MLflow).  
+   - Expose inference endpoints via Triton, TorchServe, or managed APIs.
+
+3. **Build Retrieval Layer**  
+   - Embed your knowledge base with OpenAI/HuggingFace embeddings.  
+   - Index vectors in Pinecone/FAISS; expose similarity search API.
+
+4. **Implement Orchestration Pipeline**  
+   - Ingest user prompt → sanitize → fetch context → call LLM → post-process.  
+   - Use a workflow engine (Temporal) or async workers (Celery).
+
+5. **Enable Caching & Fallbacks**  
+   - Cache prompt + context hash → response.  
+   - On inference failure or timeout, return cached or safe default.
+
+6. **Integrate Safety & Filters**  
+   - Run pre-filters on prompts; post-filters on outputs (toxicity, PII).  
+   - Log violations; optionally escalate to human review.
+
+7. **Monitor, Alert & Optimize**  
+   - Collect metrics: token usage, p95/p99 latency, error rates, cost.  
+   - Visualize in Grafana; set alerts on budget overshoot or high error spikes.
+
+8. **Iterate & A/B Test**  
+   - Experiment with prompt templates, context window sizes, model variants.  
+   - Track success metrics: user satisfaction, coherence, factual accuracy.
+
+---
+
+## 💻 Code Examples
+
+### 1. FastAPI Orchestrator (Python)
+\`\`\`python
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import httpx, redis
+
+app = FastAPI()
+cache = redis.Redis()
+
+class Prompt(BaseModel):
+    user_id: str
+    text: str
+
+@app.post("/generate")
+async def generate(p: Prompt):
+    key = f"cache:{hash(p.text)}"
+    if resp := cache.get(key):
+        return {"response": resp.decode()}
+    # 1. Retrieve context
+    ctx = await httpx.get("http://retrieval/api", json={"query": p.text})
+    # 2. Call LLM
+    llm = await httpx.post("http://inference/api", json={
+        "model": "gpt-4", "prompt": ctx.json() + p.text
+    })
+    out = llm.json()["text"]
+    # 3. Post-process & cache
+    safe = await httpx.post("http://filter/api", json={"text": out})
+    cache.set(key, safe.json()["text"], ex=3600)
+    return {"response": safe.json()["text"]}
+\`\`\`
+
+### 2. Embedding + Vector Search (Python)
+\`\`\`python
+from sentence_transformers import SentenceTransformer
+from pinecone import init, Index
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
+init(api_key="PINECONE_KEY", environment="us-west1-gcp")
+index = Index("knowledge")
+
+def retrieve(query):
+    emb = model.encode(query).tolist()
+    res = index.query(vector=emb, top_k=5, include_values=False)
+    return [m['id'] for m in res['matches']]
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- Multi-modal generation: mix text, image, audio models in one pipeline.  
+- Personalization: maintain user embeddings / memories for long-term context.  
+- Dynamic model routing based on real-time cost vs latency SLAs.  
+- Federated learning: update models with on-device or on-tenant data.  
+- Responsible AI: implement bias audits and differential privacy.  
+- Explainability: generate rationales or provenance for model outputs.  
+- Auto-ML pipelines: retrain models when data drift is detected.  
+`
+    }
+  ]
+},{
+  category: 'systemDesign',
+  title: 'Designing a Large-Scale Video Streaming Platform (YouTube/Netflix/Prime Video) — Story + Patterns + Code',
+  subItems: [
+    {
+      question: 'How would you design YouTube/Netflix/Prime Video?',
+      answerMd: `
+# 📺 Designing a Video Streaming Platform — Story-Driven Guide
+
+## 👥 Main Participants & Their Roles
+
+| Participant               | Role                                                         |
+|---------------------------|--------------------------------------------------------------|
+| Client App                | Initiates video uploads and playback requests                |
+| DNS & CDN                 | Routes clients to nearest edge for low-latency playback      |
+| Load Balancer             | Distributes traffic across API and streaming servers         |
+| API Gateway               | Handles authentication, authorization, and routing           |
+| Upload Service            | Accepts user video uploads and stores raw files              |
+| Transcoding Service       | Converts raw video into adaptive bitrate segments            |
+| Object Storage (S3/GCS)   | Stores raw uploads and encoded video segments                |
+| Metadata Service          | Manages video metadata, manifests, and thumbnails            |
+| Streaming Service         | Serves video segments via HTTP(S) using HLS/DASH protocols   |
+| Recommendation Service    | Provides personalized video suggestions                      |
+| Search Service            | Enables catalog search and discovery                         |
+| Analytics Service         | Collects playback metrics, QoS data, and user events         |
+| Monitoring & Logging      | Tracks system health, logs errors, and triggers alerts       |
+
+---
+
+## 📖 Narrative
+
+In **Streamopolis**, creators bring their videos to the grand **Upload Plaza**. The **Transcode Guild** masterfully slices and encodes each video into many resolutions. When viewers arrive, the **Edge Keepers** (CDN) serve the nearest copy for smooth playback. Meanwhile, the **Oracle of Recommendations** whispers new videos to each user, and the **Scribes of Analytics** record every play, pause, and buffer to optimize the experience.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                         | Detail                                                               |
+|------------------------------|----------------------------------------------------------------------|
+| ⚡ Low Latency Playback       | Edge caching and adaptive bitrate streaming for minimal buffering   |
+| 📈 Unlimited Scalability      | Auto-scale ingest, transcoding, and streaming tiers                  |
+| 🔄 High Availability          | Multi-region deployment, failover, and data replication              |
+| 🔒 Access Control & DRM       | Auth tokens, signed URLs, DRM license servers                        |
+| 🧠 Personalization            | Real-time recommendations based on user behavior                     |
+| 🔍 Fast Discovery             | Full-text search and faceted browsing over large catalogs            |
+| 📊 Observability             | End-to-end tracing, metrics, and alerting                            |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+User
+  │
+  ▼
+DNS ──▶ CDN Edge Cache ──▶ Client Playback
+
+Upload Flow:
+User │
+  ▼
+API Gateway ──▶ Upload Service ──▶ Object Storage (raw)
+                          │
+                          ▼
+               Transcoding Service ──▶ Object Storage (segments)
+                          │
+                          ▼
+               Metadata Service (manifests, thumbnails)
+
+Read Flow:
+User ──▶ DNS ──▶ CDN ──▶ Streaming Service ──▶ Object Storage
+
+Auxiliary Paths:
+Metadata / Recommendations / Search / Analytics
+\`\`\`
+
+---
+
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern                    | Problem Solved                                    | What to Verify                                | Fix / Best Practice                                    |
+|----------------------------|---------------------------------------------------|------------------------------------------------|--------------------------------------------------------|
+| CDN Caching                | Reduces origin load, lowers latency               | Cache invalidation on new uploads              | Use versioned URLs; short TTL for fresh content        |
+| Adaptive Bitrate Streaming | Delivers best quality under varying network conditions | Correct segment duration and codecs            | Encode multiple bitrates; adjust segment size (2–6s)   |
+| Microservices              | Isolates functionality and scales independently    | Cross-service communication & data consistency | Use gRPC/REST APIs; maintain idempotency and schema    |
+| Sharding & Partitioning    | Scales metadata and analytics stores              | Hot partitions, uneven key distribution        | Hash-based sharding; auto-rebalancing shards           |
+| Asynchronous Workflows     | Handles long-running transcoding and analytics    | Task retries and dead-letter handling          | Use message queues; track job status and retries      |
+| Token-Based Auth & DRM     | Secure video access and license enforcement       | Token expiration, leaked URLs                 | Signed URLs with expiration; integrate DRM license server |
+| Observability & Alerting   | Rapid detection of faults and performance issues  | Blind spots, incomplete metrics                | Instrument all services with traces, metrics, logs     |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide
+
+1. **Provision Infrastructure**  
+   - Set up multi-region VPC and Kubernetes/ECS clusters.  
+   - Deploy ALB/NLB in front of API and streaming services.
+
+2. **Implement Upload Service**  
+   - Use resumable uploads (tus protocol or multipart).  
+   - Store raw files in object storage with unique versioned keys.
+
+3. **Build Transcoding Pipeline**  
+   - Trigger jobs via message broker (Kafka/SQS).  
+   - Use FFmpeg or managed services (Elastic Transcoder, MediaConvert).  
+   - Output HLS/DASH segments and manifest files.
+
+4. **Store and Serve Content**  
+   - Store segments and manifests in object storage.  
+   - Configure CDN (CloudFront) with origin pointing to storage and streaming service.
+
+5. **Metadata and Search**  
+   - Persist video metadata in a NoSQL database (DynamoDB/Cassandra).  
+   - Index searchable fields in Elasticsearch/OpenSearch.
+
+6. **Streaming Service Logic**  
+   - Validate signed URLs or JWT tokens.  
+   - Serve manifest and segment URIs.  
+   - Implement range requests for fast seek.
+
+7. **Recommendation Engine**  
+   - Collect user events (views, likes, watch time).  
+   - Use collaborative filtering or graph-based algorithms.  
+   - Expose recommendations via a REST API.
+
+8. **Analytics & Monitoring**  
+   - Stream logs and events to Kafka/Kinesis.  
+   - Process with Spark/Flink for real-time dashboards.  
+   - Set up Prometheus + Grafana + Alertmanager.
+
+9. **Scale and Harden**  
+   - Auto-scale pods based on CPU, memory, and queue length.  
+   - Use chaos testing to validate failover.  
+   - Encrypt data at rest and in transit.
+
+---
+
+## 💻 Code Examples
+
+### 1. Signed URL Generation (Node.js)
+\`\`\`javascript
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3({ region: 'us-east-1' });
+
+function generateSignedUrl(key) {
+  return s3.getSignedUrl('getObject', {
+    Bucket: 'video-segments',
+    Key: key,
+    Expires: 3600
+  });
+}
+\`\`\`
+
+### 2. Transcoding with FFmpeg (Bash)
+\`\`\`bash
+ffmpeg -i input.mp4 \
+  -vf scale=-2:720 -c:v libx264 -b:v 1500k -g 48 -sc_threshold 0 \
+  -hls_time 4 -hls_playlist_type vod \
+  -master_pl_name master.m3u8 \
+  -hls_segment_filename '720p_%03d.ts' 720p.m3u8
+\`\`\`
+
+### 3. HLS Playback Endpoint (Java + Spring Boot)
+\`\`\`java
+@GetMapping("/videos/{id}/manifest")
+public ResponseEntity<Resource> getManifest(@PathVariable String id) {
+    String manifestKey = metadataService.getManifestKey(id);
+    URL url = s3Client.generatePresignedUrl(bucket, manifestKey, expiration);
+    return ResponseEntity.status(HttpStatus.FOUND)
+                         .location(url.toURI())
+                         .build();
+}
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- Live streaming with WebRTC or low-latency HLS/DASH.  
+- Per-title encoding optimization for cost-quality trade-offs.  
+- Server-side ad insertion (SSAI) and personalized ad stitching.  
+- DRM integration with Widevine, PlayReady, FairPlay.  
+- Multi-language subtitles and audio tracks.  
+- AI-driven thumbnails and content tagging.  
+- Edge compute for personalized storyboards.  
+- Compliance: GDPR, COPPA, and accessibility (closed captions).  
+`
+    }
+  ]
+},{
+  category: 'kubernetes',
+  title: 'Understanding Kubernetes Key Concepts — Story + Patterns + Code',
+  subItems: [
+    {
+      question: 'What are Kubernetes key concepts in minute detail from an understanding perspective?',
+      answerMd: `
+# 🐳 Kubernetes Key Concepts in Minute Detail — Story-Driven Guide
+
+## 👥 Main Participants & Their Roles
+
+| Participant                      | Role                                                                                 |
+|----------------------------------|--------------------------------------------------------------------------------------|
+| Cluster                          | Logical group of nodes managed by the control plane                                  |
+| Control Plane                    | Coordinates the cluster: API Server, etcd, Controller Manager, Scheduler             |
+| kube-apiserver                   | Exposes the Kubernetes API                                                          |
+| etcd                             | Consistent key–value store for cluster state                                        |
+| kube-scheduler                   | Assigns Pods to Nodes based on resource constraints and policies                     |
+| kube-controller-manager          | Runs controllers to reconcile desired and actual cluster state                       |
+| Node (Worker)                    | Executes Pods via kubelet and container runtime                                      |
+| kubelet                          | Agent on each node ensuring containers are running                                   |
+| Container Runtime                | Docker, containerd, or CRI-O that runs containers                                    |
+| Pod                              | Smallest deployable unit: one or more co-located containers                          |
+| Deployment                       | Declarative controller for managing ReplicaSets and Pods                             |
+| ReplicaSet                       | Ensures a specified number of pod replicas are running                               |
+| Service                          | Stable network endpoint that load balances traffic to Pods                           |
+| Ingress                          | Manages external HTTP/S access to Services with routing rules                        |
+| ConfigMap & Secret               | Stores non-sensitive and sensitive configuration data respectively                   |
+| Volume & PersistentVolumeClaim   | Abstracts storage for Pods, decoupling lifecycle of storage from Pods                |
+| Namespace                        | Virtual cluster partition to isolate resources and workloads                         |
+| Label & Selector                 | Key-value pairs to organize and select Kubernetes objects                            |
+| StatefulSet                      | Controller for stateful applications, providing stable identities and storage        |
+| DaemonSet                        | Ensures a copy of a Pod runs on all (or selected) Nodes                              |
+| Job & CronJob                    | Controllers for one-time or scheduled batch tasks                                    |
+
+---
+
+## 📖 Narrative
+
+In **Kube City**, you, the **Cluster Architect**, draft a **Blueprint** (YAML manifest) that describes your ideal world. The **Mayor** (kube-apiserver) accepts your blueprint and stores it in the **Charter Hall** (etcd). The **Scheduler** then assigns **Citizens** (Pods) to **Districts** (Nodes) based on resources and policies. If reality drifts from your blueprint, **Controllers** spring into action to restore balance. Developers interact through the **Town Gate** (kubectl), weaving together networking (Services, Ingress), storage (Volumes), and configuration (ConfigMaps, Secrets).
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                   | Detail                                                                 |
+|------------------------|------------------------------------------------------------------------|
+| Declarative Management | Describe desired state; Kubernetes continuously reconciles actual state |
+| Self-healing           | Automatically restart, replace, or reschedule failed Pods              |
+| Scalability            | Scale workloads horizontally with ease                                 |
+| Abstraction            | Abstract compute, storage, and networking primitives                   |
+| Portability            | Consistent behavior across cloud and on-prem environments              |
+| Resource Isolation     | Enforce boundaries with Namespaces, NetworkPolicies, and Quotas        |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+             +------------+
+             |  kubectl   |
+             +-----+------+
+                   |
+                   v
+         +---------+-----------+
+         |     API Server      |
+         +---+---+----+---+----+
+             |   |    |   |
+   +---------+   |    |   +-----------+
+   |             |    |               |
+   v             v    v               v
+Scheduler   Controller  Manager     etcd
+                  |
+        +---------+---------+
+        |   Cluster Network |
+        +---------+---------+
+                  |
+     +------------+------------+
+     |            |            |
+   Node A       Node B       Node C
+   +--------+   +--------+   +--------+
+   | kubelet|   | kubelet|   | kubelet|
+   +---+----+   +---+----+   +---+----+
+       |            |            |
+   +---+---+    +---+---+    +---+---+
+   | Pod(s) |    | Pod(s) |    | Pod(s) |
+   +-------+    +-------+    +-------+
+\`\`\`
+
+---
+
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern            | Problem Solved                                  | What to Verify                             | Fix / Best Practice                              |
+|--------------------|-------------------------------------------------|--------------------------------------------|--------------------------------------------------|
+| Declarative Config | Prevents undocumented changes and drift         | Difference between desired and actual state| Apply GitOps; version manifests in Git           |
+| Health Checks      | Detects unhealthy containers before routing     | Lax or missing readiness/liveness probes   | Define probes with correct endpoints and timings |
+| Autoscaling        | Manually scaling is error-prone and slow        | Improper metrics or thresholds             | Use HPA/VPA based on realistic CPU/memory metrics |
+| Namespace Quotas   | No isolation across teams                       | Unlimited resource consumption             | Set ResourceQuota and LimitRange per namespace   |
+| Network Policies   | Unrestricted Pod-to-Pod communication           | Overly permissive allow rules              | Define strict ingress/egress rules by labels     |
+| PVC Binding        | Pods stuck in pending state waiting for storage | Incorrect StorageClass or access modes     | Use dynamic provisioning or pre-provision PVs     |
+| Ingress TLS        | Unsecured external traffic                      | Manual certificate rotation                | Automate with cert-manager and ACME              |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide
+
+1. Bootstrap the Cluster  
+   - Use managed (EKS/GKE/AKS) or kubeadm for self-managed clusters.  
+   - Ensure etcd is highly available with backups.
+
+2. Create Namespaces & RBAC  
+   - \`kubectl create namespace dev\`.  
+   - Define Roles and RoleBindings for least-privilege access.
+
+3. Deploy Applications Declaratively  
+   - Write Deployment YAML with image, replicas, and resource requests/limits.  
+   - Apply: \`kubectl apply -f deployment.yaml\`.
+
+4. Expose Services & Ingress  
+   - Define a Service (ClusterIP/NodePort/LoadBalancer).  
+   - Configure Ingress with HTTP/S rules and TLS certificates.
+
+5. Manage Config & Secrets  
+   - Create ConfigMaps and Secrets:  
+     \`kubectl apply -f configmap.yaml\`, \`secret.yaml\`.  
+   - Mount as environment variables or volumes.
+
+6. Attach Persistent Storage  
+   - Define PersistentVolume and PersistentVolumeClaim.  
+   - Mount PVC in Pod spec for stateful workloads.
+
+7. Enable Autoscaling & Monitoring  
+   - Configure HPA:  
+     \`kubectl autoscale deployment web --cpu-percent=50 --min=2 --max=10\`.  
+   - Instrument Prometheus, Grafana, and Alertmanager.
+
+8. Secure & Harden  
+   - Apply NetworkPolicies per namespace.  
+   - Enforce PodSecurityPolicies (or OPA Gatekeeper).  
+   - Enable audit logs and enforce RBAC policies.
+
+9. Adopt Continuous Delivery  
+   - Use GitOps tools like Argo CD or Flux.  
+   - Validate manifests with kubeval and kube-linter.
+
+---
+
+## 💻 Code Examples
+
+### 1. Deployment
+\`\`\`yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+\`\`\`
+
+### 2. Service & Ingress
+\`\`\`yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: web
+  ports:
+    - port: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+spec:
+  rules:
+    - host: example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web-svc
+                port:
+                  number: 80
+\`\`\`
+
+### 3. ConfigMap & Secret
+\`\`\`yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  LOG_LEVEL: "debug"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-credentials
+type: Opaque
+stringData:
+  username: admin
+  password: s3cr3t
+\`\`\`
+
+### 4. PersistentVolume & Claim
+\`\`\`yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: data-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- Extend Kubernetes with Custom Resource Definitions (CRDs) and Operators.  
+- Deploy a Service Mesh (Istio or Linkerd) for advanced traffic control and telemetry.  
+- Implement Cluster Federation for multi-cluster strategies.  
+- Use PodDisruptionBudgets and PodTopologySpreadConstraints for reliability.  
+- Perform Blue/Green and Canary deployments with Argo Rollouts or Flagger.  
+- Optimize resource usage with Cluster Autoscaler and Vertical Pod Autoscaler.  
+- Run serverless workloads with Knative.  
+- Practice chaos testing with LitmusChaos or Chaos Mesh to validate resilience.  
+`
+    }
+  ]
+}
 
 ];
 
