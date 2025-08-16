@@ -2012,6 +2012,234 @@ return http.build();
 - CI/CD and Docker multi-stage builds for Spring Boot apps.
 - Advanced observability: distributed tracing, log correlation with Sleuth and Zipkin.
 `
+},{
+question: 'How do you configure multiple data sources (MySQL, Oracle, NoSQL) in Spring Boot?',
+answerMd: `
+# 🗂️ Multi–Data Source in Spring Boot — Story-Driven Guide
+
+## 👥 Main Participants & Their Roles
+
+| Participant              | Role                                                                          |
+|--------------------------|-------------------------------------------------------------------------------|
+| Spring Boot App          | Orchestrates business logic and data access                                   |
+| MySQL DataSource Config  | Bean that provides connections, entity manager and transaction manager for MySQL |
+| Oracle DataSource Config | Bean that provides connections, entity manager and transaction manager for Oracle|
+| NoSQL Config             | Bean/config for MongoDB (or other NoSQL) template and repositories            |
+| EntityManagerFactory     | Creates JPA context per RDBMS, bound to its DataSource                       |
+| TransactionManager       | Manages transactions per database                                            |
+| Repositories & Templates | Injected with @Qualifier to target the correct DataSource                    |
+| Monitoring & Actuator    | Tracks connection pool metrics for each DataSource                           |
+
+---
+
+## 📖 Narrative
+
+In **PolyBase City**, you’re the **Data Architect** building a Spring Boot service that reads orders from MySQL, audits them in Oracle, and streams events to a NoSQL store. You create separate **DataSource** beans for each backend, wire up distinct **EntityManagerFactories** and **TransactionManagers**, and annotate your repositories with qualifiers. At runtime, each repository speaks only to its designated database, ensuring clarity, resilience, and maintainability.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                             | Detail                                                                                 |
+|----------------------------------|----------------------------------------------------------------------------------------|
+| 🔗 Clear Separation              | Isolate MySQL, Oracle, and NoSQL contexts to avoid misrouted queries                   |
+| 🔄 Independent Transactions       | Each DataSource has its own transaction boundary                                       |
+| ⚙️ Config-Driven                  | Externalize connection properties in \`application.yml\` for env-specific overrides    |
+| 📊 Observability                 | Expose HikariCP metrics and DataSource health via Spring Boot Actuator                 |
+| 🔐 Secure Credentials            | Store passwords and credentials in encrypted secrets or vault                           |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
++----------------+
+| Spring Boot App|
++--------+-------+
+│
+┌───────────────┼────────────────┬─────────────────┐
+│               │                │                 │
+▼               ▼                ▼                 ▼
+MySQLDS        OracleDS         MongoTemplate   Actuator
+(EntityMgr,    (EntityMgr,       & Repos         & Metrics
+TxMgr)        TxMgr)
+
+│               │                │
+▼               ▼                ▼
+MySQL DB       Oracle DB      NoSQL DB (Mongo)
+\`\`\`
+
+---
+
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern                  | Problem Solved                              | Pitfall                                         | Fix / Best Practice                                              |
+|--------------------------|---------------------------------------------|-------------------------------------------------|------------------------------------------------------------------|
+| Qualifier Injection      | Ensures correct bean injection              | NoUniqueBeanDefinitionException                 | Use \`@Primary\` or \`@Qualifier("mysqlDataSource")\`            |
+| Multiple EMF/TxMgr       | Separate JPA contexts per RDBMS             | TransactionManager routing mix-up               | Reference correct \`transactionManagerRef\` in \`@EnableJpaRepositories\` |
+| Externalized Config      | Environment-specific endpoints and creds    | Credentials hard-coded                          | Use \`@ConfigurationProperties\` and encrypted vault integration |
+| NoSQL vs JPA Context     | Different programming model (document vs ORM)| Attempting JPA on NoSQL                         | Use Spring Data Mongo repositories or \`MongoTemplate\`         |
+| Cross-DB Transactions    | Maintain consistency across RDBMS & NoSQL     | No native XA support; partial rollback          | Use a saga pattern or Spring Cloud Transaction / JTA            |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide
+
+1. **Add Dependencies**
+- \`spring-boot-starter-data-jpa\`
+- \`mysql-connector-java\`, \`ojdbc-driver\`
+- \`spring-boot-starter-data-mongodb\` (or other NoSQL starter)
+
+2. **application.yml**
+\`\`\`yaml
+spring:
+datasource:
+mysql:
+jdbc-url: jdbc:mysql://mysql-host:3306/orderdb
+         username: order_user
+password: \${MYSQL_PASSWORD}
+hikari:
+pool-name: MySQLPool
+oracle:
+jdbc-url: jdbc:oracle:thin:@//oracle-host:1521/auditsvc
+         username: audit_user
+password: \${ORACLE_PASSWORD}
+hikari:
+pool-name: OraclePool
+
+data:
+mongodb:
+uri: mongodb://mongo-host:27017/eventsdb
+   \`\`\`
+
+3. **MySQL Configuration**
+\`\`\`java
+@Configuration
+@EnableJpaRepositories(
+basePackages = "com.acme.orders.repo",
+entityManagerFactoryRef = "mysqlEmf",
+transactionManagerRef = "mysqlTxMgr"
+)
+@ConfigurationProperties(prefix = "spring.datasource.mysql")
+public class MySQLConfig {
+@Bean @Primary
+public DataSource mysqlDataSource() {
+return DataSourceBuilder.create().type(HikariDataSource.class).build();
+}
+
+@Bean
+public LocalContainerEntityManagerFactoryBean mysqlEmf(
+EntityManagerFactoryBuilder builder) {
+return builder
+.dataSource(mysqlDataSource())
+.packages("com.acme.orders.model")
+.persistenceUnit("mysqlPU")
+.build();
+}
+
+@Bean
+public PlatformTransactionManager mysqlTxMgr(
+@Qualifier("mysqlEmf") EntityManagerFactory emf) {
+return new JpaTransactionManager(emf);
+}
+}
+\`\`\`
+
+4. **Oracle Configuration**
+\`\`\`java
+@Configuration
+@EnableJpaRepositories(
+basePackages = "com.acme.audit.repo",
+entityManagerFactoryRef = "oracleEmf",
+transactionManagerRef = "oracleTxMgr"
+)
+@ConfigurationProperties(prefix = "spring.datasource.oracle")
+public class OracleConfig {
+@Bean
+public DataSource oracleDataSource() {
+return DataSourceBuilder.create().type(HikariDataSource.class).build();
+}
+
+@Bean
+public LocalContainerEntityManagerFactoryBean oracleEmf(
+EntityManagerFactoryBuilder builder) {
+return builder
+.dataSource(oracleDataSource())
+.packages("com.acme.audit.model")
+.persistenceUnit("oraclePU")
+.build();
+}
+
+@Bean
+public PlatformTransactionManager oracleTxMgr(
+@Qualifier("oracleEmf") EntityManagerFactory emf) {
+return new JpaTransactionManager(emf);
+}
+}
+\`\`\`
+
+5. **NoSQL (MongoDB) Configuration**
+\`\`\`java
+@Configuration
+@EnableMongoRepositories(
+basePackages = "com.acme.events.repo",
+mongoTemplateRef = "mongoTemplate"
+)
+public class MongoConfig {
+@Bean
+public MongoClient mongoClient(
+@Value("\${spring.data.mongodb.uri}") String uri) {
+return MongoClients.create(uri);
+}
+
+@Bean
+public MongoTemplate mongoTemplate(MongoClient client) {
+return new MongoTemplate(client, "eventsdb");
+}
+}
+\`\`\`
+
+6. **Repository & Service Usage**
+\`\`\`java
+@Service
+public class OrderService {
+private final OrderRepository orders;
+private final AuditRepository audits;
+private final EventRepository events;
+
+public OrderService(
+OrderRepository orders,
+AuditRepository audits,
+EventRepository events) {
+this.orders = orders;
+this.audits = audits;
+this.events = events;
+}
+
+@Transactional("mysqlTxMgr")
+public Order placeOrder(Order o) {
+Order saved = orders.save(o);
+saveAudit(saved);
+publishEvent(saved);
+return saved;
+}
+}
+\`\`\`
+
+7. **Monitoring & Actuator**
+- Expose pools: \`management.metrics.binders.db.enabled=true\`.
+- View Hikari metrics under \`/actuator/metrics\`.
+
+---
+
+## 🚀 Beyond the Basics
+
+- **Dynamic Routing**: Use \`AbstractRoutingDataSource\` for multi-tenant routing.
+- **Cross-DB Transactions**: Integrate Atomikos or Narayana for XA transactions.
+- **Schema Migrations**: Manage MySQL/Oracle migrations with Flyway; Mongo with Mongock.
+- **Reactive NoSQL**: Use Spring WebFlux + ReactiveMongoTemplate for non-blocking IO.
+- **Credentials Vaulting**: Integrate Spring Cloud Vault or AWS Secrets Manager.
+`
 },
 {
 question: 'How does Spring Boot Auto-Configuration actually find and apply beans?',
