@@ -142,6 +142,7 @@ header input {
   border-radius: 4px;
   font-family: monospace;
 }
+
 /* ——— Dark-themed Code Snippets Only ——— */
 .sub-answer pre {
   background: #2d2d2d;
@@ -158,3 +159,174 @@ header input {
   border-radius: 4px;
   font-family: monospace;
 }
+
+/* ============================
+   MERMAID / SVG OVERRIDES
+   (Integrated into styles.css)
+   These rules ensure diagram lines, arrowheads and text remain visible
+   and responsive. They provide a safe default for light backgrounds and
+   an explicit dark-panel override for dark diagram panels.
+   ============================ */
+
+/* Container sizing & responsiveness for Mermaid diagrams */
+.mermaid,
+.mermaid-container,
+.mermaid-wrapper,
+.sub-answer .mermaid {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  margin: 1rem 0;
+  padding: 0;
+  background: transparent !important;
+}
+
+/* Make the rendered SVG responsive */
+.mermaid svg {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100%;
+  display: block;
+  margin: 0 auto;
+  background: transparent !important;
+}
+
+/* Default (light-friendly) diagram styling: dark strokes and text */
+.mermaid svg .edgePath path,
+.mermaid svg path.edge,
+.mermaid svg .messageLine,
+.mermaid svg line,
+.mermaid svg rect,
+.mermaid svg polygon {
+  stroke: rgba(34,34,34,0.95) !important; /* dark stroke for light backgrounds */
+  stroke-width: 1.4px !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  fill: none !important;
+  opacity: 1 !important;
+}
+
+/* Arrowhead markers default */
+.mermaid svg marker path,
+.mermaid svg marker polygon {
+  fill: rgba(34,34,34,0.95) !important;
+  stroke: none !important;
+}
+
+/* Default text/labels for light backgrounds */
+.mermaid svg text,
+.mermaid svg .messageText,
+.mermaid svg .label {
+  fill: rgba(17,17,17,0.95) !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+}
+
+/* Actor/participant boxes (sequence diagrams): keep light fill with dark text */
+.mermaid svg .actor,
+.mermaid svg .actor rect,
+.mermaid svg .actorLabel {
+  fill: #efecff !important;
+  stroke: rgba(120,120,130,0.9) !important;
+}
+.mermaid svg .actor text,
+.mermaid svg .actorLabel text {
+  fill: #111 !important;
+}
+
+/* Flowchart node appearance */
+.mermaid svg .flowchart .node rect,
+.mermaid svg .flowchart .node circle,
+.mermaid svg .flowchart .node polygon,
+.mermaid svg .flowchart .node path {
+  stroke-width: 1.6px !important;
+  stroke: rgba(34,34,34,0.95) !important;
+  fill: rgba(255,255,255,0.96) !important;
+}
+
+/* Notes styling */
+.mermaid svg .note {
+  fill: rgba(255,250,210,0.95) !important;
+  stroke: rgba(200,180,0,0.9) !important;
+  color: #111 !important;
+}
+
+/* Prevent parent CSS from scaling strokes unexpectedly */
+.mermaid svg * {
+  vector-effect: non-scaling-stroke !important;
+}
+
+/* ============= Dark-panel overrides =============
+   If your diagram is rendered inside a dark panel, add the class
+   "diagram-panel" (or "mermaid-panel") to the parent container.
+   These rules make strokes/text bright on dark backgrounds.
+   Example wrapper: <div class="diagram-panel"><div class="mermaid">...</div></div>
+   ================================================== */
+.diagram-panel .mermaid svg .edgePath path,
+.diagram-panel .mermaid svg path.edge,
+.mermaid-panel .mermaid svg .edgePath path,
+.mermaid-panel .mermaid svg path.edge,
+.sub-answer.dark .mermaid svg .edgePath path,
+.sub-answer.dark .mermaid svg path.edge {
+  stroke: rgba(255,255,255,0.92) !important; /* bright stroke for dark panels */
+  stroke-width: 1.6px !important;
+}
+
+.diagram-panel .mermaid svg text,
+.diagram-panel .mermaid svg .messageText,
+.diagram-panel .mermaid svg .label,
+.mermaid-panel .mermaid svg text,
+.sub-answer.dark .mermaid svg text {
+  fill: rgba(255,255,255,0.95) !important;
+}
+
+/* Arrowheads for dark panels */
+.diagram-panel .mermaid svg marker path,
+.diagram-panel .mermaid svg marker polygon,
+.mermaid-panel .mermaid svg marker path,
+.mermaid-panel .mermaid svg marker polygon,
+.sub-answer.dark .mermaid svg marker path,
+.sub-answer.dark .mermaid svg marker polygon {
+  fill: rgba(255,255,255,0.92) !important;
+}
+
+/* Actor boxes on dark panels: keep actor boxes pale to ensure readable labels */
+.diagram-panel .mermaid svg .actor,
+.mermaid-panel .mermaid svg .actor,
+.sub-answer.dark .mermaid svg .actor {
+  fill: #efecff !important;
+}
+.diagram-panel .mermaid svg .actor text,
+.mermaid-panel .mermaid svg .actor text,
+.sub-answer.dark .mermaid svg .actor text {
+  fill: #111 !important;
+}
+
+/* Ensure diagrams can scroll horizontally if they are wide */
+.mermaid,
+.mermaid-container,
+.mermaid-wrapper,
+.sub-answer .mermaid {
+  overflow-x: auto;
+}
+
+/* Small accessibility tweak: increase contrast for important connectors */
+.mermaid svg .edgeLabel,
+.mermaid svg .edgeLabel tspan {
+  fill: inherit !important;
+}
+
+ If you want every diagram to sit inside a dark-looking panel by default,
+   you can enable the following (optional). Otherwise leave it commented out.
+
+.diagram-panel, .mermaid-panel {
+  background: #222 !important;
+  color: #eee;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+
+/* End of integrated styles.css */

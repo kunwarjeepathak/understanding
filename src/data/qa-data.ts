@@ -3014,16 +3014,86 @@ category: 'react',
 title: 'Banking Finance App React',
 subItems: [
 {
-question: 'How do I build a “Banking Finance App” React app from scratch covering every core React concept, using an Indian storytelling format?',
+question: 'How do I build a “Banking Finance App” React app from scratch covering every core React concept, using an Indian storytelling format — with diagrams?',
 answerMd: `
-### The Banking Finance App: An Indian Tale
+# 🏦 Banking Finance App — An Indian Tale in React (with Visual Maps)
 
-In the thriving city of DhanPur, young banker Arjun dreamed of a digital “Banking Finance App” to serve villagers and merchants alike. Let’s journey with him through each lane of React as he builds accounts, transactions, and loan calculators.
+## 👥 Main Participants & Their Roles
+
+| Participant | Role in the App |
+|-------------|-----------------|
+| **Arjun (Developer)** | The visionary banker turning needs into code |
+| **Villagers & Merchants (Users)** | Manage accounts, transactions, and loans through the app |
+| **React Components** | Building blocks — each a self‑contained part of the UI |
+| **State Hooks** | Live registers for account balances & form inputs |
+| **Effect Hooks** | The "postmen" fetching and syncing data |
+| **Context API** | The central vault for shared state like authentication |
+| **Reducer** | The double‑entry ledger for complex updates |
+| **Routing** | Lanes of DhanPur guiding navigation |
+| **Error Boundaries/Suspense** | Guards and loading gates |
 
 ---
 
-#### 1. Opening the Bank (create-react-app)
-Arjun summons the village builder:
+## 🗺️ High‑Level Architecture (ASCII)
+
+\`\`\`
++------------------+          +------------------+
+|   Browser/App    |          |  React Router     |
++---------+--------+          +---------+---------+
+|                             |
++-------v-----------------------------v------+
+|                App.jsx                     |
++------+--------------+-------------+--------+
+|              |             |
++-----v----+   +-----v-----+  +-----v-----+
+| Accounts |   | Transactions| | LoanCalc |
++-----+----+   +------+------+ +-----+----+
+|             |                |
+useFetch/useState  useReducer        Render Props
+|             |                |
+Fetch API    Ledger State     EMI Computation
+\`\`\`
+
+---
+
+## 🌳 Component Hierarchy Tree
+
+\`\`\`
+App
+├── Navbar
+├── Dashboard
+├── Accounts
+│    ├── AccountCard
+│    └── AccountForm
+├── Transactions
+│    ├── TransactionList
+│    └── TransactionForm
+└── LoanCalculator
+\`\`\`
+
+---
+
+## 🔄 Data Flow in the App
+
+\`\`\`
+[User Action] ---> [Component Event Handler]
+|                      |
+v                      v
+setState / dispatch   API Call via useEffect/useFetch
+|                      |
+v                      v
+React Re-render <--- State/Props Updated
+\`\`\`
+
+---
+
+## 📖 Narrative
+
+In bustling **DhanPur**, banker‑developer **Arjun** builds the village’s **digital finance hub** with React, moving from foundation to polished features.
+
+---
+
+## 1️⃣ Opening the Bank — _create‑react‑app_
 
 \`\`\`bash
 npx create-react-app banking-hub
@@ -3031,17 +3101,13 @@ cd banking-hub
 npm start
 \`\`\`
 
-This lays the foundation (\`public/index.html\`) and the main gate (\`src/index.js\`).
+🏗️ **Foundation:** \`public/index.html\` (plot of land) and \`src/index.js\` (main gate).
 
 ---
 
-#### 2. Account Window: Functional Components
-Each customer’s account is a component:
+## 2️⃣ Account Window — _Functional Components_
 
 \`\`\`jsx
-// src/components/AccountCard.jsx
-import React from 'react';
-
 function AccountCard({ name, balance }) {
 return (
 <div className="account-card">
@@ -3050,20 +3116,13 @@ return (
 </div>
 );
 }
-
-export default AccountCard;
 \`\`\`
-
-Props (\`name\`, \`balance\`) are the customer’s details.
 
 ---
 
-#### 3. Counting Deposits: useState
-The teller tracks daily deposits:
+## 3️⃣ Counting Deposits — _useState_
 
 \`\`\`jsx
-import React, { useState } from 'react';
-
 function DepositCounter() {
 const [deposits, setDeposits] = useState(0);
 return (
@@ -3077,26 +3136,19 @@ New Deposit
 }
 \`\`\`
 
-\`useState\` is the teller’s tally sheet.
-
 ---
 
-#### 4. Fetching Transactions: useEffect
-Every dawn, transactions arrive from the central server:
+## 4️⃣ Fetching Transactions — _useEffect_
 
 \`\`\`jsx
-import React, { useState, useEffect } from 'react';
-
 function TransactionsList() {
 const [txns, setTxns] = useState([]);
-
 useEffect(() => {
 fetch('/api/transactions')
 .then(r => r.json())
 .then(setTxns);
-}, []); // run only once each morning
-
-  return (
+}, []);
+return (
 <ul>
 {txns.map(t => (
 <li key={t.id}>{t.date}: ₹{t.amount}</li>
@@ -3106,17 +3158,11 @@ fetch('/api/transactions')
 }
 \`\`\`
 
-\`useEffect\` simulates the postman delivering records.
-
 ---
 
-#### 5. A Custom Ritual: useFetch Hook
-To reuse any data fetch:
+## 5️⃣ A Custom Ritual — _useFetch Hook_
 
 \`\`\`jsx
-// src/hooks/useFetch.js
-import { useState, useEffect } from 'react';
-
 export function useFetch(url) {
 const [data, setData] = useState(null);
 useEffect(() => {
@@ -3126,19 +3172,12 @@ return data;
 }
 \`\`\`
 
-Call \`const accounts = useFetch('/api/accounts')\` anywhere.
-
 ---
 
-#### 6. The Bank Vault: Context API
-Share authentication and user info:
+## 6️⃣ The Bank Vault — _Context API_
 
 \`\`\`jsx
-// src/AuthContext.js
-import React, { createContext, useState, useContext } from 'react';
-
 const AuthContext = createContext();
-
 export function AuthProvider({ children }) {
 const [user, setUser] = useState(null);
 return (
@@ -3147,22 +3186,14 @@ return (
 </AuthContext.Provider>
 );
 }
-
-export function useAuth() {
-return useContext(AuthContext);
-}
+export function useAuth() { return useContext(AuthContext); }
 \`\`\`
-
-Wrap in \`src/index.js\`:
-\`<AuthProvider><App/></AuthProvider>\`.
 
 ---
 
-#### 7. Balancing the Books: useReducer
-A complex ledger demands a reducer:
+## 7️⃣ Balancing the Books — _useReducer_
 
 \`\`\`js
-// src/ledgerReducer.js
 export function ledgerReducer(state, action) {
 switch (action.type) {
 case 'ADD_TXN':    return [...state, action.txn];
@@ -3172,50 +3203,37 @@ default:           return state;
 }
 \`\`\`
 
-Use \`useReducer(ledgerReducer, [])\` to manage transactions.
-
 ---
 
-#### 8. Loading Spinner: Higher-Order Component
-Wrap modules with a spinner:
+## 8️⃣ Loading Spinner — _HOC_
 
 \`\`\`jsx
 function withSpinner(Component) {
-return function Wrapped({ isLoading, ...props }) {
-return isLoading
-? <p>Loading…</p>
-: <Component {...props} />;
-};
+return ({ isLoading, ...props }) =>
+isLoading ? <p>Loading…</p> : <Component {...props} />;
 }
 \`\`\`
 
-Use: \`const TxnWithSpinner = withSpinner(TransactionsList);\`
-
 ---
 
-#### 9. Flexible Calculations: Render Props
-A dynamic loan calculator:
+## 9️⃣ Flexible Calculations — _Render Props_
 
 \`\`\`jsx
 function LoanCalculator({ render }) {
 const rate = 0.08;
 return <div>{render(rate)}</div>;
 }
-
-// Usage:
-<LoanCalculator render={r => (
-<p>EMI for ₹10000 at {r*100}%: ₹{(10000*r)/(1-Math.pow(1+r, -12)).toFixed(2)}</p>
-)} />
 \`\`\`
 
 ---
 
-#### 10. Vault Tabs: Compound Components
-Build “Accounts” / “Transactions” tabs sharing the activeTab context.
+## 🔟 Vault Tabs — _Compound Components_
+
+*(Tab container + Tab content using shared context)*
 
 ---
 
-#### 11. Safety Net: Error Boundaries
+## 1️⃣1️⃣ Safety Net — _Error Boundaries_
 
 \`\`\`jsx
 class TransactionErrorBoundary extends React.Component {
@@ -3230,125 +3248,165 @@ return this.state.hasError
 }
 \`\`\`
 
-Wrap:
-\`<TransactionErrorBoundary><TransactionsList/></TransactionErrorBoundary>\`.
-
 ---
 
-#### 12. Secret Safe: Code Splitting
+## 1️⃣2️⃣ Secret Safe — _Code Splitting_
 
 \`\`\`jsx
-const Accounts     = React.lazy(() => import('./Accounts'));
+const Accounts = React.lazy(() => import('./Accounts'));
 const Transactions = React.lazy(() => import('./Transactions'));
-
-function App() {
-return (
-<Suspense fallback={<p>Loading module…</p>}>
-<Accounts />
-<Transactions />
-</Suspense>
-);
-}
 \`\`\`
 
 ---
 
-#### 13. Walking the Ledger: React Router
-
-\`\`\`bash
-npm install react-router-dom
-\`\`\`
+## 1️⃣3️⃣ Walking the Ledger — _React Router_
 
 \`\`\`jsx
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-
-function App() {
-return (
-<BrowserRouter>
-<nav>
-<Link to="/">Dashboard</Link>
-<Link to="/accounts">Accounts</Link>
-<Link to="/transactions">Transactions</Link>
-</nav>
-<Routes>
-<Route path="/"               element={<Dashboard />} />
-<Route path="/accounts"       element={<Accounts />} />
-<Route path="/transactions"   element={<Transactions />} />
-</Routes>
-</BrowserRouter>
-);
-}
 \`\`\`
 
 ---
 
-#### 14. Performance Tuning: useMemo & useCallback
+## 1️⃣4️⃣ Performance Tuning — _useMemo & useCallback_
 
 \`\`\`jsx
 const highValueTxns = useMemo(
 () => txns.filter(t => t.amount > 10000),
 [txns]
 );
-const handleAddTxn = useCallback(
-txn => dispatch({ type: 'ADD_TXN', txn }),
-[]
-);
 \`\`\`
 
 ---
 
-#### 15. The Grand Ledger: Bringing It All Together
+## 1️⃣5️⃣ The Grand Ledger — _Bringing It All Together_
 
-\`\`\`jsx
-// src/App.jsx
-import React, { lazy, Suspense } from 'react';
-import { useAuth } from './AuthContext';
-import TransactionErrorBoundary from './TransactionErrorBoundary';
+Integrate all modules inside \`App.jsx\` with Auth, Routing, Suspense, and Error Boundaries.
 
-const Dashboard    = lazy(() => import('./Dashboard'));
-const Accounts     = lazy(() => import('./Accounts'));
-const Transactions = lazy(() => import('./Transactions'));
+---
 
-function App() {
-const { user } = useAuth();
-return (
-<div>
-<h1>Welcome to Banking Hub{user ? \`, \${user.name}\` : ''}</h1>
-<TransactionErrorBoundary>
-<Suspense fallback={<p>Loading banking modules…</p>}>
-<Dashboard />
-<Accounts />
-<Transactions />
-</Suspense>
-</TransactionErrorBoundary>
-</div>
-);
-}
+## 📊 Visual Recap — React Concept Coverage
 
-export default App;
+\`\`\`
++------------------------+    +-----------------------+
+|   Basic Building Blocks|    |  State Management     |
+| - Components           |    | - useState            |
+| - Props                |    | - useReducer          |
++------------------------+    +-----------------------+
+|                           |
+v                           v
++------------------------+    +-----------------------+
+| Side Effects & Data    |    |   App-wide State      |
+| - useEffect            |    | - Context API         |
+| - Custom Hooks         |    +-----------------------+
++------------------------+              |
+|                           v
+v                 +-----------------------+
++------------------------+     |   Advanced Patterns   |
+| Routing / Code Splitting|    | - HOC                 |
+| Error Boundaries       |     | - Render Props        |
++------------------------+     | - Compound Components |
++-----------------------+
 \`\`\`
 
-Through components, props, state, effects, hooks, context, reducers, HOCs, render props, compound components, error boundaries, code splitting, routing, and performance hooks, Arjun’s Banking Finance App became the digital heart of DhanPur—balancing every ledger with precision and care.
+---
+
+### 🌟 Epilogue
+
+Every hook, pattern, and component Arjun built became a road, vault, or ledger entry in DhanPur’s new digital heart — a story told in code, diagrams, and the hum of smooth transactions.
 `
 }
 ]
 },
-
 {
 category: 'react',
 title: 'Healthcare App React',
 subItems: [
 {
-question: 'How do I build a “Healthcare Hub” React app from scratch covering every core React concept, using an Indian storytelling format?',
+question: 'How do I build a “Healthcare Hub” React app from scratch covering every core React concept, using an Indian storytelling format — with diagrams?',
 answerMd: `
-### The Healthcare Hub React App: An Indian Tale
+# 🏥 Healthcare Hub React App — An Indian Tale with Visual Maps
 
-In the bustling village of AarogyaPur, Dr. Kavya dreamed of a digital “Healthcare Hub” to serve every patient. Let’s walk with her through each lane of React, as she builds clinics, patient cards, and appointment counters.
+## 👥 Main participants and their roles
+
+| Participant | Role in the app |
+|-------------|-----------------|
+| **Dr. Kavya (Developer)** | Designs and builds the digital clinic |
+| **Patients** | View profiles, records, book appointments |
+| **Staff (Reception/Doctors)** | Manage schedules, records, and triage |
+| **React Components** | Rooms and widgets composing the UI |
+| **State Hooks** | Live tallies and form inputs |
+| **Effect Hooks** | Fetch and sync data with the server |
+| **Context API** | Shared auth and global clinic settings |
+| **Reducer** | Complex schedule/records updates |
+| **Router** | Navigation across wards (pages) |
+| **Error Boundaries/Suspense** | Safety nets and loading gates |
 
 ---
 
-#### 1. Laying the Foundation (create-react-app)
-Dr. Kavya calls upon her module-maker:
+## 🗺️ High‑level architecture (ASCII)
+
+\`\`\`
++-----------------+        +-----------------+
+| Browser / App   |        | React Router    |
++--------+--------+        +--------+--------+
+|                          |
++-------v--------------------------v-----+
+|               App.jsx                  |
++-------+---------------+----------------+
+|               |
++------v----+   +------v-------+    +-----------+
+| Patients  |   | Appointments |    | Records   |
++-----+-----+   +------+-------+    +-----+-----+
+|               |                  |
+useFetch/useState  useReducer           useEffect
+|               |                  |
+Fetch API Data    Manage Schedule     Load Diagnostics
+\`\`\`
+
+---
+
+## 🌳 Component hierarchy tree
+
+\`\`\`
+App
+├── Navbar
+├── Home
+├── Patients
+│    ├── PatientCard
+│    └── PatientForm
+├── Appointments
+│    ├── AppointmentCounter
+│    └── AppointmentList
+├── MedicalRecords
+└── Tabs (Compound)
+├── TabList
+├── Tab
+└── TabPanel
+\`\`\`
+
+---
+
+## 🔄 Data flow in the app
+
+\`\`\`
+[User Action] --> [Event Handler]
+|                |
+v                v
+setState / dispatch   API call via useEffect/useFetch
+|                |
+v                v
+React Re-render  <--  State / Props updated
+\`\`\`
+
+---
+
+## 📖 Narrative
+
+In the heart of **AarogyaPur**, **Dr. Kavya** envisioned a clinic without walls — a **Healthcare Hub** to serve every villager. With React as her stethoscope and keyboard as her scalpel, she shaped wards, counters, and records into a living, breathing app.
+
+---
+
+## 1️⃣ Laying the foundation — create‑react‑app
 
 \`\`\`bash
 npx create-react-app healthcare-hub
@@ -3356,40 +3414,32 @@ cd healthcare-hub
 npm start
 \`\`\`
 
-This scaffolds the main temple (\`public/index.html\`) and entry gate (\`src/index.js\`).
-
 ---
 
-#### 2. Consultation Room: Functional Components
-Each patient gets a card:
+## 2️⃣ Consultation room — Functional components
 
 \`\`\`jsx
 // src/components/PatientCard.jsx
 import React from 'react';
 
-function PatientCard({ name, age }) {
+export default function PatientCard({ name, age }) {
 return (
-<div className="patient-card">
+<div className="patient-card" role="article" aria-label="Patient card">
 <h3>{name}</h3>
 <p>Age: {age}</p>
 </div>
 );
 }
-
-export default PatientCard;
 \`\`\`
-
-Props (\`name\`, \`age\`) are the patient’s details.
 
 ---
 
-#### 3. Counting Appointments: useState
-The receptionist tracks daily bookings:
+## 3️⃣ Counting appointments — useState
 
 \`\`\`jsx
 import React, { useState } from 'react';
 
-function AppointmentCounter() {
+export function AppointmentCounter() {
 const [count, setCount] = useState(0);
 return (
 <div>
@@ -3402,26 +3452,31 @@ Book Appointment
 }
 \`\`\`
 
-State holds the appointment tally.
-
 ---
 
-#### 4. Fetching Records: useEffect
-Each morning, records arrive from the health server:
+## 4️⃣ Fetching records — useEffect
 
 \`\`\`jsx
 import React, { useState, useEffect } from 'react';
 
-function MedicalRecords() {
+export function MedicalRecords() {
 const [records, setRecords] = useState([]);
+const [error, setError] = useState(null);
 
 useEffect(() => {
+let cancelled = false;
 fetch('/api/records')
-.then(r => r.json())
-.then(setRecords);
-}, []); // once at dawn
+.then(r => {
+if (!r.ok) throw new Error('Failed to fetch records');
+return r.json();
+})
+.then(data => { if (!cancelled) setRecords(data); })
+.catch(e => { if (!cancelled) setError(e.message); });
+return () => { cancelled = true; };
+}, []);
 
-  return (
+if (error) return <p role="alert">Error: {error}</p>;
+return (
 <ul>
 {records.map(r => (
 <li key={r.id}>{r.patientName}: {r.diagnosis}</li>
@@ -3431,139 +3486,179 @@ fetch('/api/records')
 }
 \`\`\`
 
-\`useEffect\` is the daily records delivery.
-
 ---
 
-#### 5. A Reusable Ritual: useFetch Hook
-To fetch any resource:
+## 5️⃣ A reusable ritual — Custom hook useFetch
 
 \`\`\`jsx
 // src/hooks/useFetch.js
 import { useState, useEffect } from 'react';
 
-export function useFetch(url) {
+export function useFetch(url, opts) {
 const [data, setData] = useState(null);
+const [loading, setLoading] = useState(!!url);
+const [error, setError] = useState(null);
+
 useEffect(() => {
-fetch(url).then(r => r.json()).then(setData);
+if (!url) return;
+let cancelled = false;
+setLoading(true);
+fetch(url, opts)
+.then(r => (r.ok ? r.json() : Promise.reject(new Error(r.statusText))))
+.then(d => { if (!cancelled) setData(d); })
+.catch(e => { if (!cancelled) setError(e); })
+.finally(() => { if (!cancelled) setLoading(false); });
+return () => { cancelled = true; };
 }, [url]);
-return data;
+
+return { data, loading, error };
 }
 \`\`\`
 
-Now call \`const records = useFetch('/api/records')\` anywhere.
-
 ---
 
-#### 6. Shared Clinic: Context API
-A shared authentication context for staff:
+## 6️⃣ Shared clinic — Context API (Auth)
 
 \`\`\`jsx
 // src/AuthContext.js
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
 const [user, setUser] = useState(null);
+const login = (u) => setUser(u);
+const logout = () => setUser(null);
 return (
-<AuthContext.Provider value={{ user, setUser }}>
+<AuthContext.Provider value={{ user, login, logout }}>
 {children}
 </AuthContext.Provider>
 );
 }
 
 export function useAuth() {
-return useContext(AuthContext);
+const ctx = useContext(AuthContext);
+if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+return ctx;
 }
 \`\`\`
 
-Wrap at \`src/index.js\`:
-\`<AuthProvider><App/></AuthProvider>\`.
-
 ---
 
-#### 7. Managing Schedules: useReducer
-The scheduler’s ledger grows complex:
+## 7️⃣ Managing schedules — useReducer
 
 \`\`\`js
 // src/scheduleReducer.js
 export function scheduleReducer(state, action) {
 switch (action.type) {
-case 'ADD':    return [...state, action.appointment];
-case 'REMOVE': return state.filter(a => a.id !== action.id);
-default:       return state;
+case 'ADD':
+return [...state, action.appointment];
+case 'REMOVE':
+return state.filter(a => a.id !== action.id);
+case 'UPDATE':
+return state.map(a => a.id === action.appointment.id ? action.appointment : a);
+default:
+return state;
 }
 }
 \`\`\`
 
-Use \`useReducer(scheduleReducer, [])\` to manage appointments.
-
 ---
 
-#### 8. Loading Spinner: Higher-Order Component
-Wrap heavy modules with a spinner:
+## 8️⃣ Loading spinner — Higher‑order component
 
 \`\`\`jsx
-function withSpinner(Component) {
+export function withSpinner(Component) {
 return function Wrapped({ isLoading, ...props }) {
-return isLoading
-? <p>Loading…</p>
-: <Component {...props} />;
+return isLoading ? <p>Loading…</p> : <Component {...props} />;
 };
 }
 \`\`\`
 
-Use: \`const RecordsWithSpinner = withSpinner(MedicalRecords);\`
-
 ---
 
-#### 9. Customizable Banner: Render Props
-Display dynamic health alerts:
+## 9️⃣ Customizable banner — Render props
 
 \`\`\`jsx
-function AlertBox({ render }) {
-const style = { border: '1px solid red', padding: '10px' };
-return <div style={style}>{render()}</div>;
+export function AlertBox({ render }) {
+const style = { border: '1px solid #d33', padding: 10, borderRadius: 6 };
+return <div style={style} role="region" aria-label="Alert">{render()}</div>;
 }
-
-// Usage:
-<AlertBox render={() => <p>Flu season alert!</p>} />
 \`\`\`
 
 ---
 
-#### 10. Clinic Tabs: Compound Components
-To build “Patients” / “Appointments” tabs, share activeTab context among TabList, Tab, and TabPanel.
+## 🔟 Clinic tabs — Compound components
+
+\`\`\`jsx
+// src/components/Tabs.jsx
+import React, { createContext, useContext, useState } from 'react';
+
+const TabsCtx = createContext();
+
+export function Tabs({ defaultIndex = 0, children }) {
+const [active, setActive] = useState(defaultIndex);
+return <TabsCtx.Provider value={{ active, setActive }}>{children}</TabsCtx.Provider>;
+}
+export function TabList({ children }) { return <div role="tablist">{children}</div>; }
+export function Tab({ index, children }) {
+const { active, setActive } = useContext(TabsCtx);
+const isActive = active === index;
+return (
+<button
+role="tab"
+aria-selected={isActive}
+onClick={() => setActive(index)}
+style={{ fontWeight: isActive ? '700' : '400', marginRight: 8 }}
+>
+{children}
+</button>
+);
+}
+export function TabPanel({ index, children }) {
+const { active } = useContext(TabsCtx);
+return active === index ? <div role="tabpanel">{children}</div> : null;
+}
+\`\`\`
+
+Usage:
+
+\`\`\`jsx
+<Tabs defaultIndex={0}>
+<TabList>
+<Tab index={0}>Patients</Tab>
+<Tab index={1}>Appointments</Tab>
+</TabList>
+<TabPanel index={0}><Patients /></TabPanel>
+<TabPanel index={1}><Appointments /></TabPanel>
+</Tabs>
+\`\`\`
 
 ---
 
-#### 11. Safety Net: Error Boundaries
+## 1️⃣1️⃣ Safety net — Error boundaries
 
 \`\`\`jsx
-class ErrorBoundary extends React.Component {
+export class ErrorBoundary extends React.Component {
 state = { hasError: false };
 static getDerivedStateFromError() { return { hasError: true }; }
-componentDidCatch(err) { console.error(err); }
+componentDidCatch(err, info) { console.error('Boundary caught:', err, info); }
 render() {
-return this.state.hasError
-? <p>Component failed to load.</p>
-: this.props.children;
+return this.state.hasError ? <p>Something went wrong.</p> : this.props.children;
 }
 }
 \`\`\`
 
-Wrap risky components, e.g. \`<ErrorBoundary><MedicalRecords/></ErrorBoundary>\`.
-
 ---
 
-#### 12. Code Splitting: React.lazy & Suspense
+## 1️⃣2️⃣ Code splitting — React.lazy & Suspense
 
 \`\`\`jsx
-const Patients = React.lazy(() => import('./Patients'));
-const Appointments = React.lazy(() => import('./Appointments'));
+import React, { lazy, Suspense } from 'react';
+const Patients = lazy(() => import('./Patients'));
+const Appointments = lazy(() => import('./Appointments'));
 
-function App() {
+export function Modules() {
 return (
 <Suspense fallback={<p>Loading module…</p>}>
 <Patients />
@@ -3575,27 +3670,26 @@ return (
 
 ---
 
-#### 13. Navigating Wards: React Router
-
-\`\`\`bash
-npm install react-router-dom
-\`\`\`
+## 1️⃣3️⃣ Navigating wards — React Router
 
 \`\`\`jsx
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import Home from './Home';
+import Patients from './Patients';
+import Appointments from './Appointments';
 
-function App() {
+export function RouterRoot() {
 return (
 <BrowserRouter>
-<nav>
+<nav aria-label="Primary">
 <Link to="/">Home</Link>
 <Link to="/patients">Patients</Link>
 <Link to="/appointments">Appointments</Link>
 </nav>
 <Routes>
-<Route path="/"               element={<Home />} />
-<Route path="/patients"       element={<Patients />} />
-<Route path="/appointments"   element={<Appointments />} />
+<Route path="/" element={<Home />} />
+<Route path="/patients" element={<Patients />} />
+<Route path="/appointments" element={<Appointments />} />
 </Routes>
 </BrowserRouter>
 );
@@ -3604,45 +3698,151 @@ return (
 
 ---
 
-#### 14. Performance Tuning: useMemo & useCallback
+## 1️⃣4️⃣ Performance tuning — useMemo & useCallback
 
 \`\`\`jsx
-const sortedPatients = useMemo(() => sortByName(patients), [patients]);
-const handleBook = useCallback((id) => bookAppointment(id), []);
+import React, { useMemo, useCallback } from 'react';
+
+export function PatientsOptimized({ patients, bookAppointment }) {
+const sortedPatients = useMemo(
+() => [...patients].sort((a, b) => a.name.localeCompare(b.name)),
+[patients]
+);
+const handleBook = useCallback((id) => bookAppointment(id), [bookAppointment]);
+
+return (
+<ul>
+{sortedPatients.map(p => (
+<li key={p.id}>
+{p.name} — {p.age}
+<button onClick={() => handleBook(p.id)}>Book</button>
+</li>
+))}
+</ul>
+);
+}
 \`\`\`
 
 ---
 
-#### 15. The Grand Opening: Bringing It All Together
+## 1️⃣5️⃣ The grand opening — Bringing it all together
 
 \`\`\`jsx
 // src/App.jsx
 import React, { lazy, Suspense } from 'react';
-import { useAuth } from './AuthContext';
-import ErrorBoundary from './ErrorBoundary';
+import { AuthProvider, useAuth } from './AuthContext';
+import { ErrorBoundary } from './ErrorBoundary';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 
-const Patients     = lazy(() => import('./Patients'));
+const Home = () => <p>Welcome to AarogyaPur Healthcare Hub</p>;
+const Patients = lazy(() => import('./Patients'));
 const Appointments = lazy(() => import('./Appointments'));
+const MedicalRecords = lazy(() => import('./MedicalRecords'));
 
-function App() {
-const { user } = useAuth();
+function Shell() {
+const { user, login, logout } = useAuth();
 return (
 <div>
-<h1>Welcome to Healthcare Hub{user ? \`, Dr. \${user.name}\` : ''}</h1>
+<header>
+<h1>Healthcare Hub{user ? \`, Dr. \${user.name}\` : ''}</h1>
+{user ? (
+<button onClick={logout}>Logout</button>
+) : (
+<button onClick={() => login({ name: 'Kavya' })}>Login</button>
+)}
+</header>
+
+<BrowserRouter>
+<nav>
+<Link to="/">Home</Link>
+<Link to="/patients">Patients</Link>
+<Link to="/appointments">Appointments</Link>
+<Link to="/records">Records</Link>
+</nav>
+
 <ErrorBoundary>
-<Suspense fallback={<p>Loading content…</p>}>
-<Patients />
-<Appointments />
+<Suspense fallback={<p>Loading…</p>}>
+<Routes>
+<Route path="/" element={<Home />} />
+<Route path="/patients" element={<Patients />} />
+<Route path="/appointments" element={<Appointments />} />
+<Route path="/records" element={<MedicalRecords />} />
+</Routes>
 </Suspense>
 </ErrorBoundary>
+</BrowserRouter>
 </div>
 );
 }
 
-export default App;
+export default function App() {
+return (
+<AuthProvider>
+<Shell />
+</AuthProvider>
+);
+}
 \`\`\`
 
-Through components, props, state, effects, hooks, context, reducers, HOCs, render props, compound components, error boundaries, code splitting, routing, and performance hooks, Dr. Kavya’s Healthcare Hub served every patient with seamless care—proving that React can heal and transform any village.
+---
+
+## 🧭 Optional mermaid diagrams (rendered when supported)
+
+\`\`\`mermaid
+flowchart TD
+A[User Action] --> B[Event Handler]
+B --> C{State Update?}
+C -->|setState| D[Re-render]
+C -->|dispatch| E[Reducer]
+E --> D
+D --> F[Effects run]
+F -->|fetch| G[Server]
+G --> F
+\`\`\`
+
+\`\`\`mermaid
+graph TD
+App --> Navbar
+App --> Patients
+App --> Appointments
+App --> MedicalRecords
+Patients --> PatientCard
+Patients --> PatientForm
+Appointments --> AppointmentCounter
+Appointments --> AppointmentList
+\`\`\`
+
+---
+
+## 📊 Visual recap — React concept coverage
+
+\`\`\`
++------------------------+    +-----------------------+
+|   Basic Building Blocks|    |  State Management     |
+| - Components           |    | - useState            |
+| - Props                |    | - useReducer          |
++------------------------+    +-----------------------+
+|                           |
+v                           v
++------------------------+    +-----------------------+
+| Side Effects & Data    |    |   App-wide State      |
+| - useEffect            |    | - Context API         |
+| - Custom Hooks         |    +-----------------------+
++------------------------+              |
+|                           v
+v                 +-----------------------+
++------------------------+     |   Advanced Patterns   |
+| Routing / Code Splitting|    | - HOC                 |
+| Error Boundaries       |     | - Render Props        |
++------------------------+     | - Compound Components |
++-----------------------+
+\`\`\`
+
+---
+
+### 🌟 Epilogue
+
+With components as consultation rooms, context as the clinic’s vault, reducers as the master schedule, and effects as messengers to the server, **AarogyaPur’s Healthcare Hub** hums with care. Every click becomes kindness, every render a reassurance — React, in service of healing.
 `
 }
 ]
@@ -5523,7 +5723,223 @@ return "Default fallback response";
 `
 }
 ]
+},{
+category: 'systemDesign',
+title: 'Design shortUrl in Java with architectural diagram (story + implementation)',
+subItems: [
+{
+question: 'Design shortUrl in Java with architectural diagram',
+answerMd: `
+# 🚀 TinyURL in Java — Story‑Driven System Design
+
+## 👥 Main Participants & Their Roles
+
+| Participant | Role in the Short URL System |
+|-------------|------------------------------|
+| **Client (Browser / App)** | Sends requests to shorten URLs and follows redirect links. |
+| **API Service (Spring Boot)** | Central brain — handles requests, validates input, coordinates ID generation, DB, and cache. |
+| **ID Generator** | Creates unique numeric IDs to be encoded into short aliases (Base62). |
+| **Base62 Encoder** | Converts numeric IDs into compact, human‑friendly short codes. |
+| **Database** | Stores the alias → original URL mapping with metadata. |
+| **Cache (Redis)** | Holds hot mappings for lightning‑fast lookups. |
+| **Analytics / MQ (Optional)** | Tracks click events, feeds into reporting. |
+| **Monitoring & Logging** | Observes performance, errors, usage patterns for ops teams. |
+
+---
+
+## 📖 Narrative
+
+Once upon a time in **LinkNagar**, every long winding address wanted a simpler nickname to move faster through the streets. You’re the chief at the 🏢 **Alias Office**, issuing short aliases and guiding travellers there instantly — even during rush hour.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal | Detail |
+|------|--------|
+| ⚡ Speed | Sub‑50 ms p95 redirect latency |
+| 📈 Scale | Millions of redirects/day |
+| 🛡️ Correctness | Unique alias per original URL |
+| 💪 Resilience | No single point of failure |
+| 🚫 Abuse control | Prevent brute force & spam |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
++---------+         +------------------+
+Client  | Browser |  POST   |   API Service    |
++---------+ ------> | (Spring Boot)    |
+GET /a1B2          +------------------+
+|                   |
+|        +----------+-----------+
+|        |                      |
+v        v                      v
++-----------+  +-----------+     +-----------+
+|   Cache   |  |  Database |     |  ID Gen    |
+| (Redis)   |  | (alias→URL)|     | (Counter / |
++-----------+  +-----------+     |  Base62)   |
+|   ^                          +-----------+
+hit ->   |   |  miss
+v   |
++-----------+
+|  Redirect |
+|  Response |
++-----------+
+\`\`\`
+
+---
+
+## 🔄 Core Flows
+
+1. **Shorten URL**:
+POST → Validate → ID Gen → Base62 encode → Store in DB → Cache → Respond alias.
+
+2. **Redirect**:
+GET → Check cache → Hit → Redirect;
+Miss → DB lookup → Cache → Redirect → (Optional: publish click event).
+
+---
+
+## 🗃️ Data Model
+
+\`\`\`sql
+CREATE TABLE url_mapping (
+alias        VARCHAR(12) PRIMARY KEY,
+original_url TEXT        NOT NULL,
+created_at   TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+last_access  TIMESTAMP   NULL,
+clicks       BIGINT      DEFAULT 0
+);
+CREATE INDEX idx_url_mapping_created ON url_mapping(created_at);
+\`\`\`
+
+---
+
+## 💻 Java Essentials
+
+### Base62 Encoder
+\`\`\`java
+public final class Base62 {
+private static final char[] ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+public static String encode(long num) {
+if (num == 0) return "0";
+StringBuilder sb = new StringBuilder();
+while (num > 0) {
+sb.append(ALPHABET[(int)(num % 62)]);
+num /= 62;
 }
+return sb.reverse().toString();
+}
+}
+\`\`\`
+
+### ID Generator
+\`\`\`java
+@Component
+public class IdGenerator {
+private final AtomicLong counter;
+public IdGenerator(@Value("\${tinyurl.start-seq:1}") long start) {
+this.counter = new AtomicLong(start);
+}
+public long nextId() {
+return counter.getAndIncrement();
+}
+}
+\`\`\`
+
+### Entity
+\`\`\`java
+@Entity
+@Table(name = "url_mapping")
+public class UrlMapping {
+@Id private String alias;
+@Column(name="original_url", nullable=false, length=2048)
+private String originalUrl;
+private Instant createdAt = Instant.now();
+private Instant lastAccess;
+private long clicks;
+}
+\`\`\`
+
+### Service
+\`\`\`java
+@Service
+public class TinyUrlService {
+private final UrlRepo repo;
+private final IdGenerator ids;
+private final String domain;
+
+public TinyUrlService(UrlRepo repo, IdGenerator ids, @Value("\${tinyurl.domain}") String domain) {
+this.repo = repo; this.ids = ids; this.domain = domain;
+}
+
+public String shorten(String rawUrl) {
+String url = normalize(rawUrl);
+validate(url);
+for (int i = 0; i < 3; i++) {
+String alias = Base62.encode(ids.nextId());
+if (!repo.existsById(alias)) {
+UrlMapping m = new UrlMapping();
+m.setAlias(alias);
+m.setOriginalUrl(url);
+repo.save(m);
+return domain + "/" + alias;
+}
+}
+throw new IllegalStateException("Failed to allocate alias");
+}
+
+@Transactional
+public Optional<String> resolve(String alias) {
+return repo.findById(alias).map(m -> {
+m.setClicks(m.getClicks() + 1);
+m.setLastAccess(Instant.now());
+return m.getOriginalUrl();
+});
+}
+}
+\`\`\`
+
+### Controller
+\`\`\`java
+@RestController
+public class TinyUrlController {
+private final TinyUrlService svc;
+public TinyUrlController(TinyUrlService svc) { this.svc = svc; }
+
+@PostMapping("/shorten")
+public ResponseEntity<Map<String,String>> shorten(@RequestBody Map<String,String> body) {
+String aliasUrl = svc.shorten(body.get("url"));
+return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("alias", aliasUrl));
+}
+
+@GetMapping("/{alias}")
+public ResponseEntity<Void> redirect(@PathVariable String alias) {
+return svc.resolve(alias)
+.map(u -> ResponseEntity.status(HttpStatus.FOUND).location(URI.create(u)).build())
+.orElse(ResponseEntity.notFound().build());
+}
+}
+\`\`\`
+
+---
+
+## 📊 Scaling & Ops
+
+- Cache hot aliases in Redis 🗄️
+- Distributed ID gen (Snowflake/DB sequence) for multi‑node 🚦
+- Shard DB by alias hash for scale 🧩
+- Publish click events to Kafka/MQ for analytics 📈
+- Global low‑latency via CDN/edge 🌍
+- Observability: monitor QPS, latency, cache hit rate, errors 📡
+- URL validation & rate‑limit per client 🔒
+`
+}
+]
+},
+
 ];
 
 export default data;
