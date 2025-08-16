@@ -1781,6 +1781,239 @@ category: 'springBoot',
 title: 'Spring & Spring Boot Deep Dive',
 subItems: [
 {
+question: 'Explain Spring and Spring Boot key concepts in minute details',
+answerMd: `
+# Detailed Spring & Spring Boot Key Concepts
+
+## 👥 Core Modules & Their Roles
+
+| Module                         | Role                                                         |
+|--------------------------------|--------------------------------------------------------------|
+| Spring Core (IoC Container)    | Manages bean creation, wiring, scopes, lifecycle             |
+| Spring AOP                     | Implements cross-cutting concerns via proxies or weaving     |
+| Spring Data                    | Simplifies data access with repositories and templates       |
+| Spring MVC                     | Handles web requests via DispatcherServlet, controllers, views |
+| Spring Security                | Offers authentication, authorization, and security filters   |
+| Spring Test                    | Provides testing support (MockMvc, TestContext)              |
+| Spring Boot Auto-Configuration | Automatically configures beans based on classpath settings   |
+| Spring Boot Starters           | Aggregated dependencies for rapid development                |
+| Spring Boot Actuator           | Exposes operational endpoints (metrics, health, tracing)     |
+| Spring Boot CLI & DevTools     | Tools for rapid development and auto-restart                 |
+
+---
+
+## 🏗 IoC Container & Bean Lifecycle
+
+1. **Bean Definition & Metadata**
+- Defined via annotations (\`@Component\`, \`@Service\`, \`@Repository\`, \`@Configuration\`/\`@Bean\`) or XML.
+- Metadata stored in \`BeanDefinition\`.
+
+2. **Bean Creation Phases**
+- **Instantiation:** Create bean instance via constructor or factory method.
+- **Populate Properties:** Inject dependencies via constructor, setter, or field injection.
+- **BeanPostProcessors (pre):** \`postProcessBeforeInitialization\`.
+- **InitializingBean & \`@PostConstruct\`:** Custom init callbacks.
+- **BeanPostProcessors (post):** \`postProcessAfterInitialization\`.
+- **Destruction:** \`DisposableBean\` & \`@PreDestroy\` on context close.
+
+3. **Scopes**
+- **Singleton (default):** One shared instance per \`ApplicationContext\`.
+- **Prototype:** New instance for each injection.
+- **Web scopes:** \`request\`, \`session\`, \`application\` in web environments.
+- **Custom scopes:** Via the \`Scope\` interface.
+
+---
+
+## ⚙️ Dependency Injection & Configuration
+
+- **Annotation-Based**
+- \`@Autowired\`, \`@Inject\`, \`@Resource\`.
+- Constructor vs setter vs field injection.
+- Optional dependencies with \`@Nullable\` or \`@Autowired(required=false)\`.
+
+- **Java Configuration**
+- \`@Configuration\` classes define \`@Bean\` methods.
+- \`@ComponentScan\` to auto-detect components.
+- \`@Import\`, \`@PropertySource\`, \`@Profile\` to conditionally load beans.
+
+- **Externalized Configuration**
+- \`application.properties\` / \`application.yml\`.
+- \`@Value\`, \`@ConfigurationProperties\` for relaxed binding.
+- Profiles: \`application-{profile}.properties\`.
+- \`Environment\` and \`EnvironmentPostProcessor\` for custom sources.
+
+---
+
+## 🔄 Spring Boot Auto-Configuration
+
+- **Mechanism**
+- \`spring.factories\` loads auto-configuration classes.
+- \`@ConditionalOnClass\`, \`@ConditionalOnMissingBean\`, \`@ConditionalOnProperty\` control activation.
+- Beans auto-configured for DataSource, JPA, MVC, Security, etc.
+
+- **Starters**
+- Aggregated POMs: \`spring-boot-starter-web\`, \`spring-boot-starter-data-jpa\`, \`spring-boot-starter-security\`, etc.
+- Simplify dependency management.
+
+- **Custom Auto-Configuration**
+- Define \`@Configuration\` and register via \`spring.factories\`.
+- Order with \`@AutoConfigureBefore\` / \`@AutoConfigureAfter\`.
+
+---
+
+## 📦 Packaging & Deployment
+
+| Packaging Model    | Description                                                         |
+|--------------------|---------------------------------------------------------------------|
+| Jar (Executable)   | Embedded servlet container; \`java -jar app.jar\`                   |
+| War (Traditional)  | Deploy to external container; use \`spring-boot-starter-tomcat\`    |
+| Layered Jar        | Multi-layer jar optimized for Docker image layering                 |
+
+- **Build Plugins:** Maven (\`spring-boot-maven-plugin\`), Gradle (\`spring-boot-gradle-plugin\`).
+- **Repackaging:** Fat-jar with nested dependencies using \`JarLauncher\`.
+
+---
+
+## 🔍 Actuator & Observability
+
+| Endpoint             | Description                                  |
+|----------------------|----------------------------------------------|
+| /actuator/health     | Application health status                    |
+| /actuator/metrics    | Numeric metrics (memory, CPU, custom)        |
+| /actuator/info       | App info from \`build-info.properties\`      |
+| /actuator/httptrace  | HTTP request traces                          |
+| /actuator/env        | Environment properties                       |
+| /actuator/loggers    | Dynamic log level configuration              |
+| /actuator/threaddump | Thread dump                                  |
+| /actuator/prometheus | Prometheus-formatted metrics                 |
+
+- **Customize Exposure:** \`management.endpoints.web.exposure.include\`.
+- **Metrics Backend:** Micrometer with Prometheus, Datadog, New Relic.
+- **Distributed Tracing:** Spring Cloud Sleuth / OpenTelemetry integration.
+
+---
+
+## 🔒 Security
+
+- **Core Concepts**
+- Filter chain managed by \`SecurityFilterChain\`.
+- \`AuthenticationProvider\`, \`UserDetailsService\`, \`SecurityContextHolder\`.
+
+- **Configuration Styles**
+- Legacy: extend \`WebSecurityConfigurerAdapter\`.
+- Modern: declare \`@Bean SecurityFilterChain\`.
+- Method security: \`@EnableMethodSecurity\`, \`@PreAuthorize\`.
+
+- **OAuth2 & JWT**
+- Use \`spring-boot-starter-oauth2-client\` / \`resource-server\`.
+- Customize \`JwtAuthenticationConverter\`.
+
+---
+
+## 🧪 Testing
+
+- **Test Slices**
+- \`@WebMvcTest\`, \`@DataJpaTest\`, \`@JdbcTest\`, \`@WebFluxTest\`.
+- Load limited context for fast execution.
+
+- **Mocking & Simulation**
+- \`@MockBean\` replaces beans in context.
+- \`MockMvc\` and \`WebTestClient\` for HTTP layer.
+
+- **Integration Tests**
+- \`@SpringBootTest\` with \`webEnvironment\`.
+- \`TestRestTemplate\` or \`WebTestClient\`.
+
+---
+
+## 🗺️ Architectural Diagram
+
+\`\`\`plaintext
+[ Client ]
+│
+▼
+[ Embedded Server (Tomcat/Jetty/Undertow) ]
+│
+▼
+[ DispatcherServlet ] ─→ HandlerMapping → Controller → ViewResolver → View
+│
+├─ FilterChain (Security, CORS, etc.)
+└─ HandlerInterceptors
+
+[ ApplicationContext (IoC Container) ]
+│
+├─ BeanFactoryPostProcessors → modify definitions
+├─ BeanPostProcessors → wrap beans (AOP proxies)
+├─ Beans (Controllers, Services, Repositories, Configs)
+└─ Environment & PropertySources
+
+spring-boot auto-configuration ↔ conditional beans based on classpath & properties
+\`\`\`
+
+---
+
+## 🚀 Advanced Topics & Pitfalls
+
+- Customizing auto-configuration with \`@Conditional\`.
+- Managing complex configuration with \`@ConfigurationProperties\` validation.
+- Performance tuning: caching (\`@Cacheable\`), async (\`@Async\`), thread pools.
+- Reactive stack: Spring WebFlux, Reactor, functional endpoints.
+- Cloud-native: Spring Cloud Config, Gateway, Circuit Breaker (Resilience4j), Kubernetes probes.
+- Common pitfalls: circular dependencies, bean overriding, classpath conflicts, file locking on Windows.
+
+---
+
+## 💻 Code Example Snippets
+
+### 1. @ConfigurationProperties with Validation
+\`\`\`java
+@Configuration
+@ConfigurationProperties(prefix = "app")
+@Validated
+public class AppProperties {
+@NotNull
+private String name;
+private DatasourceProperties datasource;
+// getters/setters
+}
+\`\`\`
+
+### 2. Custom Auto-Configuration
+\`\`\`java
+@Configuration
+@ConditionalOnClass(DataSource.class)
+@EnableConfigurationProperties(AppProperties.class)
+public class MyAutoConfiguration {
+@Bean
+@ConditionalOnMissingBean
+public MyService myService(AppProperties props) {
+return new MyService(props.getName());
+}
+}
+\`\`\`
+
+### 3. SecurityFilterChain Bean (Spring Security 5.7+)
+\`\`\`java
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+http.authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+.oauth2Login(Customizer.withDefaults());
+return http.build();
+}
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- GraalVM native-image with Spring AOT.
+- Spring Cloud ecosystem: Config, Netflix OSS, Kubernetes integration.
+- Service mesh: Istio, Linkerd with Spring Cloud Gateway.
+- CI/CD and Docker multi-stage builds for Spring Boot apps.
+- Advanced observability: distributed tracing, log correlation with Sleuth and Zipkin.
+`
+},
+{
 question: 'How does Spring Boot Auto-Configuration actually find and apply beans?',
 answerMd: `
 ### Under-the-Hood of Auto-Configuration
@@ -7855,7 +8088,7 @@ public ResponseEntity<Resource> getManifest(@PathVariable String id) {
     }
   ]
 },{
-  category: 'kubernetes',
+  category: 'devOps',
   title: 'Understanding Kubernetes Key Concepts — Story + Patterns + Code',
   subItems: [
     {
