@@ -3,11 +3,12 @@ import Header   from './components/Header';
 import Sidebar  from './components/Sidebar';
 import QAList   from './components/QAList';
 
-export type Category = 'all' | 'java' | 'springBoot' | 'cloud' | 'kafka' | 'aws' | 'javascript' |'react' | 'angular';
+export type Category = 'all' | 'java' | 'systemDesign' |'springBoot' | 'cloud' | 'kafka' | 'aws' | 'javascript' |'react' | 'angular';
 
 const categories = [
   { key: 'all' as Category,        label: 'All' },
   { key: 'java' as Category,       label: 'JAVA' },
+  { key: 'systemDesign' as Category,       label: 'SystemDesign' },
   { key: 'springBoot' as Category, label: 'Spring' },
   { key: 'cloud' as Category,      label: 'Cloud' },
   { key: 'kafka' as Category,      label: 'Kafka' },

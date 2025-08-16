@@ -3016,14 +3016,32 @@ subItems: [
 {
 question: 'How do I build a “Banking Finance App” React app from scratch covering every core React concept, using an Indian storytelling format?',
 answerMd: `
-### The Banking Finance App: An Indian Tale
+# 🏦 Banking Finance App — An Indian Tale in React
 
-In the thriving city of DhanPur, young banker Arjun dreamed of a digital “Banking Finance App” to serve villagers and merchants alike. Let’s journey with him through each lane of React as he builds accounts, transactions, and loan calculators.
+## 👥 Main Participants & Their Roles
+
+| Participant | Role in the App |
+|-------------|-----------------|
+| **Arjun (Developer)** | The visionary banker turning needs into code. |
+| **Villagers & Merchants (Users)** | Use the app to manage accounts, transactions, loans. |
+| **React Components** | UI building blocks — accounts, forms, transaction lists. |
+| **State (useState, useReducer)** | The “tally sheets” holding live account & transaction data. |
+| **Effects (useEffect)** | The “postman” fetching new transactions and data from the server. |
+| **Context API** | The “vault” sharing authentication and global info across the bank. |
+| **Custom Hooks** | Ritualised tasks — reusable business logic. |
+| **Routing (React Router)** | The “lanes of DhanPur” guiding users to different sections. |
+| **Error Boundaries & Suspense** | Safety nets and loading guards. |
 
 ---
 
-#### 1. Opening the Bank (create-react-app)
-Arjun summons the village builder:
+## 📖 Narrative
+
+In the thriving city of **DhanPur**, young banker **Arjun** dreamed of a digital Banking Finance App that could serve **villagers and merchants alike**.
+He set out to build it in React — mastering each street, square, and alley of the framework like a well‑mapped city.
+
+---
+
+## 1️⃣ Opening the Bank — _create‑react‑app_
 
 \`\`\`bash
 npx create-react-app banking-hub
@@ -3031,12 +3049,11 @@ cd banking-hub
 npm start
 \`\`\`
 
-This lays the foundation (\`public/index.html\`) and the main gate (\`src/index.js\`).
+🏗️ **Foundation:** \`public/index.html\` (plot of land) and \`src/index.js\` (main gate).
 
 ---
 
-#### 2. Account Window: Functional Components
-Each customer’s account is a component:
+## 2️⃣ Account Window — _Functional Components_
 
 \`\`\`jsx
 // src/components/AccountCard.jsx
@@ -3054,12 +3071,11 @@ return (
 export default AccountCard;
 \`\`\`
 
-Props (\`name\`, \`balance\`) are the customer’s details.
+💡 Props are like **customer details** passed to the teller.
 
 ---
 
-#### 3. Counting Deposits: useState
-The teller tracks daily deposits:
+## 3️⃣ Counting Deposits — _useState_
 
 \`\`\`jsx
 import React, { useState } from 'react';
@@ -3077,12 +3093,11 @@ New Deposit
 }
 \`\`\`
 
-\`useState\` is the teller’s tally sheet.
+🗒️ **useState** is the teller’s **tally sheet**.
 
 ---
 
-#### 4. Fetching Transactions: useEffect
-Every dawn, transactions arrive from the central server:
+## 4️⃣ Fetching Transactions — _useEffect_
 
 \`\`\`jsx
 import React, { useState, useEffect } from 'react';
@@ -3106,12 +3121,11 @@ fetch('/api/transactions')
 }
 \`\`\`
 
-\`useEffect\` simulates the postman delivering records.
+📮 **useEffect** = postman bringing transaction records at dawn.
 
 ---
 
-#### 5. A Custom Ritual: useFetch Hook
-To reuse any data fetch:
+## 5️⃣ A Custom Ritual — _useFetch Hook_
 
 \`\`\`jsx
 // src/hooks/useFetch.js
@@ -3126,12 +3140,11 @@ return data;
 }
 \`\`\`
 
-Call \`const accounts = useFetch('/api/accounts')\` anywhere.
+🔄 Reuse anywhere: \`const accounts = useFetch('/api/accounts')\`.
 
 ---
 
-#### 6. The Bank Vault: Context API
-Share authentication and user info:
+## 6️⃣ The Bank Vault — _Context API_
 
 \`\`\`jsx
 // src/AuthContext.js
@@ -3153,13 +3166,12 @@ return useContext(AuthContext);
 }
 \`\`\`
 
-Wrap in \`src/index.js\`:
+🔐 Wrap in \`index.js\`:
 \`<AuthProvider><App/></AuthProvider>\`.
 
 ---
 
-#### 7. Balancing the Books: useReducer
-A complex ledger demands a reducer:
+## 7️⃣ Balancing the Books — _useReducer_
 
 \`\`\`js
 // src/ledgerReducer.js
@@ -3172,12 +3184,11 @@ default:           return state;
 }
 \`\`\`
 
-Use \`useReducer(ledgerReducer, [])\` to manage transactions.
+📊 Ideal for complex ledgers and multiple transaction types.
 
 ---
 
-#### 8. Loading Spinner: Higher-Order Component
-Wrap modules with a spinner:
+## 8️⃣ Loading Spinner — _HOC_
 
 \`\`\`jsx
 function withSpinner(Component) {
@@ -3189,33 +3200,28 @@ return isLoading
 }
 \`\`\`
 
-Use: \`const TxnWithSpinner = withSpinner(TransactionsList);\`
-
 ---
 
-#### 9. Flexible Calculations: Render Props
-A dynamic loan calculator:
+## 9️⃣ Flexible Calculations — _Render Props_
 
 \`\`\`jsx
 function LoanCalculator({ render }) {
 const rate = 0.08;
 return <div>{render(rate)}</div>;
 }
-
-// Usage:
-<LoanCalculator render={r => (
-<p>EMI for ₹10000 at {r*100}%: ₹{(10000*r)/(1-Math.pow(1+r, -12)).toFixed(2)}</p>
-)} />
 \`\`\`
 
----
-
-#### 10. Vault Tabs: Compound Components
-Build “Accounts” / “Transactions” tabs sharing the activeTab context.
+📈 Pass a \`render\` function to customise EMI display logic.
 
 ---
 
-#### 11. Safety Net: Error Boundaries
+## 🔟 Vault Tabs — _Compound Components_
+
+Use shared context for “Accounts” / “Transactions” tab logic.
+
+---
+
+## 1️⃣1️⃣ Safety Net — _Error Boundaries_
 
 \`\`\`jsx
 class TransactionErrorBoundary extends React.Component {
@@ -3230,105 +3236,49 @@ return this.state.hasError
 }
 \`\`\`
 
-Wrap:
-\`<TransactionErrorBoundary><TransactionsList/></TransactionErrorBoundary>\`.
-
 ---
 
-#### 12. Secret Safe: Code Splitting
+## 1️⃣2️⃣ Secret Safe — _Code Splitting_
 
 \`\`\`jsx
 const Accounts     = React.lazy(() => import('./Accounts'));
 const Transactions = React.lazy(() => import('./Transactions'));
-
-function App() {
-return (
-<Suspense fallback={<p>Loading module…</p>}>
-<Accounts />
-<Transactions />
-</Suspense>
-);
-}
 \`\`\`
+
+🪄 Load modules on demand for performance.
 
 ---
 
-#### 13. Walking the Ledger: React Router
-
-\`\`\`bash
-npm install react-router-dom
-\`\`\`
+## 1️⃣3️⃣ Walking the Ledger — _React Router_
 
 \`\`\`jsx
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-
-function App() {
-return (
-<BrowserRouter>
-<nav>
-<Link to="/">Dashboard</Link>
-<Link to="/accounts">Accounts</Link>
-<Link to="/transactions">Transactions</Link>
-</nav>
-<Routes>
-<Route path="/"               element={<Dashboard />} />
-<Route path="/accounts"       element={<Accounts />} />
-<Route path="/transactions"   element={<Transactions />} />
-</Routes>
-</BrowserRouter>
-);
-}
 \`\`\`
+
+🛣️ Navigate between dashboard, accounts, and transactions like streets in DhanPur.
 
 ---
 
-#### 14. Performance Tuning: useMemo & useCallback
+## 1️⃣4️⃣ Performance Tuning — _useMemo & useCallback_
 
 \`\`\`jsx
 const highValueTxns = useMemo(
 () => txns.filter(t => t.amount > 10000),
 [txns]
 );
-const handleAddTxn = useCallback(
-txn => dispatch({ type: 'ADD_TXN', txn }),
-[]
-);
 \`\`\`
 
 ---
 
-#### 15. The Grand Ledger: Bringing It All Together
+## 1️⃣5️⃣ The Grand Ledger — _Bringing It All Together_
 
-\`\`\`jsx
-// src/App.jsx
-import React, { lazy, Suspense } from 'react';
-import { useAuth } from './AuthContext';
-import TransactionErrorBoundary from './TransactionErrorBoundary';
+Integrate all modules inside \`App.jsx\` with Auth, Routing, Suspense, and Error Boundaries.
 
-const Dashboard    = lazy(() => import('./Dashboard'));
-const Accounts     = lazy(() => import('./Accounts'));
-const Transactions = lazy(() => import('./Transactions'));
+---
 
-function App() {
-const { user } = useAuth();
-return (
-<div>
-<h1>Welcome to Banking Hub{user ? \`, \${user.name}\` : ''}</h1>
-<TransactionErrorBoundary>
-<Suspense fallback={<p>Loading banking modules…</p>}>
-<Dashboard />
-<Accounts />
-<Transactions />
-</Suspense>
-</TransactionErrorBoundary>
-</div>
-);
-}
+### 🌟 Epilogue
 
-export default App;
-\`\`\`
-
-Through components, props, state, effects, hooks, context, reducers, HOCs, render props, compound components, error boundaries, code splitting, routing, and performance hooks, Arjun’s Banking Finance App became the digital heart of DhanPur—balancing every ledger with precision and care.
+Through components, props, state, effects, hooks, context, reducers, HOCs, render props, compound components, error boundaries, code splitting, routing, and performance hooks… **Arjun’s Banking Finance App** became the digital heart of DhanPur — balancing every ledger with **precision** and **care**.
 `
 }
 ]
@@ -5523,7 +5473,223 @@ return "Default fallback response";
 `
 }
 ]
+},{
+category: 'systemDesign',
+title: 'Design shortUrl in Java with architectural diagram (story + implementation)',
+subItems: [
+{
+question: 'Design shortUrl in Java with architectural diagram',
+answerMd: `
+# 🚀 TinyURL in Java — Story‑Driven System Design
+
+## 👥 Main Participants & Their Roles
+
+| Participant | Role in the Short URL System |
+|-------------|------------------------------|
+| **Client (Browser / App)** | Sends requests to shorten URLs and follows redirect links. |
+| **API Service (Spring Boot)** | Central brain — handles requests, validates input, coordinates ID generation, DB, and cache. |
+| **ID Generator** | Creates unique numeric IDs to be encoded into short aliases (Base62). |
+| **Base62 Encoder** | Converts numeric IDs into compact, human‑friendly short codes. |
+| **Database** | Stores the alias → original URL mapping with metadata. |
+| **Cache (Redis)** | Holds hot mappings for lightning‑fast lookups. |
+| **Analytics / MQ (Optional)** | Tracks click events, feeds into reporting. |
+| **Monitoring & Logging** | Observes performance, errors, usage patterns for ops teams. |
+
+---
+
+## 📖 Narrative
+
+Once upon a time in **LinkNagar**, every long winding address wanted a simpler nickname to move faster through the streets. You’re the chief at the 🏢 **Alias Office**, issuing short aliases and guiding travellers there instantly — even during rush hour.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal | Detail |
+|------|--------|
+| ⚡ Speed | Sub‑50 ms p95 redirect latency |
+| 📈 Scale | Millions of redirects/day |
+| 🛡️ Correctness | Unique alias per original URL |
+| 💪 Resilience | No single point of failure |
+| 🚫 Abuse control | Prevent brute force & spam |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
++---------+         +------------------+
+Client  | Browser |  POST   |   API Service    |
++---------+ ------> | (Spring Boot)    |
+GET /a1B2          +------------------+
+|                   |
+|        +----------+-----------+
+|        |                      |
+v        v                      v
++-----------+  +-----------+     +-----------+
+|   Cache   |  |  Database |     |  ID Gen    |
+| (Redis)   |  | (alias→URL)|     | (Counter / |
++-----------+  +-----------+     |  Base62)   |
+|   ^                          +-----------+
+hit ->   |   |  miss
+v   |
++-----------+
+|  Redirect |
+|  Response |
++-----------+
+\`\`\`
+
+---
+
+## 🔄 Core Flows
+
+1. **Shorten URL**:
+POST → Validate → ID Gen → Base62 encode → Store in DB → Cache → Respond alias.
+
+2. **Redirect**:
+GET → Check cache → Hit → Redirect;
+Miss → DB lookup → Cache → Redirect → (Optional: publish click event).
+
+---
+
+## 🗃️ Data Model
+
+\`\`\`sql
+CREATE TABLE url_mapping (
+alias        VARCHAR(12) PRIMARY KEY,
+original_url TEXT        NOT NULL,
+created_at   TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+last_access  TIMESTAMP   NULL,
+clicks       BIGINT      DEFAULT 0
+);
+CREATE INDEX idx_url_mapping_created ON url_mapping(created_at);
+\`\`\`
+
+---
+
+## 💻 Java Essentials
+
+### Base62 Encoder
+\`\`\`java
+public final class Base62 {
+private static final char[] ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+public static String encode(long num) {
+if (num == 0) return "0";
+StringBuilder sb = new StringBuilder();
+while (num > 0) {
+sb.append(ALPHABET[(int)(num % 62)]);
+num /= 62;
 }
+return sb.reverse().toString();
+}
+}
+\`\`\`
+
+### ID Generator
+\`\`\`java
+@Component
+public class IdGenerator {
+private final AtomicLong counter;
+public IdGenerator(@Value("\${tinyurl.start-seq:1}") long start) {
+this.counter = new AtomicLong(start);
+}
+public long nextId() {
+return counter.getAndIncrement();
+}
+}
+\`\`\`
+
+### Entity
+\`\`\`java
+@Entity
+@Table(name = "url_mapping")
+public class UrlMapping {
+@Id private String alias;
+@Column(name="original_url", nullable=false, length=2048)
+private String originalUrl;
+private Instant createdAt = Instant.now();
+private Instant lastAccess;
+private long clicks;
+}
+\`\`\`
+
+### Service
+\`\`\`java
+@Service
+public class TinyUrlService {
+private final UrlRepo repo;
+private final IdGenerator ids;
+private final String domain;
+
+public TinyUrlService(UrlRepo repo, IdGenerator ids, @Value("\${tinyurl.domain}") String domain) {
+this.repo = repo; this.ids = ids; this.domain = domain;
+}
+
+public String shorten(String rawUrl) {
+String url = normalize(rawUrl);
+validate(url);
+for (int i = 0; i < 3; i++) {
+String alias = Base62.encode(ids.nextId());
+if (!repo.existsById(alias)) {
+UrlMapping m = new UrlMapping();
+m.setAlias(alias);
+m.setOriginalUrl(url);
+repo.save(m);
+return domain + "/" + alias;
+}
+}
+throw new IllegalStateException("Failed to allocate alias");
+}
+
+@Transactional
+public Optional<String> resolve(String alias) {
+return repo.findById(alias).map(m -> {
+m.setClicks(m.getClicks() + 1);
+m.setLastAccess(Instant.now());
+return m.getOriginalUrl();
+});
+}
+}
+\`\`\`
+
+### Controller
+\`\`\`java
+@RestController
+public class TinyUrlController {
+private final TinyUrlService svc;
+public TinyUrlController(TinyUrlService svc) { this.svc = svc; }
+
+@PostMapping("/shorten")
+public ResponseEntity<Map<String,String>> shorten(@RequestBody Map<String,String> body) {
+String aliasUrl = svc.shorten(body.get("url"));
+return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("alias", aliasUrl));
+}
+
+@GetMapping("/{alias}")
+public ResponseEntity<Void> redirect(@PathVariable String alias) {
+return svc.resolve(alias)
+.map(u -> ResponseEntity.status(HttpStatus.FOUND).location(URI.create(u)).build())
+.orElse(ResponseEntity.notFound().build());
+}
+}
+\`\`\`
+
+---
+
+## 📊 Scaling & Ops
+
+- Cache hot aliases in Redis 🗄️
+- Distributed ID gen (Snowflake/DB sequence) for multi‑node 🚦
+- Shard DB by alias hash for scale 🧩
+- Publish click events to Kafka/MQ for analytics 📈
+- Global low‑latency via CDN/edge 🌍
+- Observability: monitor QPS, latency, cache hit rate, errors 📡
+- URL validation & rate‑limit per client 🔒
+`
+}
+]
+},
+
 ];
 
 export default data;
