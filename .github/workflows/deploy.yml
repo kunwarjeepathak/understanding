@@ -2,7 +2,7 @@ name: Build & Deploy QA Hub
 
 on:
   push:
-    branches: [ main ]
+    branches: [ test ]    # ← trigger on your new branch
 
 jobs:
   build-and-deploy:
@@ -11,8 +11,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Use Node.js
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
           node-version: '18'
@@ -24,10 +26,10 @@ jobs:
       - name: Build production bundle
         run: npm run build
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages branch
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build
-          publish_branch: deploy
+          publish_branch: deploy     # ← your Pages branch
           force_orphan: true
