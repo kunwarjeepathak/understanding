@@ -1,23 +1,20 @@
-# .github/workflows/deploy.yml
 name: Build & Deploy QA Hub
-
-# Grant write access to contents (so we can push) and pages (for Pages API)
-permissions:
-  contents: write
-  pages: write
 
 on:
   push:
     branches: [ test ]
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 
+jobs:
+  build:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+        with: { fetch-depth: 0 }
 
       - uses: actions/setup-node@v3
         with:
@@ -25,13 +22,18 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
-
       - run: npm run build
 
-      - name: Deploy to GitHub Pages branch
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Upload build output
+        uses: actions/upload-pages-artifact@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build
-          publish_branch: deploy
-          force_orphan: true
+          path: ./build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+        with:
+          branch: deploy
