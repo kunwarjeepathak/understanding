@@ -9536,6 +9536,392 @@ client.get('session123', (err, val) => { /* ... */ });
 }
 ]
 },
+{
+category: 'leadership',
+title: 'Handling Tough Situations — STAR Q&A',
+subItems: [
+{
+question: 'Describe a situation at Wipro where you handled a critical migration smoothly.',
+answerMd: `
+# STAR Example: Zero-Downtime Core Banking Migration at Wipro
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+Customer Transactions
+│
+▼
+Legacy STAR System
+│
+▼
+Oracle ESB
+┌───────┴───────┐
+▼               ▼
+STAR Adapter       T24 Adapter
+└───────┬───────┘
+▼
+Relationship Summary Service
+│
+▼
+Data Stores
+\`\`\`
+
+## Situation
+
+At Wipro, our team was responsible for migrating SAMBA Financial Group’s 1 million+ retail banking customers from a legacy STAR system to the Temenos T24 core banking platform. We needed to process over 40 000 transactions daily with zero downtime, while meeting strict regulatory requirements and ensuring data consistency across two disparate systems.
+
+## Task
+
+As the Senior Software Engineer and onsite coordinator, I was charged with:
+- Designing and executing a zero-downtime migration strategy.
+- Ensuring real-time data synchronization between STAR and T24 throughout the cut-over.
+- Building robust integration layers for both legacy and new system transactions.
+- Coordinating cross-functional teams across Hyderabad and Riyadh to hit a fixed go-live deadline.
+
+## Action
+
+1. Architected Oracle ESB Integration
+- Developed two ESB routes: a STAR adapter for legacy flows and a T24 adapter for migrated accounts.
+- Employed message queuing and guaranteed-delivery patterns to prevent data loss.
+
+2. Designed Hybrid Data Consolidation
+- Created a “Relationship Summary” service to merge customer profiles in real time.
+- Implemented nightly reconciliation jobs that auto-corrected minor mismatches.
+
+3. Built Critical Modules
+- Exchange Rate Management for live currency conversion.
+- E-Statement Digitization, reducing manual request volume by 40%.
+- Speedcash Transfers to streamline cross-border remittances.
+
+4. Coordinated Cross-Functional Execution
+- Ran daily stand-ups between Hyderabad and Riyadh to track progress.
+- Drafted detailed runbooks, rollback plans, and conducted parallel dry-run migrations.
+- Liaised with regulatory auditors ahead of go-live to validate compliance checkpoints.
+
+## Result
+
+- Achieved zero downtime on cut-over day; processed 40 000+ transactions seamlessly.
+- Maintained 100% data integrity, with nightly jobs auto-resolving 98% of minor mismatches.
+- Reduced manual statements by 40%, boosting customer satisfaction scores.
+- Earned Wipro’s “Excellence in Delivery” award for flawless execution.
+`
+},
+{
+question: 'Describe a challenging re-architecture at Carelon Global Solutions and how you resolved it.',
+answerMd: `
+# STAR Example: Cost-Effective Claims Pipeline Re-architecture at Carelon Global Solutions
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+Client / Dashboard
+│
+▼
+Amazon S3
+│ (Put Event)
+▼
+AWS Lambda
+│
+┌─────┴─────┐
+▼           ▼
+DocumentDB   AWS Transfer Family
+│
+▼
+FileNet
+\`\`\`
+
+## Situation
+
+At Carelon, we processed over 1 million healthcare claims per day through an AWS event-driven pipeline. Rising S3 egress fees and intermittent SFTP failures to FileNet threatened our cost targets and 99.9% SLA commitment.
+
+## Task
+
+As Technical Lead, I needed to re-architect the ingestion and transfer workflow to:
+- Eliminate performance bottlenecks.
+- Reduce annual infrastructure costs by at least \$15 000.
+- Guarantee reliable, end-to-end delivery without disrupting downstream systems.
+
+## Action
+
+1. Designed a Lambda-centric Pipeline
+- Lambdas subscribed to S3 event notifications, processed claims in batches with idempotent checks, and stored metadata in DocumentDB.
+
+2. Migrated to Serverless SFTP
+- Replaced EC2-based SFTP jobs with S3 event–triggered AWS Transfer Family transfers, enabling near-real-time movement to FileNet.
+
+3. Implemented Automated Remediations
+- Added granular CloudWatch metrics and alarm-driven automations (Lambda retries, dead-letter queues) to resolve failures within minutes.
+
+4. Optimized Costs
+- Consolidated small file writes into larger S3 objects, leveraged Intelligent-Tiering, and right-sized Lambda memory configurations.
+
+## Result
+
+- Cut annual infrastructure costs by \$18 000 (20% better than target).
+- Achieved 99.9% SLA compliance over six months with zero unplanned downtime.
+- Reduced end-to-end claim-processing latency by 35%, improving partner satisfaction.
+- Automated error remediation, reducing manual interventions by 80%.
+`
+},
+{
+question: 'Describe a demanding platform overhaul at DBS Bank and how you managed it effectively.',
+answerMd: `
+# STAR Example: Automated Trade-Reporting Platform at DBS Bank
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+Murex Trade Events
+│
+▼
+Kafka
+│
+▼
+Golang Reconciliation Service
+┌──────────┴──────────┐
+▼                     ▼
+React Dashboard      Spring Batch ETL
+│
+▼
+MariaDB
+\`\`\`
+
+## Situation
+
+DBS needed to modernize its HKTR/SGTR trade-reporting platforms by migrating from a legacy mainframe and disparate systems to a unified, cloud-native Golang and React stack. Manual reconciliations consumed 50% of an analyst’s workweek and were error-prone.
+
+## Task
+
+As Lead Development Engineer, I was tasked with:
+- Delivering a production-grade reconciliation system within a four-month regulatory deadline.
+- Halving manual effort while preserving data accuracy for millions of daily transactions.
+
+## Action
+
+1. Built Golang Microservices
+- Consumed Murex trade events via Kafka, applied business validations, and generated reconciliation records.
+
+2. Developed a Real-Time React Dashboard
+- Displayed mismatches and audit trails, enabling analysts to drill into discrepancies.
+
+3. Automated Nightly ETL Workflows
+- Used Spring Batch to load enriched data into MariaDB and perform consistency checks against mainframe exports.
+
+4. Streamlined CI/CD
+- Implemented Jenkins pipelines and Terraform on OpenShift, reducing release cycles from two weeks to four days.
+
+5. Fostered Cross-Team Collaboration
+- Held bi-weekly demos with compliance, QA, and infrastructure teams to stay ahead of regulatory checkpoints.
+
+## Result
+
+- Reduced manual reconciliation effort by 50%, saving 1 000 analyst hours per quarter.
+- Delivered the platform on schedule with zero critical audit findings.
+- Increased deployment frequency by 40%, enabling rapid feature iterations.
+- Won DBS’s Delivery Excellence Award for innovation in trade-reporting automation.
+`
+},
+]
+},{
+category: 'leadership',
+title: 'Q&A Platform Architecture — Q&A Format',
+subItems: [
+{
+question: 'Draw and explain the application architecture you are currently working on.',
+answerMd: `
+# Q&A Platform Architecture — Overview
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
++------------+
+|   Client   |
++-----+------+
+|
+v
++---------+
+|   CDN   |
++---------+
+|
+v
++----------------------+
+|    Frontend App      |
+| (Next.js / React)    |
++----------+-----------+
+|
+v
++----------------------+
+|   API Gateway / LB   |
++----------+-----------+
+|
++--------------+--------------+
+|              |              |
+v              v              v
++--------+    +-----------+    +------------+
+| Auth   |    | QA Service|    | DiagramSvc |
+| Service|    |           |    |            |
++--------+    +-----+-----+    +-----+------+
+|                |
+v                v
++-----------+    +---------------+
+| Database  |    | Object Store  |
++-----------+    +---------------+
+|
+v
++-----------+
+|  Redis    |
++-----------+
+
+
+
+Provider Claims Attachments
+=============================
+Availity → [CFX] → [S3] → [Lambda] → [DocumentDB] → [Textract/PDF Merging] → [SFTP → FileNet]
+↗ (EventBridge)
+
+
+
+Client / Dashboard
+│
+▼
+Amazon S3
+│ (Writes data)
+▼
+AWS Lambda
+│
+├───────────────────────────────────────┐
+│                                       │
+▼                                       ▼
+Producer Queue                          Amazon SNS
+│
+▼
+Kubernetes Cluster
+│
+├─────────────┬───────────────┬───────────────┐
+│             │               │               │
+▼             ▼               ▼               ▼
+Horizontal    Cluster          Horizontal      Output
+Autoscaler    Autoscaler       Autoscaler      Bucket
+│
+▼
+Administers Containers
+│
+├─────────────┬───────────────┬───────────────┐
+│             │               │               │
+▼             ▼               ▼               ▼
+Executor      Runs             Validates       PostgreSQL
+Containers    Validation       Outputs         PersistentVolume
+
+
+Additional services: SearchSvc (Elasticsearch), Analytics (Kafka → DW), CI/CD Pipeline.
+\`\`\`
+
+---
+
+
+Key Components
+1.	File Ingestion (AWS S3 + CFX)
+o	Cloud File Exchange (CFX):
+	Polled Availity’s SFTP for new claim batches (ZIP files).
+	File Size Handling: Split >10MB files into chunks using AWS Transfer Family.
+2.	Event-Driven Processing (Lambda)
+o	Trigger: S3 ObjectCreated events.
+o	Workflow:
+1.	Unzip & Validate: Extracted attachments (PDF, CSV, TIFF) using libarchive (Python).
+2.	Merge to PDF:
+	Converted non-PDF files (e.g., CSV → PDF tables) with PyPDF2/reportlab.
+	Stitched multi-page TIFFs into single PDFs using Pillow.
+3.	Metadata Extraction:
+	Used AWS Textract to OCR scanned PDFs and extract fields like patient_id, claim_amount.
+	Stored raw and processed files in DocumentDB for audit trails.
+2.	Downstream Integration
+o	SFTP to FileNet:
+	Transformed PDFs into FileNet-compatible formats (e.g., TIFF for legacy systems).
+	Retry Logic: AWS Step Functions to handle SFTP timeouts.
+	Post-Processing (AWS Glue):
+	Batch-processed merged PDFs to flag anomalies (e.g., overpayments).
+	Error Handling
+	Dead-Letter Queue (SQS): Captured failed Lambda invocations for reprocessing.
+	SNS Alerts: Notified ops team for manual review of corrupted files.
+Impact
+•	20% Faster Settlements: Reduced manual document handling for overpayment claims.
+•	Cost Savings: Cut Availity’s storage costs by 40% via AWS S3 lifecycle policies.
+
+
+
+## 👥 Main Components & Responsibilities
+
+| Component         | Responsibility                                         |
+|-------------------|--------------------------------------------------------|
+| Client            | Browse, author, and preview Q&A content                |
+| CDN               | Cache static assets for low-latency delivery           |
+| Frontend App      | Renders UI, handles live preview and diagram editing   |
+| API Gateway / LB  | Routes requests, enforces auth and rate limits         |
+| Auth Service      | OAuth/JWT issuance and session management              |
+| QA Service        | CRUD operations on questions, answers, metadata        |
+| DiagramSvc        | Renders Mermaid, ASCII art, and image diagrams         |
+| Database          | Persists user data, content, version history           |
+| Redis             | Caches sessions, rate-limit counters                   |
+| Object Store      | Stores markdown, diagram exports, assets (S3/Git)      |
+| SearchSvc         | Ingests content events, serves full-text search (ES)   |
+| Analytics         | Streams usage events via Kafka into data warehouse     |
+| CI/CD Pipeline    | Automates build, test, and deployment to Kubernetes    |
+
+---
+
+## 📖 Narrative
+
+Our platform empowers technical authors to create rich Q&A articles blending code, diagrams, and narrative. Readers get sub-second load times, real-time search, and live preview of Mermaid or ASCII diagrams. Behind the scenes, an event-driven pipeline keeps search and analytics in sync, while a robust CI/CD workflow guarantees safe, repeatable releases.
+
+---
+
+## 🎯 Goals & Constraints
+
+| Goal                          | Detail                                                              |
+|-------------------------------|---------------------------------------------------------------------|
+| Real-time Editing & Preview   | Instant markdown and diagram rendering in the browser               |
+| Scalable Content Storage      | Handle thousands of concurrent reads/writes with strong consistency |
+| Rich Diagram & Code Support   | Embed and render Mermaid, ASCII art, and syntax-highlighted code    |
+| Low-Latency Search            | Full-text search with tag filtering and autocomplete                |
+| Multi-Tenancy & Access Control| Isolate customer data and enforce role-based permissions            |
+| Automated Deployment          | Zero-downtime releases via blue-green/Kubernetes                    |
+
+---
+
+## 🔄 Data Flow
+
+1. User loads page → CDN → Frontend App.
+2. Editor requests content → API Gateway → Auth → QA Service → DB/Redis.
+3. Diagram preview request → DiagramSvc → Object Store → returns URL.
+4. Content changes → QA Service emits Kafka event → SearchSvc indexes into Elasticsearch.
+5. User interactions → Analytics events → Kafka → Data Warehouse for dashboards.
+6. Git push → CI/CD Pipeline builds containers → deploys to Kubernetes → invalidates CDN.
+
+---
+
+## 🔄 Core Patterns & Considerations
+
+| Pattern           | Problem Solved                                | Verification                      | Mitigation                         |
+|-------------------|-----------------------------------------------|-----------------------------------|------------------------------------|
+| CDN Caching       | Reduces load and latency                      | Cache invalidation on updates     | Use ETags, cache-busting headers   |
+| Rate Limiting     | Prevents abuse and overload                   | Burst vs sustained thresholds     | Token bucket in Redis              |
+| Circuit Breaker   | Fails fast on external diagram or search APIs | Sensitivity of thresholds         | Resilience4j with fallback         |
+| Event-Driven Sync | Decouples services for scalable indexing      | Ordering and duplication          | Idempotent consumers, DLQs         |
+| CI/CD Automation  | Ensures reproducible, zero-downtime deploys   | Pipeline flakiness                | Automated rollback on failure      |
+
+---
+
+## 🚀 Advanced Considerations
+
+- Multi-region active-active deployment with global DB replication
+- Blue-green deployments and feature flags for safe rollouts
+- Predictive CDN pre-warming via usage analytics
+- ML-driven content recommendations and synonym expansion
+- End-to-end encryption and GDPR audit logging
+`
+}
+]
+}
 
 ];
 
