@@ -252,6 +252,351 @@ Use synchronized blocks, locks (\`ReentrantLock\`), concurrent collections, or a
 `
 }
 ]
+}, {
+  category: 'java',
+  title: 'Java 17: Why These Features Came into the Market',
+  subItems: [
+    {
+  question: 'What are the main features of Java 17 and why were they introduced?',
+  answerMd: `
+# Java 17: Why These Features Came into the Market
+
+Imagine you work in a fast-moving software team in Bengaluru. Over time, you hit these pain points:
+- Developers accidentally use hidden JDK APIs and break upgrades.
+- Simple data classes need too much boilerplate.
+- Switch statements scatter \`instanceof\` checks and casts everywhere.
+- \`java.util.Random\` feels dated and sometimes biased.
+- Calling native C code via JNI is verbose and error-prone.
+- Heavy numeric loops run too slowly.
+- Floating-point results differ slightly across machines, causing subtle bugs.
+
+To address these, Java 17 introduced seven key improvements.
+
+---
+
+## 🗺️ ASCII Timeline & Feature Map
+
+\`\`\`
+Java 8 (2014) ---> Java 9 (2017) ---> Java 11 (2018) ---> Java 17 (2021 LTS)
+                                                    |
+                                                    v
+                +---------------------------------------------+
+                |                 Java 17                    |
+                +---------------------------------------------+
+                | JEP 396: Strong Encapsulation               |
+                | JEP 409: Sealed Classes & Interfaces        |
+                | JEP 406: Pattern Matching for switch (prev) |
+                | JEP 356: Enhanced Pseudo-Random Generators   |
+                | JEP 412: Foreign Function & Memory API      |
+                | JEP 418: Vector API                         |
+                | JEP 398: Always-Strict Floating-Point Rules |
+                +---------------------------------------------+
+\`\`\`
+
+---
+
+## 1. Strong Encapsulation (JEP 396)
+
+Why:
+- Teams accidentally relied on internal JDK classes.
+- Upgrades broke code without warning.
+
+What:
+- All non-exported packages in modules are now sealed.
+- You only see what you explicitly export in \`module-info.java\`.
+
+\`\`\`java
+// module-info.java
+module my.app {
+    requires java.base;   // only java.base is visible
+    exports com.my.app.api;
+}
+\`\`\`
+
+---
+
+## 2. Sealed Classes & Interfaces (JEP 409)
+
+Why:
+- Public type hierarchies ballooned uncontrolled, risking invariants.
+
+What:
+- Let library authors list exactly which subclasses or implementors are allowed.
+
+\`\`\`java
+public sealed interface Shape permits Circle, Rectangle {
+    double area();
+}
+public final class Circle implements Shape { /*…*/ }
+public final class Rectangle implements Shape { /*…*/ }
+\`\`\`
+
+---
+
+## 3. Pattern Matching for switch (JEP 406, Preview)
+
+Why:
+- \`instanceof\` + cast combos cluttered switch statements.
+
+What:
+- Switch can now test type and bind a variable in one step.
+
+\`\`\`java
+static String describe(Object o) {
+    return switch (o) {
+        case Integer i -> "Integer: " + i;
+        case String  s -> "String: "  + s;
+        default        -> "Other";
+    };
+}
+\`\`\`
+
+---
+
+## 4. Enhanced PRNG API (JEP 356)
+
+Why:
+- \`java.util.Random\` algorithms were dated and inconsistent.
+
+What:
+- New \`RandomGenerator\` factory offers modern, high-quality options (Xoroshiro, L64X128Mix, etc.).
+
+\`\`\`java
+var rng = RandomGenerator.of("L64X128MixRandom");
+int roll = rng.nextInt(1, 7);  // 1..6
+\`\`\`
+
+---
+
+## 5. Foreign Function & Memory API (JEP 412, Incubator)
+
+Why:
+- JNI is verbose and easy to mismanage, leading to memory leaks.
+
+What:
+- Safe, high-performance native calls via \`MemorySegment\` and \`Linker\`, no JNI boilerplate.
+
+\`\`\`java
+// pseudo-code for calling C's printf
+var linker = CLinker.systemCLinker();
+var lookup = SymbolLookup.loaderLookup();
+var printf = linker.downcallHandle(
+    lookup.lookup("printf").get(),
+    MethodType.methodType(int.class, MemoryAddress.class),
+    FunctionDescriptor.of(CLinker.C_INT, CLinker.C_POINTER)
+);
+// later: printf.invokeExact(addrOf("Hello, world!"));
+\`\`\`
+
+---
+
+## 6. Vector API (JEP 418, Incubator)
+
+Why:
+- Numeric loops (image processing, ML) need SIMD speedups.
+
+What:
+- Expose hardware-accelerated vector lanes in pure Java.
+
+\`\`\`java
+VectorSpecies<Float> SPECIES = FloatVector.SPECIES_PREFERRED;
+var v1 = FloatVector.fromArray(SPECIES, a, 0);
+var v2 = FloatVector.fromArray(SPECIES, b, 0);
+v1.add(v2).intoArray(result, 0);
+\`\`\`
+
+---
+
+## 7. Always-Strict Floating-Point Semantics (JEP 398)
+
+Why:
+- Tiny FP discrepancies on different platforms led to hard-to-find bugs.
+
+What:
+- Enforce IEEE-754 strict mode by default so results match everywhere.
+
+---
+
+With these seven enhancements, Java 17 makes your code safer, more concise, and faster—helping teams across India and beyond upgrade with confidence.
+`
+    },{
+  question: 'What are the main features of Java 8 and why were they introduced?',
+  answerMd: `
+# Java 8: Why These Features Came into the Market
+
+Imagine you’re maintaining a sprawling enterprise system across Bangalore and beyond. Before Java 8, you struggled with:
+- Anonymous inner classes everywhere for callbacks, leading to verbose boilerplate.  
+- Manual loops for every collection transformation, with no easy parallelism.  
+- Interfaces you couldn’t evolve without breaking existing implementations.  
+- java.util.Date and Calendar APIs that were mutable, timezone-confusing, and bug-prone.  
+- NullPointerExceptions lurking at each unchecked reference.  
+- Clumsy asynchronous workflows built atop threads, Future callbacks or third-party libs.  
+- Embedding JavaScript via the slow Rhino engine.
+
+To tackle these pain points, Java 8 shipped eight foundational improvements.
+
+---
+
+## 🗺️ ASCII Timeline & Feature Map
+
+\`\`\`
+Java 6 (2011) ---> Java 7 (2011) ---> Java 8 (2014)
+                                      |
+                                      v
+         +------------------------------------------------+
+         |                   Java 8                      |
+         +------------------------------------------------+
+         | 1. Lambda & Functional Interfaces             |
+         | 2. Method References                          |
+         | 3. Stream API                                 |
+         | 4. Default & Static Methods in Interfaces     |
+         | 5. New Date/Time API (JSR-310)                |
+         | 6. Optional<T>                                |
+         | 7. CompletableFuture & Parallel Streams        |
+         | 8. Nashorn JavaScript Engine                  |
+         +------------------------------------------------+
+\`\`\`
+
+---
+
+## 1. Lambda & Functional Interfaces
+
+Why  
+- Anonymous inner classes for single-method callbacks clutter code.  
+- Teams wanted to treat behavior as first-class data.
+
+What  
+- Introduce \`()->\` syntax for inline functions.  
+- Use \`@FunctionalInterface\` to mark interfaces with exactly one abstract method.
+
+\`\`\`java
+Runnable r  = () -> System.out.println("Hello, Java 8!");
+Function<String,Integer> parse = s -> Integer.parseInt(s);
+\`\`\`
+
+---
+
+## 2. Method References
+
+Why  
+- Even simple lambdas like \`x -> x.method()\` felt verbose.
+
+What  
+- \`ClassName::staticMethod\`, \`instance::instanceMethod\`, \`Type::new\` let you point directly at methods or constructors.
+
+\`\`\`java
+List<String> names = List.of("Alice", "Bob", "Carol");
+names.forEach(System.out::println);
+\`\`\`
+
+---
+
+## 3. Stream API
+
+Why  
+- Manual loops for filtering, mapping, reducing data clutter business logic.  
+- Parallelism required manual ForkJoin boilerplate.
+
+What  
+- Fluent \`.stream()\` pipelines with \`.filter()\`, \`.map()\`, \`.reduce()\`.  
+- One-liner \`.parallelStream()\` to leverage multicore cores.
+
+\`\`\`java
+List<Integer> evens = numbers.stream()
+    .filter(n -> n % 2 == 0)
+    .collect(Collectors.toList());
+\`\`\`
+
+---
+
+## 4. Default & Static Methods in Interfaces
+
+Why  
+- Adding a method to an interface broke every existing implementation.
+
+What  
+- \`default\` methods supply an in-interface implementation.  
+- \`static\` methods bundle utilities alongside the interface.
+
+\`\`\`java
+public interface Logger {
+    default void log(String msg) { System.out.println(msg); }
+    static Logger getGlobal() { return new ConsoleLogger(); }
+}
+\`\`\`
+
+---
+
+## 5. New Date/Time API (JSR-310)
+
+Why  
+- \`java.util.Date\` and \`Calendar\` were mutable, poorly designed, and thread-unsafe.
+
+What  
+- \`java.time\` package with immutable types: \`LocalDate\`, \`LocalDateTime\`, \`Instant\`, \`Duration\`, \`Period\`.
+
+\`\`\`java
+LocalDate today     = LocalDate.now();
+LocalDate birthday  = LocalDate.of(1990, Month.JANUARY, 1);
+Period    age       = Period.between(birthday, today);
+\`\`\`
+
+---
+
+## 6. Optional<T>
+
+Why  
+- NullPointerExceptions everywhere; no expressive way to model “maybe missing” values.
+
+What  
+- \`Optional<T>\` wraps a value that may be absent.  
+- Methods like \`.ifPresent()\`, \`.orElse()\` enforce explicit unwrapping.
+
+\`\`\`java
+Optional<String> nameOpt = Optional.ofNullable(findUserName());
+nameOpt.ifPresent(n -> System.out.println("User: " + n));
+\`\`\`
+
+---
+
+## 7. CompletableFuture & Parallel Streams
+
+Why  
+- \`Future\` and callbacks led to nested, hard-to-compose logic.  
+- Parallel loops still required explicit ForkJoin coding.
+
+What  
+- \`CompletableFuture\` for non-blocking, composable async flows.  
+- Streams gain \`.parallel()\`, powered by the common ForkJoinPool.
+
+\`\`\`java
+CompletableFuture.supplyAsync(() -> fetchData())
+    .thenApplyAsync(this::process)
+    .thenAcceptAsync(System.out::println);
+\`\`\`
+
+---
+
+## 8. Nashorn JavaScript Engine
+
+Why  
+- Server-side JS embedding used the slow, outdated Rhino engine.
+
+What  
+- Nashorn delivers a high-performance ECMAScript 5.1 engine on the JVM.
+
+\`\`\`java
+ScriptEngine engine = new ScriptEngineManager()
+    .getEngineByName("nashorn");
+engine.eval("print('Hello from Nashorn!');");
+\`\`\`
+
+---
+
+With these eight breakthroughs, Java 8 transformed the language into a modern, expressive, and parallel-ready platform—helping teams across India and the world write cleaner, safer, and faster code.
+`
+}
+  ]
 },
 {
 category: 'java',
@@ -325,7 +670,6 @@ hello
 ~~~
 `
 },// Add this under the “String Based Questions” card’s subItems array
-
 {
 question: "How do you print all words that appear more than once using Java Streams?",
 answerMd: `
@@ -7859,6 +8203,217 @@ return svc.resolve(alias)
 }
 ]
 },{
+category: 'systemDesign',
+title: 'Event Booking System with Concurrency and Validation — Story + Patterns + Code',
+subItems: [
+{
+question: 'How do you implement an event booking system that prevents overbooking under concurrent requests, allows cancellations, and provides event-wise summaries using in-memory storage?',
+answerMd: `
+# 🏟️ Event Booking System with Concurrency & Validation — Story-Driven Guide
+
+## 👥 Main Participants & Their Roles
+
+| Participant         | Role                                          |
+|---------------------|-----------------------------------------------|
+| Client              | Sends booking and cancellation requests       |
+| Event Repository    | Stores events with seat counts                |
+| Booking Repository  | Manages booking records                       |
+| Booking Service     | Contains thread-safe booking logic            |
+| REST Controllers    | Expose API endpoints                          |
+| Testing Tools       | JUnit and Spring Test for unit & integration  |
+
+---
+
+## 📖 Narrative
+
+Imagine you're managing ticket sales for a blockbuster concert in **Microtown**. The moment the tickets go live, hundreds of fans swarm your API. Your mission: ensure nobody secures more seats than exist, even when dozens of booking requests race in parallel. When someone cancels, free up a seat immediately. And at any point, provide an accurate summary of total vs. booked seats.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                         | Detail                                                         |
+|------------------------------|----------------------------------------------------------------|
+| 🚦 Prevent Overbooking       | Use per-event locks to serialize seat updates                   |
+| 🔁 Safe Cancellations        | Release a seat and remove the booking record                   |
+| 📋 Accurate Summaries        | Return total and booked seats in real-time                     |
+| 🔐 Input Validation          | Reject invalid event IDs, user IDs, and non-positive seats     |
+| 🧪 Comprehensive Testing     | Unit tests for concurrency; integration tests for endpoint flow|
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+Client
+│
+├─ POST /events ──▶ EventController ──▶ EventRepository
+│
+├─ POST /bookings ─▶ BookingController ──▶ BookingService ──▶ [EventRepo + BookingRepo]
+│      │                         │
+│      │                         └─ Locks per Event
+│      │
+│      └─ Input Validation
+│
+├─ DELETE /bookings/{id} ─▶ BookingController ─▶ BookingService ─▶ Repos
+│
+└─ GET /events/{id}/summary ─▶ EventController ─▶ BookingService ─▶ Summary
+\`\`\`
+
+---
+
+## 🔄 Core Patterns & Pitfalls
+
+| Pattern            | Problem Solved                               | Pitfall to Watch                         |
+|--------------------|----------------------------------------------|------------------------------------------|
+| ReentrantLock      | Serialize seat updates per event             | Forgetting unlock() in exception block   |
+| ConcurrentHashMap  | Thread-safe in-memory storage                | Race conditions if external locking skipped |
+| UUID IDs           | Unique identifiers for events/bookings       | Practically no collision risk            |
+| Input Validation   | Early rejection of bad requests              | Inconsistent error codes if missing checks |
+| Exception Handling | Meaningful HTTP statuses for clients         | Swallowed exceptions obscure bugs        |
+
+---
+
+## 🛠️ Step-by-Step Implementation Guide
+
+1. **Define Entities**
+- Event: id, name, totalSeats, bookedSeats, lock
+- Booking: id, eventId, userId
+
+2. **Build In-Memory Repositories**
+- Use ConcurrentHashMap for thread-safe storage of events/bookings
+
+3. **Implement BookingService**
+- Acquire event.lock
+- Check and atomically update bookedSeats
+- Save or delete Booking record
+
+4. **Create REST Controllers**
+- POST /events: validate payload, create Event
+- POST /bookings: validate userId, call createBooking()
+- DELETE /bookings/{id}: cancelBooking()
+- GET /events/{id}/summary: getEventSummary()
+
+5. **Write Tests**
+- **Unit**: spawn concurrent booking attempts, assert no overbooking
+- **Integration**: end-to-end flow, verify conflict response and summary
+
+---
+
+## 💻 Code Examples
+
+### Entity Definitions
+
+\`\`\`java
+public class Event {
+private final String id;
+private final String name;
+private final int totalSeats;
+private int bookedSeats;
+private final ReentrantLock lock = new ReentrantLock();
+// constructors, getters, setters
+}
+
+public class Booking {
+private final String id;
+private final String eventId;
+private final String userId;
+// constructors, getters
+}
+\`\`\`
+
+### BookingService (Thread-Safe)
+
+\`\`\`java
+@Service
+public class BookingService {
+private final EventRepository eventRepo;
+private final BookingRepository bookingRepo;
+
+public BookingService(EventRepository er, BookingRepository br) {
+this.eventRepo = er;
+this.bookingRepo = br;
+}
+
+public Booking createBooking(String eventId, String userId) {
+Event event = eventRepo.findById(eventId)
+.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+
+event.getLock().lock();
+try {
+if (event.getBookedSeats() >= event.getTotalSeats()) {
+throw new ResponseStatusException(HttpStatus.CONFLICT, "No seats available");
+}
+event.setBookedSeats(event.getBookedSeats() + 1);
+Booking booking = new Booking(UUID.randomUUID().toString(), eventId, userId);
+bookingRepo.save(booking);
+return booking;
+} finally {
+event.getLock().unlock();
+}
+}
+
+public void cancelBooking(String bookingId) {
+Booking booking = bookingRepo.findById(bookingId)
+.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
+
+Event event = eventRepo.findById(booking.getEventId())
+.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+
+event.getLock().lock();
+try {
+event.setBookedSeats(event.getBookedSeats() - 1);
+bookingRepo.delete(bookingId);
+} finally {
+event.getLock().unlock();
+}
+}
+
+public EventSummary getEventSummary(String eventId) {
+Event event = eventRepo.findById(eventId)
+.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+return new EventSummary(event.getTotalSeats(), event.getBookedSeats());
+}
+}
+\`\`\`
+
+### Unit Test for Concurrency
+
+\`\`\`java
+@Test
+void concurrentBookingsDoNotOverbook() throws InterruptedException {
+Event event = new Event("e1", "Concert", 5, 0);
+eventRepo.save(event);
+
+ExecutorService executor = Executors.newFixedThreadPool(10);
+CountDownLatch latch = new CountDownLatch(10);
+for (int i = 0; i < 10; i++) {
+executor.submit(() -> {
+try {
+bookingService.createBooking("e1", UUID.randomUUID().toString());
+} catch (ResponseStatusException ignored) {}
+finally { latch.countDown(); }
+});
+}
+latch.await();
+assertEquals(5, eventRepo.findById("e1").get().getBookedSeats());
+executor.shutdown();
+}
+\`\`\`
+
+---
+
+## 🚀 Beyond the Basics
+
+- Persist events and bookings in a database with optimistic locking
+- Expose metrics and health indicators for seat availability
+- Introduce JWT-based user authentication
+- Push live seat counts via WebSocket
+- Implement soft deletes and audit trails for cancellations
+`
+}
+]
+},{
   category: 'systemDesign',
   title: 'Designing a Large-Scale E-Commerce Platform (Amazon/Flipkart) — Story + Patterns + Code',
   subItems: [
@@ -9921,7 +10476,130 @@ Our platform empowers technical authors to create rich Q&A articles blending cod
 `
 }
 ]
+},{
+category: 'communication',
+title: 'Conflict Management',
+subItems: [
+{
+question: 'What are the main internal conflict scenarios in the IT industry and how can you resolve them?',
+answerMd: `
+# Internal Conflict Scenarios and Resolution in IT
+
+IT organizations frequently encounter friction arising from misaligned goals, scarce resources, process mismatches, and interpersonal dynamics. Below are ten common interview-style questions—each tied to a real conflict scenario—and a step-by-step approach to resolve them.
+
+---
+
+## 1. Describe your approach to resolving a conflict between two team members.
+**Scenario:** Two developers clash over choosing the optimal technical solution.
+**Resolution:**
+1. Meet each developer individually and listen actively.
+2. Identify the root cause (style difference, ownership ambiguity, missing data).
+3. Facilitate a joint workshop to compare pros and cons objectively.
+4. Define clear success criteria and document the decision.
+5. Follow up to ensure both parties adhere to the agreed approach.
+
+---
+
+## 2. Explain a time you mediated a dispute over resource allocation.
+**Scenario:** Two project teams compete for the same limited servers or budget.
+**Resolution:**
+1. Convene both teams in a neutral setting.
+2. Clarify resource constraints and project timelines.
+3. Co-create a prioritization framework based on impact, deadlines, and ROI.
+4. Negotiate a phased or shared allocation plan.
+5. Monitor usage and KPIs jointly to prevent future conflicts.
+
+---
+
+## 3. How would you resolve a situation where vague directives cause repeated mistakes?
+**Scenario:** Miscommunication between management and front-line engineers leads to errors.
+**Resolution:**
+1. Hold separate listening sessions with engineers and managers.
+2. Surface ambiguous policies and unclear expectations.
+3. Draft precise, written guidelines and workflow diagrams.
+4. Roll out guidelines in interactive workshops with Q&A.
+5. Establish a monthly feedback loop for continuous refinement.
+
+---
+
+## 4. Give an example of bridging a gap between teams using different methodologies.
+**Scenario:** Agile and Waterfall teams clash over cadence and deliverables.
+**Resolution:**
+1. Visually map both processes to identify common goals and hand-offs.
+2. Design a hybrid workflow (e.g., short sprints with stage-gate reviews).
+3. Agree on a shared communication cadence (daily stand-ups + milestone reviews).
+4. Pilot the hybrid model on one feature.
+5. Revisit and refine after two cycles based on retrospectives.
+
+---
+
+## 5. Tell me about a time you managed conflict arising from shifting or vague specs.
+**Scenario:** Repeated bugs and rework due to unclear requirements.
+**Resolution:**
+1. Host a spec-refinement workshop with all stakeholders.
+2. Define user stories with clear acceptance criteria.
+3. Build quick prototypes or spikes for ambiguous features.
+4. Lock in a versioned requirements document.
+5. Enforce change-control for any subsequent tweaks.
+
+---
+
+## 6. How do you handle a team member who consistently resists change?
+**Scenario:** A developer refuses to adopt a new process or tool.
+**Resolution:**
+1. Schedule a one-on-one to understand their concerns.
+2. Empathize and validate their fears (learning curve, loss of ownership).
+3. Run a small pilot to demonstrate benefits.
+4. Provide targeted training and pair them with a champion.
+5. Celebrate early wins publicly to build momentum.
+
+---
+
+## 7. Describe how you diffused a personality-based conflict on your team.
+**Scenario:** Two colleagues have a deep personality clash affecting morale.
+**Resolution:**
+1. Mediate a private conversation focusing on behaviors, not character.
+2. Establish team norms and communication ground rules.
+3. Pair them on a low-risk task to foster empathy.
+4. Recognize and reward collaborative successes.
+5. Revisit norms in regular retrospectives.
+
+---
+
+## 8. Explain a time you resolved friction between dev, QA, and operations.
+**Scenario:** Blockers in cross-functional projects due to unclear hand-offs.
+**Resolution:**
+1. Clarify roles and hand-off responsibilities in a RACI matrix.
+2. Create a shared “swimlane” Kanban board for end-to-end visibility.
+3. Schedule regular sync-ups with rotating facilitators.
+4. Track and publicize key metrics (e.g., time-to-resolve).
+5. Adjust processes based on retrospective feedback.
+
+---
+
+## 9. How have you managed conflicts in a distributed or remote team?
+**Scenario:** Collaboration breakdown with remote or offshore teams.
+**Resolution:**
+1. Define overlapping “core hours” for live collaboration.
+2. Standardize documentation in a shared wiki or knowledge base.
+3. Schedule weekly video stand-ups and daily async check-ins.
+4. Rotate pair-programming or mentoring across locations.
+5. Use pulse surveys to surface issues early.
+
+---
+
+## 10. Can you share an example of resolving a conflict when two groups competed for funding?
+**Scenario:** Teams vie for a tight budget or headcount.
+**Resolution:**
+1. Present data-driven business cases from both sides.
+2. Score each request against agreed criteria (ROI, risk, strategic fit).
+3. Negotiate a phased funding or headcount release.
+4. Offer cross-team support once initial deliverables are met.
+5. Review ROI jointly post-delivery to inform future allocations.
+`
 }
+]
+},
 
 ];
 
