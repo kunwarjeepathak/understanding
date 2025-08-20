@@ -7068,6 +7068,139 @@ this.http.get<AccountBalance>(\`\${apiBase}/accounts/\${accountId}/balance\`)
 - Integration with micro-frontend architecture for scaling large teams.
 - End-to-end encryption of sensitive data in forms and storage.
 `
+},{
+  question: 'What are the main key points for migrating from Angular to React?',
+  answerMd: `
+# Angular → React Migration: Key Points
+
+Imagine you lead a Bengaluru team shifting a large Angular app to React without breaking the users’ experience. These are the essential points you must cover.
+
+---
+
+## 1. Choose Your Migration Strategy
+- Strangler Pattern  
+  • Incrementally replace Angular routes or components with React counterparts.  
+- Full Rewrite  
+  • Build the new React app from scratch—best for small to medium codebases.  
+- Micro-frontend  
+  • Run Angular and React side by side; migrate one “micro-app” at a time.  
+
+---
+
+## 2. Bootstrapping Dual Frameworks
+- Install React alongside Angular (via a separate \`index.html\` or mounting points).  
+- Use tools like Single-SPA or custom wrappers to load both runtimes.  
+
+---
+
+## 3. Translate Templates to JSX
+- Convert Angular templates (\`*ngIf\`, \`*ngFor\`, pipes) into JSX expressions and JavaScript loops.  
+- Replace Angular directives with React props, hooks, or custom components.
+
+---
+
+## 4. Map Components and Modules
+- Angular NgModules → React code-split bundles or feature folders.  
+- Angular Components → React Functional Components + Hooks.  
+- Lazy load React slices via \`React.lazy\` and \`Suspense\`.
+
+---
+
+## 5. State Management Transition
+- Angular Services / NgRx → React Context, Redux, or Recoil.  
+- Translate selectors and reducers into \`useReducer\` or Redux slices.  
+
+---
+
+## 6. Dependency Injection Replacement
+- Angular’s DI → React Context or custom factories.  
+- Abstract service creation behind factories/hooks for easy mocking in tests.
+
+---
+
+## 7. Routing Consolidation
+- Angular Router → React Router v6+.  
+- Migrate route definitions, guards, and lazy-loaded modules into React’s \`<Routes>\` structure.
+
+---
+
+## 8. Forms Migration
+- Template-driven / Reactive Forms → Formik or React Hook Form.  
+- Rebuild custom validators and cross-field checks in React form libraries.
+
+---
+
+## 9. HTTP & Services Layer
+- Angular \`HttpClient\` → Fetch API / Axios / React Query.  
+- Retain shared service logic; wrap in hooks (\`useFetch\`, \`useMutation\`).
+
+---
+
+## 10. Third-Party Library Swap
+- Identify Angular-specific libraries (Material, RxJS-heavy) and find React equivalents (MUI, RxJS still usable, or native Promises).  
+
+---
+
+## 11. Testing Framework Migration
+- Jasmine/Karma → Jest + React Testing Library.  
+- Port unit tests and end-to-end flows (Protractor → Cypress or Playwright).
+
+---
+
+## 12. Build & CI/CD Updates
+- Replace \`ng build\` steps with Create React App, Vite, or custom Webpack.  
+- Update pipelines, linting rules, and code coverage tools.
+
+---
+
+## 13. SEO & Server-Side Rendering
+- Angular Universal → Next.js, Remix, or Gatsby for React.  
+- Migrate prerendered pages and dynamic meta tags.
+
+---
+
+## 14. Performance & Bundle Size
+- Enable tree-shaking and code splitting.  
+- Compare bundle sizes; optimize large dependencies and images.
+
+---
+
+## 15. Developer Training & Knowledge Transfer
+- Run React workshops focusing on JSX, Hooks, and component patterns.  
+- Maintain pairing sessions between Angular and React experts.
+
+---
+
+## 16. Rollout Plan with Feature Toggles
+- Wrap new React features behind feature flags.  
+- Canary release to a subset of users; monitor errors before full cut-over.
+
+---
+
+## 17. Monitoring & Regression Tracking
+- Add error and performance monitoring (Sentry, New Relic).  
+- Create dashboards for HTTP metrics, render times, and test pass rates.
+
+---
+
+## 🗺️ ASCII Migration Flow
+
+\`\`\`
+[Angular App v1]
+    |
+    |--- migrate Route /dashboard ---> [React Dashboard Module]
+    |                        |
+    |                        +-> React Component Tree
+    |
+    |--- migrate Route /reports ---> [React Reports Module]
+    |                        |
+    |                        +-> React Component Tree
+    |
+[Angular App v1] (strangled gradually, until fully replaced by React App v2)
+\`\`\`
+
+Cover these points to ensure a smooth, risk-mitigated move from Angular to React.
+`
 }
 ]
 },
@@ -9423,6 +9556,208 @@ resources:
 - Offline downloads & DRM-managed secure download packages.  
 - Real-time recommendation integration in player.  
 - Chaos engineering on streaming pipeline to validate resilience.  
+`
+    }
+  ]
+},{
+  "category": "python",
+  "title": "Python Code-Backed Q&A",
+  "subItems": [
+    {
+      "question": "How do you define functions and use *args/**kwargs?",
+      "answerMd": `
+# Function Definitions
+
+## Basic Function
+\`\`\`python
+def greet(name: str) -> None:
+    print(f"Hello, {name}")
+\`\`\`
+
+## Variable Arguments with *args and **kwargs
+\`\`\`python
+def var_args(*args, **kwargs):
+    print("Positional args:", args)
+    print("Keyword args:", kwargs)
+
+var_args(1, 2, x=3, y=4)
+\`\`\`
+`
+    },
+    {
+      "question": "How do you read and write files using open and with?",
+      "answerMd": `
+# File I/O
+
+## Reading a File
+\`\`\`python
+with open("input.txt", "r") as f:
+    contents = f.read()
+    print(contents)
+\`\`\`
+
+## Writing to a File
+\`\`\`python
+with open("output.txt", "w") as f:
+    f.write("Hello, world!")
+\`\`\`
+`
+    },
+    {
+      "question": "How do you define classes, methods, and inheritance?",
+      "answerMd": `
+# Classes & Inheritance
+
+## Defining a Class and Instance
+\`\`\`python
+class Animal:
+    def __init__(self, name):
+        self.name = name
+
+dog = Animal("Rover")
+print(dog.name)  # Rover
+\`\`\`
+
+## Instance, Class, and Static Methods
+\`\`\`python
+class MyClass:
+    def instance_method(self):
+        print("Called instance_method()", self)
+
+    @classmethod
+    def class_method(cls):
+        print("Called class_method()", cls)
+
+    @staticmethod
+    def static_method():
+        print("Called static_method()")
+
+MyClass().instance_method()
+MyClass.class_method()
+MyClass.static_method()
+\`\`\`
+
+## Inheritance
+\`\`\`python
+class Bird(Animal):
+    def fly(self):
+        print(f"{self.name} is flying")
+
+sparrow = Bird("Jack")
+sparrow.fly()  # Jack is flying
+\`\`\`
+`
+    },
+    {
+      "question": "How do decorators and context managers work?",
+      "answerMd": `
+# Decorators & Context Managers
+
+## Decorator Example
+\`\`\`python
+def my_decorator(func):
+    def wrapper(*args, **kwargs):
+        print("Before call")
+        result = func(*args, **kwargs)
+        print("After call")
+        return result
+    return wrapper
+
+@my_decorator
+def say_hello(name):
+    print(f"Hello, {name}")
+
+say_hello("Alice")
+\`\`\`
+
+## Context Manager Example
+\`\`\`python
+class FileOpener:
+    def __init__(self, filename, mode):
+        self.file = open(filename, mode)
+    def __enter__(self):
+        return self.file
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.file.close()
+
+with FileOpener("sample.txt", "w") as f:
+    f.write("Context managers rock!")
+\`\`\`
+`
+    },
+    {
+      "question": "What are iterators and how do generator functions work?",
+      "answerMd": `
+# Iterators & Generators
+
+## Iterator Protocol
+\`\`\`python
+class CountDown:
+    def __init__(self, start):
+        self.current = start
+    def __iter__(self):
+        return self
+    def __next__(self):
+        if self.current <= 0:
+            raise StopIteration
+        value = self.current
+        self.current -= 1
+        return value
+
+for num in CountDown(3):
+    print(num)
+\`\`\`
+
+## Generator Function
+\`\`\`python
+def countdown(start):
+    while start > 0:
+        yield start
+        start -= 1
+
+for num in countdown(3):
+    print(num)
+\`\`\`
+`
+    },
+    {
+      "question": "How do you use threading and async/await for concurrency?",
+      "answerMd": `
+# Concurrency
+
+## Threading Example
+\`\`\`python
+import threading
+
+def worker(name):
+    print(f"Worker {name} is running")
+
+threads = []
+for i in range(3):
+    t = threading.Thread(target=worker, args=(i,))
+    threads.append(t)
+    t.start()
+
+for t in threads:
+    t.join()
+\`\`\`
+
+## Async/Await Example
+\`\`\`python
+import asyncio
+
+async def say_after(delay, message):
+    await asyncio.sleep(delay)
+    print(message)
+
+async def main():
+    await asyncio.gather(
+        say_after(1, "Hello"),
+        say_after(2, "World")
+    )
+
+asyncio.run(main())
+\`\`\`
 `
     }
   ]
