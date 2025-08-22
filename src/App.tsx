@@ -3,7 +3,7 @@ import Header   from './components/Header';
 import Sidebar  from './components/Sidebar';
 import QAList   from './components/QAList';
 
-export type Category = 'all' | 'java' | 'systemDesign' | 'springBoot' | 'cloud' | 'devOps' |'kafka' | 'aws' | 'azure' | 'javascript' |'react' | 'angular'| 'database' | 'python' | 'leadership'| 'communication';
+export type Category = 'all' | 'java' | 'systemDesign' | 'springBoot' | 'cloud' | 'devOps' |'kafka' | 'aws' | 'azure' | 'javascript' |'react' | 'angular'| 'database' | 'python' | 'golang' | 'leadership'| 'communication';
 
 const categories = [
   { key: 'all' as Category,        label: 'All' },
@@ -20,6 +20,7 @@ const categories = [
   { key: 'angular' as Category,    label: 'Angular' },
   { key: 'database' as Category,    label: 'DataBase' },
   { key: 'python' as Category,    label: 'Python' },
+  { key: 'golang' as Category,    label: 'golang' },
   { key: 'leadership' as Category,    label: 'Leadership' },
   { key: 'communication' as Category,    label: 'Communication' },
 ];
