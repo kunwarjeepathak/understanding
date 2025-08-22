@@ -238,6 +238,187 @@ CompletableFuture.supplyAsync(() -> fetch())
 .thenAccept(System.out::println);
 ~~~
 `
+},{
+question: 'What are the use cases for CompletableFuture and how do you implement them?',
+answerMd: `
+# 🌀 Use Cases of CompletableFuture & Implementation
+
+CompletableFuture lets you write non-blocking, asynchronous code in a declarative, composable way. Here are five common patterns—each with a real-world scenario, an ASCII flow diagram, and a step-by-step Java implementation.
+
+---
+
+## 1. Asynchronous Data Fetching
+
+When you need to call multiple external services without blocking the main thread, CompletableFuture shines.
+
+Scenario: You want to fetch flight details and hotel availability concurrently before combining them into a travel package.
+
+\`\`\`
+Main Thread
+│
+┌─────▼─────┐
+│ launch two │
+│ tasks      │
+└─────┬─────┘
+│          │
+┌───▼───┐  ┌───▼───┐
+│Flight │  │Hotel  │
+│Service│  │Service│
+└───┬───┘  └───┬───┘
+│          │
+└─────┬────┘
+▼
+combineResults
+│
+package
+\`\`\`
+
+\`\`\`java
+ExecutorService pool = Executors.newFixedThreadPool(2);
+
+CompletableFuture<Flight> flightFut =
+CompletableFuture.supplyAsync(() -> fetchFlight(), pool);
+
+CompletableFuture<Hotel> hotelFut =
+CompletableFuture.supplyAsync(() -> fetchHotel(), pool);
+
+CompletableFuture<TravelPackage> travelFut =
+flightFut.thenCombine(hotelFut,
+(flight, hotel) -> new TravelPackage(flight, hotel));
+
+TravelPackage result = travelFut.join();
+pool.shutdown();
+\`\`\`
+
+---
+
+## 2. Dependent Task Chaining
+
+Use \`thenCompose\` when one async result drives the next call.
+
+Scenario: You retrieve a user’s ID, then fetch their order history.
+
+\`\`\`
+getUserId()
+│
+thenCompose(id -> getOrders(id))
+│
+thenApply(orders -> calculateTotal(orders))
+\`\`\`
+
+\`\`\`java
+CompletableFuture<User> userFut =
+CompletableFuture.supplyAsync(() -> getUser("kunwar"));
+
+CompletableFuture<List<Order>> ordersFut =
+userFut.thenCompose(user -> fetchOrders(user.getId()));
+
+CompletableFuture<Double> totalFut =
+ordersFut.thenApply(this::sumOrderValues);
+
+double total = totalFut.join();
+\`\`\`
+
+---
+
+## 3. Combining Independent Futures
+
+When you need the quickest result from several alternatives, use \`anyOf\`. To wait for all, use \`allOf\`.
+
+| Pattern | Waits For              | Return Type                  |
+|--------:|------------------------|------------------------------|
+| \`allOf\` | _all_ tasks finish     | \`CompletableFuture<Void>\`  |
+| \`anyOf\` | _first_ task to finish | \`CompletableFuture<Object>\` |
+
+\`\`\`java
+CompletableFuture<String> a = CompletableFuture.supplyAsync(() -> callA());
+CompletableFuture<String> b = CompletableFuture.supplyAsync(() -> callB());
+CompletableFuture<String> c = CompletableFuture.supplyAsync(() -> callC());
+
+// Wait for the fastest
+CompletableFuture<Object> fastest = CompletableFuture.anyOf(a, b, c);
+System.out.println("Winner: " + fastest.join());
+
+// Wait for all to complete
+CompletableFuture<Void> allDone = CompletableFuture.allOf(a, b, c);
+allDone.join();
+List<String> results = Stream.of(a, b, c)
+.map(CompletableFuture::join)
+.collect(Collectors.toList());
+\`\`\`
+
+---
+
+## 4. Timeout and Fallback
+
+Gracefully fall back when a service is slow or fails.
+
+\`\`\`java
+CompletableFuture<String> primary =
+CompletableFuture.supplyAsync(() -> slowService());
+
+// Apply timeout and fallback
+CompletableFuture<String> withTimeout =
+primary.completeOnTimeout("default", 2, TimeUnit.SECONDS)
+.exceptionally(ex -> "errorResponse");
+
+String response = withTimeout.join();
+System.out.println(response);
+\`\`\`
+
+---
+
+## 5. Parallel Batch Processing
+
+Process a list of tasks in parallel, then aggregate.
+
+Scenario: Resize a batch of images concurrently, then collect the transformed files.
+
+\`\`\`java
+List<Path> inputs = List.of(...);
+
+List<CompletableFuture<Path>> futures = inputs.stream()
+.map(path -> CompletableFuture.supplyAsync(
+() -> resizeImage(path), pool))
+.collect(Collectors.toList());
+
+CompletableFuture<Void> allDone =
+CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+
+CompletableFuture<List<Path>> resized = allDone.thenApply(v ->
+futures.stream()
+.map(CompletableFuture::join)
+.collect(Collectors.toList()));
+
+List<Path> outputFiles = resized.join();
+pool.shutdown();
+\`\`\`
+
+---
+
+## Quick Reference Table
+
+| Feature              | Method              | Use Case                                        |
+|----------------------|---------------------|-------------------------------------------------|
+| Simple async task    | \`runAsync\`          | fire-and-forget operations                      |
+| Async with result    | \`supplyAsync\`       | compute a value off the main thread             |
+| Chain dependent      | \`thenCompose\`       | next call depends on prior result               |
+| Transform result     | \`thenApply\`         | synchronous transformation of async result      |
+| Combine two          | \`thenCombine\`       | merge two independent futures                   |
+| First to finish      | \`anyOf\`             | race multiple tasks                             |
+| All to finish        | \`allOf\`             | wait for a group of parallel tasks              |
+| Timeout              | \`completeOnTimeout\` | define a default if it takes too long           |
+| Handle errors        | \`exceptionally\`     | catch and recover from exceptions               |
+
+---
+
+### Beyond the Examples
+
+- Configure a custom thread pool for CPU-bound vs I/O-bound tasks.
+- Use \`whenComplete\` for logging or cleanup without affecting results.
+- Integrate with Spring’s WebClient for reactive HTTP calls returning CompletableFutures.
+- Consider Project Loom for simpler concurrency patterns when it becomes mainstream.
+`
 },
 {
 question: 'What’s new in CompletableFuture?',
@@ -8004,6 +8185,105 @@ return false;
 ]
 },{
   category: 'systemDesign',
+  title: 'Comprehensive Code Review Checklist — Story + Patterns + Guide',
+  subItems: [
+    {
+      question: 'What all things do I need to consider for code review?',
+      answerMd: `
+# Comprehensive Code Review: What to Look For
+
+A rigorous code review goes beyond spotting typos. It ensures your code is correct, maintainable, secure, and performant. Here’s a structured checklist to guide any review:
+
+---
+
+## 1. Pre-Review Checks
+- Confirm the branch builds cleanly and all tests pass locally  
+- Ensure CI lint, static analysis, and security scans are green  
+- Read linked tickets or design docs to understand the feature’s intent  
+
+## 2. Functional Correctness
+- Does the code fulfill requirements and handle edge cases?  
+- Are business rules and validations implemented?  
+- Can you trace through critical paths and error flows without surprises?  
+
+## 3. Error Handling & Resilience
+- Are exceptions caught at the right level and logged, not swallowed?  
+- Is resource cleanup done via try-with-resources or finally blocks?  
+- Does it fail fast on invalid inputs with clear error messages?  
+
+## 4. Testing & Coverage
+- Are there unit tests for each new public method and key branch?  
+- Do tests cover both success and failure scenarios, including boundaries?  
+- Are integration or end-to-end tests added when touching multiple components?  
+
+## 5. Readability & Style
+- Are names (classes, methods, variables) self-descriptive and consistent?  
+- Is formatting uniform—indentation, braces, spacing—enforced by a formatter?  
+- Are complex blocks broken into small functions with single responsibility?  
+
+## 6. Maintainability & Design
+- Does the code follow SOLID principles?  
+- Are abstractions clear, with high cohesion and low coupling?  
+- Is duplication minimized—refactor copied logic into utilities?  
+- Are magic numbers or strings replaced with named constants or enums?  
+
+## 7. Performance & Scalability
+- Are algorithms and data structures appropriate for input sizes?  
+- Do you spot any N² loops or blocking calls in hot paths?  
+- Is caching or batching applied where repeated calls are expensive?  
+- For I/O-bound work, is asynchronous or non-blocking I/O used when needed?  
+
+## 8. Security Considerations
+- Are inputs validated and sanitized before use?  
+- Are database calls parameterized to prevent injections?  
+- Are secrets stored securely (env vars, vault) and never hard-coded?  
+- Are authorization checks in place at API and method levels?  
+
+## 9. Dependencies & Licensing
+- Are new libraries vetted for security advisories and license compatibility?  
+- Is version pinning appropriate, avoiding overly broad ranges?  
+- Remove unused imports or modules to shrink the attack surface.  
+
+## 10. Logging & Observability
+- Are key events instrumented with structured, leveled logs?  
+- Is sensitive data redacted in logs?  
+- Are metrics emitted for latencies, error rates, and business counters?  
+- If applicable, is distributed tracing set up for cross-service calls?  
+
+## 11. Documentation & Comments
+- Is complex logic explained with Javadoc or inline comments?  
+- Are README, changelog, or API specs updated for new endpoints/features?  
+- Remove stale comments that no longer match code behavior.  
+
+## 12. API & Schema Evolution
+- If this change alters a public API, is backward compatibility preserved?  
+- Are deprecations handled gracefully with clear migration paths?  
+- For DB schema changes, are migrations reversible and zero-downtime?  
+
+## 13. CI/CD & Deployment
+- Does the change integrate smoothly into existing pipelines—no new manual steps?  
+- Are environment-specific configurations externalized (no hard-coding)?  
+- Has a rollback strategy been considered for risky changes?  
+
+## 14. UX & Accessibility (Front-End)
+- Are UI changes tested across screen sizes and browsers?  
+- Are semantic HTML elements and ARIA roles used for accessibility?  
+- Is localization (i18n) handled for any user-facing text?  
+
+## 15. Feedback & Collaboration
+- Provide actionable, respectful comments with suggested changes.  
+- Group related issues so the author can batch fixes (e.g., “naming,” “error handling”).  
+- Ask clarifying questions when behavior isn’t obvious—don’t assume intent.  
+- Acknowledge good patterns and well-written sections, not just errors.  
+
+---
+
+By systematically covering these areas, you’ll catch defects early, improve code quality, and foster stronger engineering practices across your team.
+`
+    }
+  ]
+},{
+  category: 'systemDesign',
   title: 'System Design Basics — Story + Pillars + Patterns',
   subItems: [
     {
@@ -11088,7 +11368,169 @@ Use these questions and answers to demonstrate your mastery of clear communicati
 `
 }
 ]
-},
+},{
+category: 'golang',
+title: 'GraphQL vs REST API — Story + Patterns + Code',
+subItems: [
+{
+question: 'How graphQL is different from REST API',
+answerMd: `
+# GraphQL vs REST API: Core Differences & When to Use Which
+
+GraphQL and REST both let clients talk to servers over HTTP, but they take very different approaches to data fetching, schema design, versioning, and more. Here’s a deep dive into what sets them apart:
+
+---
+
+## 📖 Narrative
+
+Imagine you’re at a restaurant:
+
+- REST is like ordering from a fixed menu. You pick predefined dishes (endpoints), and you get everything that comes with that dish—even if you don’t want some sides (over-fetching).
+- GraphQL is like a custom à-la-carte experience. You tell the chef exactly which ingredients you want on your plate (fields), and they send back only those.
+
+---
+
+## 🔍 Key Differences
+
+1. Single vs Multiple Endpoints
+- REST: One URL per resource (e.g., \`/users\`, \`/users/1/posts\`).
+- GraphQL: A single \`/graphql\` endpoint for all queries and mutations.
+
+2. Data Fetching
+- REST: You often over-fetch or under-fetch, then stitch data in the client with multiple requests.
+- GraphQL: Client defines exactly which fields it needs in a single request.
+
+3. Schema & Typing
+- REST: Schema is implicit—defined by your API documentation (Swagger/OpenAPI).
+- GraphQL: Strongly typed schema on server; clients can introspect types, docs, and relationships at runtime.
+
+4. Versioning & Evolvability
+- REST: New versions often require URL changes (e.g., \`/v2/users\`).
+- GraphQL: Fields can be deprecated in the schema; clients simply stop querying them—no new endpoint needed.
+
+5. Caching
+- REST: Leverages built-in HTTP caching (ETags, cache-control headers).
+- GraphQL: More complex—requires custom caching layers or client libraries (Apollo Client, Relay).
+
+6. Tooling & Discoverability
+- REST: Swagger/OpenAPI generates docs, but you must keep them in sync.
+- GraphQL: Built-in introspection powers GraphiQL/Playground UIs for live querying and docs.
+
+7. Complexity & Overhead
+- REST: Simple to implement; predictable URL structure.
+- GraphQL: Powerful but introduces complexity—schema design, resolver performance, query cost analysis.
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+### REST
+\`\`\`
+Client
+│ GET /users/1
+▼
+UserService ──▶ Database
+
+Client
+│ GET /users/1/posts
+▼
+PostService ──▶ Database
+\`\`\`
+
+### GraphQL
+\`\`\`
+Client
+│ POST /graphql { user(id:1){ name posts{ title } } }
+▼
+GraphQL Server ──▶ UserResolver → Database
+├─▶ PostResolver → Database
+└─▶ Combines results
+\`\`\`
+
+---
+
+## ✨ Example Requests
+
+### REST
+\`\`\`http
+GET /users/1
+Response:
+{
+"id": 1,
+"name": "Kunwar",
+"email": "kunwar@example.com",
+"createdAt": "2025-08-22T16:00:00Z"
+}
+
+GET /users/1/posts
+Response:
+[
+{ "id": 10, "title": "Intro to Java" },
+{ "id": 12, "title": "Async Programming" }
+]
+\`\`\`
+
+### GraphQL
+\`\`\`graphql
+POST /graphql
+{
+user(id: 1) {
+name
+posts {
+title
+}
+}
+}
+
+Response:
+{
+"data": {
+"user": {
+"name": "Kunwar",
+"posts": [
+{ "title": "Intro to Java" },
+{ "title": "Async Programming" }
+]
+}
+}
+}
+\`\`\`
+
+---
+
+## 📊 Comparison Table
+
+| Aspect            | REST                                      | GraphQL                                        |
+|-------------------|-------------------------------------------|------------------------------------------------|
+| Endpoints         | Multiple per resource                     | Single \`/graphql\`                              |
+| Fetch Control     | Over-fetch / Under-fetch                  | Precise field selection                        |
+| Schema            | Implicit (docs or OpenAPI)                | Strongly typed & introspectable                |
+| Versioning        | URL or header versioning                  | Deprecate fields; evolve schema in place       |
+| Caching           | HTTP caching built-in                     | Requires custom cache strategies               |
+| Discoverability   | Separate docs (Swagger)                   | Built-in introspection, GraphiQL/Playground     |
+| Complexity        | Lower setup overhead                      | Higher initial investment; powerful queries    |
+
+---
+
+## 🚀 When to Choose What
+
+- Pick **REST** if you need
+- Simple CRUD operations
+- Out-of-the-box HTTP caching
+- Predictable URL structure with minimal tooling
+
+- Pick **GraphQL** if you need
+- Flexible, client-driven queries (aggregations, nested joins)
+- Strong type safety & auto-generated docs
+- Avoiding version bumps when evolving the API
+
+---
+
+Would you like to explore setting up a GraphQL server in Spring Boot or Node.js, or dive into query optimization and security patterns for GraphQL?
+`
+}
+]
+}
 
 ];
 

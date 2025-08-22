@@ -20,7 +20,7 @@ const categories = [
   { key: 'angular' as Category,    label: 'Angular' },
   { key: 'database' as Category,    label: 'DataBase' },
   { key: 'python' as Category,    label: 'Python' },
-  { key: 'golang' as Category,    label: 'golang' },
+  { key: 'golang' as Category,    label: 'Golang' },
   { key: 'leadership' as Category,    label: 'Leadership' },
   { key: 'communication' as Category,    label: 'Communication' },
 ];
