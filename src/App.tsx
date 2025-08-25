@@ -7,11 +7,11 @@ export type Category = 'all' | 'java' | 'systemDesign' | 'springBoot' | 'cloud' 
 
 const categories = [
   { key: 'all' as Category,        label: 'All' },
-  { key: 'java' as Category,       label: 'JAVA' },
-  { key: 'systemDesign' as Category,       label: 'SystemDesign' },
+  { key: 'java' as Category,       label: 'JAVA Architect' },
+  { key: 'systemDesign' as Category,       label: 'System Design Architect' },
   { key: 'springBoot' as Category, label: 'Spring' },
-  { key: 'cloud' as Category,      label: 'Cloud' },
-  { key: 'devOps' as Category,      label: 'DevOps' },
+  { key: 'cloud' as Category,      label: 'Cloud Architect' },
+  { key: 'devOps' as Category,      label: 'DevOps Architect' },
   { key: 'kafka' as Category,      label: 'Kafka' },
   { key: 'aws' as Category,      label: 'AWS' },
   { key: 'azure' as Category,      label: 'Azure' },
