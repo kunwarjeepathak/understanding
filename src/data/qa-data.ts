@@ -9466,12 +9466,164 @@ Your three-year-old booking platform is one codebase. You need independent deplo
 ]
 },{
 category: 'cloud',
-title: 'Certifications and Continuous Learning Questions',
+title: 'Behavioral Questions',
 subItems: [
 {
-question: 'What is spring cloud architecture in microservices?',
-answerMd: ``
-}
+      question: 'Can you tell us about yourself and your relevant background?',
+      answerMd: `
+# 🧑 About Me & Background
+
+## Narrative  
+
+I’m a cloud architect with nine years of experience driving global infrastructure initiatives in finance, healthcare, and retail. I began my career as a systems engineer, mastered virtualization and networking, then shifted focus to designing large-scale, multi-cloud environments.
+
+## Key Milestones  
+
+- Led a team of 8 on a data lake implementation ingesting 100TB/month  
+- Authored open-source Terraform modules with 1.2K GitHub stars  
+- Presented at three international cloud conferences  
+`
+    },
+    {
+      question: 'What interests you about this position and our company?',
+      answerMd: `
+# 🔍 Interest in This Role & Company
+
+## Alignment with Mission  
+
+Your organization’s focus on innovation and customer trust resonates with my passion for secure, cutting-edge solutions. I admire your commitment to sustainability and see an opportunity to optimize cloud footprints while driving performance.
+
+## What Excites Me  
+
+- Building next-generation microservices for real-time analytics  
+- Collaborating with a diverse team dedicated to best practices  
+- Contributing to open-source initiatives under your brand  
+`
+    },
+    {
+      question: 'How do you prioritise your tasks and manage your time effectively?',
+      answerMd: `
+# ⏱️ Task Prioritization & Time Management
+
+## Frameworks & Techniques  
+
+- Eisenhower Matrix for urgent vs. important decisions  
+- Time blocking with 90-minute focus sprints  
+- Weekly sprint planning and daily stand-ups
+
+## Tools & Practices  
+
+- Trello or Jira for backlog grooming  
+- Calendar “Do Not Disturb” slots for deep work  
+- 15-minute mid-week check-ins to adjust priorities  
+`
+    },
+    {
+      question: 'How do you work in a team and collaborate with colleagues?',
+      answerMd: `
+# 🤝 Teamwork & Collaboration
+
+## Core Practices  
+
+- Shared architecture workshops in sprint zero  
+- Pair-programming sessions for complex IAC templates  
+- Cross-functional “war rooms” during major releases
+
+## Communication Rituals  
+
+- Weekly brown-bag lunch demos  
+- Rotating meeting facilitators to surface diverse perspectives  
+- Shared Slack channels with clear naming conventions  
+`
+    },
+    {
+      question: 'What are your strengths and weaknesses in this role?',
+      answerMd: `
+# ⚖️ Strengths & Weaknesses
+
+## Strengths  
+
+- Deep expertise in multi-cloud networking and security  
+- Strong facilitation skills to align diverse stakeholders  
+- Data-driven decision making with metrics and dashboards
+
+## Weaknesses  
+
+- Tendency to over-validate every edge case  
+- Mitigation: set strict timeboxes and enlist peer reviews  
+`
+    },
+    {
+      question: 'How do you keep up with industry trends and advancements?',
+      answerMd: `
+# 📈 Staying Current
+
+## Sources  
+
+- Official blogs: AWS News, Azure Updates, Google Cloud Blog  
+- Podcasts: Last Week in AWS, Azure Friday, GCP Podcast  
+- Communities: r/aws, CNCF Slack channels, local meetups
+
+## Personal Routine  
+
+- One “Cloud Hour” per week for reading release notes  
+- Contribute to beta programs and write monthly blog posts  
+`
+    },
+    {
+      question: 'What is your strategy for decision-making and problem-solving in the workplace?',
+      answerMd: `
+# 🧠 Decision-Making & Problem-Solving
+
+## Approach  
+
+1. Gather data: logs, metrics, stakeholder input  
+2. Define success criteria and constraints  
+3. Prototype or proof of concept for high-risk options  
+4. Evaluate trade-offs with a decision matrix  
+5. Implement iteratively with continuous feedback loops  
+`
+    },
+    {
+      question: 'How do you handle feedback and criticism?',
+      answerMd: `
+# 🔄 Handling Feedback & Criticism
+
+## Mindset  
+
+I embrace a growth mindset and view feedback as a catalyst for improvement.
+
+## Process  
+
+- Thank the giver and clarify specifics  
+- Reflect immediately and log action items  
+- Share my plan for next steps and follow up  
+`
+    },
+    {
+      question: 'How do you effectively communicate with internal and external stakeholders?',
+      answerMd: `
+# 🗣️ Stakeholder Communication
+
+## Tactics  
+
+- Tailor language: executive summaries for leaders, deep dives for engineers  
+- Use visual aids: architecture diagrams, dashboards, roadmaps  
+- Regular syncs: biweekly demos and monthly steering-committee updates  
+`
+    },
+    {
+      question: 'How do you maintain a positive attitude in the face of challenges or setbacks?',
+      answerMd: `
+# 🌟 Maintaining Positivity
+
+## Practices  
+
+- Reframe challenges as learning opportunities  
+- Celebrate small wins and share recognition publicly  
+- Keep an issues-to-solutions tracker to maintain momentum  
+`
+    }
 ]
 },{
 category: 'cloud',
