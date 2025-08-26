@@ -2,12 +2,14 @@ declare module 'mermaid';
 export interface SubItemData {
 question: string;
 answerMd: string;
+important?: boolean; // Add this property
 }
 
 export interface QACardData {
 category: string;
 title: string;
 subItems: SubItemData[];
+important?: boolean; 
 }
 
 const data: QACardData[] = [
@@ -237,7 +239,8 @@ CompletableFuture.supplyAsync(() -> fetch())
 .exceptionally(ex -> fallback())
 .thenAccept(System.out::println);
 ~~~
-`
+`,
+important: true, // Mark as important
 },{
 question: 'What are the use cases for CompletableFuture and how do you implement them?',
 answerMd: `
@@ -2001,7 +2004,7 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict) {
 {
 question: 'What are the key improvements to HashMap in Java 8?',
 answerMd: `
-# 🌟 Java 8 HashMap Improvements — Story-Driven Guide
+# 🌟 Java 8 HashMap Improvements Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -2540,7 +2543,7 @@ return http.build();
 },{
 question: 'How do you configure multiple data sources (MySQL, Oracle, NoSQL) in Spring Boot?',
 answerMd: `
-# 🗂️ Multi–Data Source in Spring Boot — Story-Driven Guide
+# 🗂️ Multi–Data Source in Spring Boot Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -2873,7 +2876,7 @@ answerMd: `
 
 | Aspect               | @Profile                    | @Conditional                |
 |----------------------|-----------------------------|-----------------------------|
-| Activation           | \`spring.profiles.active\`  | No global switch — eval’d per condition |
+| Activation           | \`spring.profiles.active\`  | No global switch eval’d per condition |
 | Use Case             | Coarse-grained environment configs (dev/prod) | Fine-grained bean registration rules |
 | Annotations          | \`@Profile("dev")\`         | \`@ConditionalOnBean\`, \`@ConditionalOnProperty\`, etc. |
 | Bean Visibility      | Exclude entire config classes in inactive profiles | Skip individual beans or configurations based on custom logic |
@@ -4284,7 +4287,7 @@ subItems: [
 {
 question: 'What is AWS VPC and how it is structured?',
 answerMd: `
-# 🌐 AWS VPC Architecture & Structure — Story-Driven Guide
+# 🌐 AWS VPC Architecture & Structure Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -4475,7 +4478,7 @@ route_table_id = aws_route_table.public.id
 {
 question: 'How do IAM users, roles, and policies work together?',
 answerMd: `
-# 🔐 AWS IAM: Users, Roles & Policies — Story-Driven Guide
+# 🔐 AWS IAM: Users, Roles & Policies Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -4767,9 +4770,9 @@ category: 'react',
 title: 'Banking Finance App React',
 subItems: [
 {
-question: 'How do I build a “Banking Finance App” React app from scratch covering every core React concept, using an Indian storytelling format — with diagrams?',
+question: 'How do I build a “Banking Finance App” React app from scratch covering every core React concept, using an Indian storytelling format with diagrams?',
 answerMd: `
-# 🏦 Banking Finance App — An Indian Tale in React (with Visual Maps)
+# 🏦 Banking Finance App An Indian Tale in React (with Visual Maps)
 
 ## 👥 Main Participants & Their Roles
 
@@ -4777,7 +4780,7 @@ answerMd: `
 |-------------|-----------------|
 | **Arjun (Developer)** | The visionary banker turning needs into code |
 | **Villagers & Merchants (Users)** | Manage accounts, transactions, and loans through the app |
-| **React Components** | Building blocks — each a self‑contained part of the UI |
+| **React Components** | Building blocks each a self‑contained part of the UI |
 | **State Hooks** | Live registers for account balances & form inputs |
 | **Effect Hooks** | The "postmen" fetching and syncing data |
 | **Context API** | The central vault for shared state like authentication |
@@ -4846,7 +4849,7 @@ In bustling **DhanPur**, banker‑developer **Arjun** builds the village’s **d
 
 ---
 
-## 1️⃣ Opening the Bank — _create‑react‑app_
+## 1️⃣ Opening the Bank _create‑react‑app_
 
 \`\`\`bash
 npx create-react-app banking-hub
@@ -4858,7 +4861,7 @@ npm start
 
 ---
 
-## 2️⃣ Account Window — _Functional Components_
+## 2️⃣ Account Window _Functional Components_
 
 \`\`\`jsx
 function AccountCard({ name, balance }) {
@@ -4873,7 +4876,7 @@ return (
 
 ---
 
-## 3️⃣ Counting Deposits — _useState_
+## 3️⃣ Counting Deposits _useState_
 
 \`\`\`jsx
 function DepositCounter() {
@@ -4891,7 +4894,7 @@ New Deposit
 
 ---
 
-## 4️⃣ Fetching Transactions — _useEffect_
+## 4️⃣ Fetching Transactions _useEffect_
 
 \`\`\`jsx
 function TransactionsList() {
@@ -4913,7 +4916,7 @@ return (
 
 ---
 
-## 5️⃣ A Custom Ritual — _useFetch Hook_
+## 5️⃣ A Custom Ritual _useFetch Hook_
 
 \`\`\`jsx
 export function useFetch(url) {
@@ -4927,7 +4930,7 @@ return data;
 
 ---
 
-## 6️⃣ The Bank Vault — _Context API_
+## 6️⃣ The Bank Vault _Context API_
 
 \`\`\`jsx
 const AuthContext = createContext();
@@ -4944,7 +4947,7 @@ export function useAuth() { return useContext(AuthContext); }
 
 ---
 
-## 7️⃣ Balancing the Books — _useReducer_
+## 7️⃣ Balancing the Books _useReducer_
 
 \`\`\`js
 export function ledgerReducer(state, action) {
@@ -4958,7 +4961,7 @@ default:           return state;
 
 ---
 
-## 8️⃣ Loading Spinner — _HOC_
+## 8️⃣ Loading Spinner _HOC_
 
 \`\`\`jsx
 function withSpinner(Component) {
@@ -4969,7 +4972,7 @@ isLoading ? <p>Loading…</p> : <Component {...props} />;
 
 ---
 
-## 9️⃣ Flexible Calculations — _Render Props_
+## 9️⃣ Flexible Calculations _Render Props_
 
 \`\`\`jsx
 function LoanCalculator({ render }) {
@@ -4980,13 +4983,13 @@ return <div>{render(rate)}</div>;
 
 ---
 
-## 🔟 Vault Tabs — _Compound Components_
+## 🔟 Vault Tabs _Compound Components_
 
 *(Tab container + Tab content using shared context)*
 
 ---
 
-## 1️⃣1️⃣ Safety Net — _Error Boundaries_
+## 1️⃣1️⃣ Safety Net _Error Boundaries_
 
 \`\`\`jsx
 class TransactionErrorBoundary extends React.Component {
@@ -5003,7 +5006,7 @@ return this.state.hasError
 
 ---
 
-## 1️⃣2️⃣ Secret Safe — _Code Splitting_
+## 1️⃣2️⃣ Secret Safe _Code Splitting_
 
 \`\`\`jsx
 const Accounts = React.lazy(() => import('./Accounts'));
@@ -5012,7 +5015,7 @@ const Transactions = React.lazy(() => import('./Transactions'));
 
 ---
 
-## 1️⃣3️⃣ Walking the Ledger — _React Router_
+## 1️⃣3️⃣ Walking the Ledger _React Router_
 
 \`\`\`jsx
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
@@ -5020,7 +5023,7 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 
 ---
 
-## 1️⃣4️⃣ Performance Tuning — _useMemo & useCallback_
+## 1️⃣4️⃣ Performance Tuning _useMemo & useCallback_
 
 \`\`\`jsx
 const highValueTxns = useMemo(
@@ -5031,13 +5034,13 @@ const highValueTxns = useMemo(
 
 ---
 
-## 1️⃣5️⃣ The Grand Ledger — _Bringing It All Together_
+## 1️⃣5️⃣ The Grand Ledger _Bringing It All Together_
 
 Integrate all modules inside \`App.jsx\` with Auth, Routing, Suspense, and Error Boundaries.
 
 ---
 
-## 📊 Visual Recap — React Concept Coverage
+## 📊 Visual Recap React Concept Coverage
 
 \`\`\`
 +------------------------+    +-----------------------+
@@ -5065,7 +5068,7 @@ v                 +-----------------------+
 
 ### 🌟 Epilogue
 
-Every hook, pattern, and component Arjun built became a road, vault, or ledger entry in DhanPur’s new digital heart — a story told in code, diagrams, and the hum of smooth transactions.
+Every hook, pattern, and component Arjun built became a road, vault, or ledger entry in DhanPur’s new digital heart a story told in code, diagrams, and the hum of smooth transactions.
 `
 }
 ]
@@ -5075,9 +5078,9 @@ category: 'react',
 title: 'Healthcare App React',
 subItems: [
 {
-question: 'How do I build a “Healthcare Hub” React app from scratch covering every core React concept, using an Indian storytelling format — with diagrams?',
+question: 'How do I build a “Healthcare Hub” React app from scratch covering every core React concept, using an Indian storytelling format with diagrams?',
 answerMd: `
-# 🏥 Healthcare Hub React App — An Indian Tale with Visual Maps
+# 🏥 Healthcare Hub React App An Indian Tale with Visual Maps
 
 ## 👥 Main participants and their roles
 
@@ -5155,11 +5158,11 @@ React Re-render  <--  State / Props updated
 
 ## 📖 Narrative
 
-In the heart of **AarogyaPur**, **Dr. Kavya** envisioned a clinic without walls — a **Healthcare Hub** to serve every villager. With React as her stethoscope and keyboard as her scalpel, she shaped wards, counters, and records into a living, breathing app.
+In the heart of **AarogyaPur**, **Dr. Kavya** envisioned a clinic without walls a **Healthcare Hub** to serve every villager. With React as her stethoscope and keyboard as her scalpel, she shaped wards, counters, and records into a living, breathing app.
 
 ---
 
-## 1️⃣ Laying the foundation — create‑react‑app
+## 1️⃣ Laying the foundation create‑react‑app
 
 \`\`\`bash
 npx create-react-app healthcare-hub
@@ -5169,7 +5172,7 @@ npm start
 
 ---
 
-## 2️⃣ Consultation room — Functional components
+## 2️⃣ Consultation room Functional components
 
 \`\`\`jsx
 // src/components/PatientCard.jsx
@@ -5187,7 +5190,7 @@ return (
 
 ---
 
-## 3️⃣ Counting appointments — useState
+## 3️⃣ Counting appointments useState
 
 \`\`\`jsx
 import React, { useState } from 'react';
@@ -5207,7 +5210,7 @@ Book Appointment
 
 ---
 
-## 4️⃣ Fetching records — useEffect
+## 4️⃣ Fetching records useEffect
 
 \`\`\`jsx
 import React, { useState, useEffect } from 'react';
@@ -5241,7 +5244,7 @@ return (
 
 ---
 
-## 5️⃣ A reusable ritual — Custom hook useFetch
+## 5️⃣ A reusable ritual Custom hook useFetch
 
 \`\`\`jsx
 // src/hooks/useFetch.js
@@ -5270,7 +5273,7 @@ return { data, loading, error };
 
 ---
 
-## 6️⃣ Shared clinic — Context API (Auth)
+## 6️⃣ Shared clinic Context API (Auth)
 
 \`\`\`jsx
 // src/AuthContext.js
@@ -5298,7 +5301,7 @@ return ctx;
 
 ---
 
-## 7️⃣ Managing schedules — useReducer
+## 7️⃣ Managing schedules useReducer
 
 \`\`\`js
 // src/scheduleReducer.js
@@ -5318,7 +5321,7 @@ return state;
 
 ---
 
-## 8️⃣ Loading spinner — Higher‑order component
+## 8️⃣ Loading spinner Higher‑order component
 
 \`\`\`jsx
 export function withSpinner(Component) {
@@ -5330,7 +5333,7 @@ return isLoading ? <p>Loading…</p> : <Component {...props} />;
 
 ---
 
-## 9️⃣ Customizable banner — Render props
+## 9️⃣ Customizable banner Render props
 
 \`\`\`jsx
 export function AlertBox({ render }) {
@@ -5341,7 +5344,7 @@ return <div style={style} role="region" aria-label="Alert">{render()}</div>;
 
 ---
 
-## 🔟 Clinic tabs — Compound components
+## 🔟 Clinic tabs Compound components
 
 \`\`\`jsx
 // src/components/Tabs.jsx
@@ -5389,7 +5392,7 @@ Usage:
 
 ---
 
-## 1️⃣1️⃣ Safety net — Error boundaries
+## 1️⃣1️⃣ Safety net Error boundaries
 
 \`\`\`jsx
 export class ErrorBoundary extends React.Component {
@@ -5404,7 +5407,7 @@ return this.state.hasError ? <p>Something went wrong.</p> : this.props.children;
 
 ---
 
-## 1️⃣2️⃣ Code splitting — React.lazy & Suspense
+## 1️⃣2️⃣ Code splitting React.lazy & Suspense
 
 \`\`\`jsx
 import React, { lazy, Suspense } from 'react';
@@ -5423,7 +5426,7 @@ return (
 
 ---
 
-## 1️⃣3️⃣ Navigating wards — React Router
+## 1️⃣3️⃣ Navigating wards React Router
 
 \`\`\`jsx
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
@@ -5451,7 +5454,7 @@ return (
 
 ---
 
-## 1️⃣4️⃣ Performance tuning — useMemo & useCallback
+## 1️⃣4️⃣ Performance tuning useMemo & useCallback
 
 \`\`\`jsx
 import React, { useMemo, useCallback } from 'react';
@@ -5467,7 +5470,7 @@ return (
 <ul>
 {sortedPatients.map(p => (
 <li key={p.id}>
-{p.name} — {p.age}
+{p.name} {p.age}
 <button onClick={() => handleBook(p.id)}>Book</button>
 </li>
 ))}
@@ -5478,7 +5481,7 @@ return (
 
 ---
 
-## 1️⃣5️⃣ The grand opening — Bringing it all together
+## 1️⃣5️⃣ The grand opening Bringing it all together
 
 \`\`\`jsx
 // src/App.jsx
@@ -5567,7 +5570,7 @@ Appointments --> AppointmentList
 
 ---
 
-## 📊 Visual recap — React concept coverage
+## 📊 Visual recap React concept coverage
 
 \`\`\`
 +------------------------+    +-----------------------+
@@ -5595,7 +5598,7 @@ v                 +-----------------------+
 
 ### 🌟 Epilogue
 
-With components as consultation rooms, context as the clinic’s vault, reducers as the master schedule, and effects as messengers to the server, **AarogyaPur’s Healthcare Hub** hums with care. Every click becomes kindness, every render a reassurance — React, in service of healing.
+With components as consultation rooms, context as the clinic’s vault, reducers as the master schedule, and effects as messengers to the server, **AarogyaPur’s Healthcare Hub** hums with care. Every click becomes kindness, every render a reassurance React, in service of healing.
 `
 }
 ]
@@ -7036,12 +7039,12 @@ Integrate these into your CI pipeline to catch errors before merge.
 },// Add these as the next cards in your src/qa-data.ts
 {
 category: 'angular',
-title: 'Developing a Banking Application with Angular — Story + Patterns + Code',
+title: 'Developing a Banking Application with Angular ',
 subItems: [
 {
 question: 'How do you develop a banking application using Angular?',
 answerMd: `
-# 🏦 Building a Banking Application with Angular — Story-Driven Guide
+# 🏦 Building a Banking Application with Angular Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -7681,7 +7684,7 @@ subItems: [
 {
 question: 'What is spring cloud architecture in microservices?',
 answerMd: `
-# ☁️ Spring Cloud Architecture in Microservices — Story-Driven Guide
+# ☁️ Spring Cloud Architecture in Microservices Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -7902,7 +7905,7 @@ return Receipt.builder()
 {
 question: 'What are core microservices design patterns',
 answerMd: `
-# 🚧 Core Microservices Design Patterns — Story-Driven Guide
+# 🚧 Core Microservices Design Patterns Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -7998,7 +8001,7 @@ API Gateway ──▶ Auth Service
 {
 question: 'How do you implement rate limiting, retry and fallback mechanisms?',
 answerMd: `
-# 🛡️ Rate Limiting, Retries & Fallbacks — Story-Driven Guide
+# 🛡️ Rate Limiting, Retries & Fallbacks Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -9636,7 +9639,7 @@ answerMd: ``
 ]
 },{
   category: 'systemDesign',
-  title: 'Comprehensive Code Review Checklist — Story + Patterns + Guide',
+  title: 'Comprehensive Code Review Checklist ',
   subItems: [
     {
       question: 'What all things do I need to consider for code review?',
@@ -9735,12 +9738,12 @@ By systematically covering these areas, you’ll catch defects early, improve co
   ]
 },{
   category: 'systemDesign',
-  title: 'System Design Basics — Story + Pillars + Patterns',
+  title: 'System Design Basics Story + Pillars + Patterns',
   subItems: [
     {
       question: 'What are the basics of system design?',
       answerMd: `
-# 🧱 System Design Basics — Story-Driven Primer
+# 🧱 System Design Basics Story-Driven Primer
 
 ## 👥 Main Participants & Their Roles
 
@@ -9858,14 +9861,14 @@ subItems: [
 {
 question: 'Design shortUrl in Java with architectural diagram',
 answerMd: `
-# 🚀 TinyURL in Java — Story‑Driven System Design
+# 🚀 TinyURL in Java Story‑Driven System Design
 
 ## 👥 Main Participants & Their Roles
 
 | Participant | Role in the Short URL System |
 |-------------|------------------------------|
 | **Client (Browser / App)** | Sends requests to shorten URLs and follows redirect links. |
-| **API Service (Spring Boot)** | Central brain — handles requests, validates input, coordinates ID generation, DB, and cache. |
+| **API Service (Spring Boot)** | Central brain handles requests, validates input, coordinates ID generation, DB, and cache. |
 | **ID Generator** | Creates unique numeric IDs to be encoded into short aliases (Base62). |
 | **Base62 Encoder** | Converts numeric IDs into compact, human‑friendly short codes. |
 | **Database** | Stores the alias → original URL mapping with metadata. |
@@ -9877,7 +9880,7 @@ answerMd: `
 
 ## 📖 Narrative
 
-Once upon a time in **LinkNagar**, every long winding address wanted a simpler nickname to move faster through the streets. You’re the chief at the 🏢 **Alias Office**, issuing short aliases and guiding travellers there instantly — even during rush hour.
+Once upon a time in **LinkNagar**, every long winding address wanted a simpler nickname to move faster through the streets. You’re the chief at the 🏢 **Alias Office**, issuing short aliases and guiding travellers there instantly even during rush hour.
 
 ---
 
@@ -10068,12 +10071,12 @@ return svc.resolve(alias)
 ]
 },{
 category: 'systemDesign',
-title: 'Event Booking System with Concurrency and Validation — Story + Patterns + Code',
+title: 'Event Booking System with Concurrency and Validation ',
 subItems: [
 {
 question: 'How do you implement an event booking system that prevents overbooking under concurrent requests, allows cancellations, and provides event-wise summaries using in-memory storage?',
 answerMd: `
-# 🏟️ Event Booking System with Concurrency & Validation — Story-Driven Guide
+# 🏟️ Event Booking System with Concurrency & Validation Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -10279,12 +10282,12 @@ executor.shutdown();
 ]
 },{
   category: 'systemDesign',
-  title: 'Designing a Large-Scale E-Commerce Platform (Amazon/Flipkart) — Story + Patterns + Code',
+  title: 'Designing a Large-Scale E-Commerce Platform (Amazon/Flipkart) ',
   subItems: [
     {
       question: 'How would you design Amazon.com/Flipkart?',
       answerMd: `
-# 🛒 Designing Amazon.com/Flipkart — Story-Driven Guide
+# 🛒 Designing Amazon.com/Flipkart Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -10478,12 +10481,12 @@ for msg in consumer:
   ]
 },{
   category: 'systemDesign',
-  title: 'Designing Generative AI Systems — Story + Patterns + Code',
+  title: 'Designing Generative AI Systems ',
   subItems: [
     {
       question: 'How would you design Generative AI Systems?',
       answerMd: `
-# 🤖 Generative AI System Design — Story-Driven Guide
+# 🤖 Generative AI System Design Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -10666,12 +10669,12 @@ def retrieve(query):
   ]
 },{
   category: 'systemDesign',
-  title: 'Designing a Large-Scale Video Streaming Platform (YouTube/Netflix/Prime Video) — Story + Patterns + Code',
+  title: 'Designing a Large-Scale Video Streaming Platform (YouTube/Netflix/Prime Video) ',
   subItems: [
     {
       question: 'How would you design YouTube/Netflix/Prime Video?',
       answerMd: `
-# 📺 Designing a Video Streaming Platform — Story-Driven Guide
+# 📺 Designing a Video Streaming Platform Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -10854,12 +10857,12 @@ public ResponseEntity<Resource> getManifest(@PathVariable String id) {
   ]
 },{
   category: 'devOps',
-  title: 'Understanding Kubernetes Key Concepts — Story + Patterns + Code',
+  title: 'Understanding Kubernetes Key Concepts ',
   subItems: [
     {
       question: 'What are Kubernetes key concepts in minute detail from an understanding perspective?',
       answerMd: `
-# 🐳 Kubernetes Key Concepts in Minute Detail — Story-Driven Guide
+# 🐳 Kubernetes Key Concepts in Minute Detail Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -11135,7 +11138,7 @@ spec:
   ]
 },{
   category: 'systemDesign',
-  title: 'Designing a High-Scale Video Streaming Platform — In-Depth Guide',
+  title: 'Designing a High-Scale Video Streaming Platform In-Depth Guide',
   subItems: [
     {
       question: 'Design a video streaming app for 100 countries, 100M users, 10M active users, 1M uploaders (video sizes 200 MB–2 GB). What are the key challenges and mitigations while maintaining all core NFRs?',
@@ -11499,7 +11502,7 @@ asyncio.run(main())
     {
       question: 'Which database technologies (relational, document, key–value, time–series) make sense for storing video metadata, user profiles, watch history, and analytics—and what are the trade-offs?',
       answerMd: `
-# 🗄️ Choosing the Right Database Technology — Story-Driven Guide
+# 🗄️ Choosing the Right Database Technology Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -11624,69 +11627,69 @@ CREATE INDEX idx_upload_date ON video_metadata (upload_date);
     // stubs for further questions; fill in using the same story-driven format
     {
       question: 'How do you model video metadata (title, description, tags, upload date, owner) to support both point-lookups (by video ID) and secondary queries (by tag, category, uploader)?',
-      answerMd: `\n# 🎨 Modeling Video Metadata — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+      answerMd: `\n# 🎨 Modeling Video Metadata Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
     },
     {
       question: 'What sharding or partitioning strategy will you apply to the metadata store to handle 100 M users and 1 M monthly uploads, and how will you rebalance shards as data grows?',
-      answerMd: `\n# 📐 Sharding & Partitioning Strategy — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+      answerMd: `\n# 📐 Sharding & Partitioning Strategy Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
     },
     {
       question: 'How will you replicate and cache metadata across 100 countries to achieve low-latency reads while maintaining acceptable consistency—master/slave, multi-master, or geo-distributed NoSQL?',
-      answerMd: `\n# 🌍 Global Replication & Caching — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+      answerMd: `\n# 🌍 Global Replication & Caching Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
     },
     {
       question: 'What consistency model will you choose for user-centric data (watch history, likes, comments)? Strong consistency, eventual consistency, or a hybrid—and why?',
-      answerMd: `\n# 🔗 Consistency Models — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+      answerMd: `\n# 🔗 Consistency Models Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
     },
     {
       question: 'How do you ensure transactional integrity when a video upload transaction spans object storage (for chunks) and the metadata database?',
-      answerMd: `\n# 🔄 Cross-System Transactions — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+      answerMd: `\n# 🔄 Cross-System Transactions Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
     },
     {
       question: 'How will you design the schema and indexing for user watch history and engagement events to power real-time analytics and recommendations at scale?',
-      answerMd: `\n# 📈 Watch History & Engagement Schema — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+      answerMd: `\n# 📈 Watch History & Engagement Schema Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
     },
     {
       question: 'What archival and data-lifecycle policies will you enforce on the metadata database and analytics store to control storage costs and meet compliance (e.g., GDPR)?',
-      answerMd: `\n# 🗄️ Archival & Data-Lifecycle Policies — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+      answerMd: `\n# 🗄️ Archival & Data-Lifecycle Policies Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
     },
     {
       question: 'How will you handle schema migrations and versioning across millions of records and multiple regions without downtime?',
-      answerMd: `\n# 🔧 Zero-Downtime Migrations — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+      answerMd: `\n# 🔧 Zero-Downtime Migrations Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
     },
     {
       question: 'What caching layer (Redis, Memcached, in-memory) and invalidation strategy will you use to reduce load on the primary database for high-frequency queries (e.g., “trending now”)?',
-      answerMd: `\n# ⚡ Caching & Invalidation Strategy — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+      answerMd: `\n# ⚡ Caching & Invalidation Strategy Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
     },
     {
       question: 'How do you design the comments, ratings, and playlist tables (or collections) to optimize for frequent writes, reads, and pagination?',
-      answerMd: `\n# 📝 Comments, Ratings & Playlists Schema — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+      answerMd: `\n# 📝 Comments, Ratings & Playlists Schema Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
     },
     {
       question: 'What backup, restore, and disaster-recovery plan will you implement to meet a 99.99% availability SLA for your metadata store?',
-      answerMd: `\n# 🚨 Backup, Restore & Disaster Recovery — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+      answerMd: `\n# 🚨 Backup, Restore & Disaster Recovery Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
     },
     {
       question: 'How do you monitor database health and performance (throughput, latency, error rates) and alert on anomalies for proactive scaling and tuning?',
-      answerMd: `\n# 🔍 Monitoring & Alerting — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+      answerMd: `\n# 🔍 Monitoring & Alerting Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
     },
     {
       question: 'How will you secure the metadata and analytics databases—encryption at rest/in transit, role-based access control, audit logging—to protect user and content data?',
-      answerMd: `\n# 🔐 Database Security — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+      answerMd: `\n# 🔐 Database Security Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
     },
     {
       question: 'When and how would you introduce a specialized search engine (Elasticsearch, Solr) alongside your primary database for full-text search on video titles/descriptions?',
-      answerMd: `\n# 🔎 Full-Text Search Integration — Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
+      answerMd: `\n# 🔎 Full-Text Search Integration Story-Driven Guide\n\n*(Answer in the above format with participants, narrative, patterns, …)*\n`
     }
   ]
 },{
   category: 'systemDesign',
-  title: 'Designing a Parking Garage System — Story + Patterns + Code',
+  title: 'Designing a Parking Garage System ',
   subItems: [
     {
       question: 'How would you design a Parking Garage system?',
       answerMd: `
-# 🚗 Designing a Parking Garage System — Story-Driven Guide
+# 🚗 Designing a Parking Garage System Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -11835,12 +11838,12 @@ public double calculateFee(LocalDateTime entry, LocalDateTime exit, VehicleType 
   ]
 },{
   category: 'database',
-  title: 'SQL vs NoSQL & Aurora vs DynamoDB — In-Depth Use Cases & Scenarios',
+  title: 'SQL vs NoSQL & Aurora vs DynamoDB In-Depth Use Cases & Scenarios',
   subItems: [
     {
       question: 'When should you choose SQL vs NoSQL?',
       answerMd: `
-# 🗄️ SQL vs NoSQL — Use Case Scenarios
+# 🗄️ SQL vs NoSQL Use Case Scenarios
 
 ## 👥 Main Participants & Their Roles
 
@@ -11928,7 +11931,7 @@ db.products.insertOne({
     {
       question: 'Aurora vs DynamoDB: which for which workload?',
       answerMd: `
-# ☁️ Aurora vs DynamoDB — Workload-Driven Scenarios
+# ☁️ Aurora vs DynamoDB Workload-Driven Scenarios
 
 ## 👥 Main Participants & Their Roles
 
@@ -12003,12 +12006,12 @@ Every user interaction is logged. DynamoDB Streams triggers Lambda consumers for
   ]
 },{
 category: 'systemDesign',
-title: 'Caching & Redis vs Memcached Caching Strategies — Story + Use Cases + Patterns',
+title: 'Caching & Redis vs Memcached Caching Strategies ',
 subItems: [
 {
 question: 'What are the common caching strategies?',
 answerMd: `
-# ⚡ Caching Strategies — Story-Driven Guide
+# ⚡ Caching Strategies Story-Driven Guide
 
 ## 👥 Main Participants & Their Roles
 
@@ -12079,7 +12082,7 @@ Cache Layer ────▶ Primary Database
 {
 question: 'When should you choose Redis vs Memcached?',
 answerMd: `
-# 🗃️ Redis vs Memcached — Use Case Scenarios
+# 🗃️ Redis vs Memcached Use Case Scenarios
 
 ## 👥 Main Participants & Their Roles
 
@@ -12159,7 +12162,7 @@ client.get('session123', (err, val) => { /* ... */ });
 },
 {
 category: 'leadership',
-title: 'Handling Tough Situations — STAR Q&A',
+title: 'Handling Tough Situations STAR Q&A',
 subItems: [
 {
 question: 'Describe a situation at Wipro where you handled a critical migration smoothly.',
@@ -12345,12 +12348,12 @@ As Lead Development Engineer, I was tasked with:
 ]
 },{
 category: 'leadership',
-title: 'Q&A Platform Architecture — Q&A Format',
+title: 'Q&A Platform Architecture Q&A Format',
 subItems: [
 {
 question: 'Draw and explain the application architecture you are currently working on.',
 answerMd: `
-# Q&A Platform Architecture — Overview
+# Q&A Platform Architecture Overview
 
 ## 🗺️ Architecture at a Glance (ASCII)
 
@@ -12821,7 +12824,7 @@ Use these questions and answers to demonstrate your mastery of clear communicati
 ]
 },{
 category: 'golang',
-title: 'GraphQL vs REST API — Story + Patterns + Code',
+title: 'GraphQL vs REST API ',
 subItems: [
 {
 question: 'How graphQL is different from REST API',
