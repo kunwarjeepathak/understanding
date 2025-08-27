@@ -421,7 +421,8 @@ pool.shutdown();
 - Use \`whenComplete\` for logging or cleanup without affecting results.
 - Integrate with Spring’s WebClient for reactive HTTP calls returning CompletableFutures.
 - Consider Project Loom for simpler concurrency patterns when it becomes mainstream.
-`
+`,
+important: true,
 },
 {
 question: 'What’s new in CompletableFuture?',
@@ -1259,7 +1260,8 @@ System.out.println(removeDuplicates(s));  // Kunwr j Pthk
 \`\`\`
 Kunwr j Pthk
 \`\`\`
-`
+`,
+important: true, 
 },
 {
 question: 'What’s the difference between StringBuilder and StringBuffer?',
@@ -2309,6 +2311,96 @@ category: 'springBoot',
 title: 'Spring & Spring Boot Deep Dive',
 subItems: [
 {
+"question": "What is the purpose and effect of the @SpringBootApplication annotation in Spring Boot?",
+"answerMd": `
+# 🚀 @SpringBootApplication — The All‑in‑One Spring Boot Starter
+
+The @SpringBootApplication annotation is a **meta‑annotation** that combines several key Spring annotations to simplify application configuration.
+
+---
+
+## 📦 What It Combines
+
+Internally, it is equivalent to using these three annotations together:
+
+- **@SpringBootConfiguration**
+Specialized form of @Configuration for Spring Boot.
+- **@EnableAutoConfiguration**
+Automatically configures Spring beans based on classpath settings, other beans, and property settings.
+- **@ComponentScan**
+Scans the current package and subpackages for components, configurations, and services to register as beans.
+
+---
+
+## 🛠 Practical Effects
+
+1. **Bootstraps the Application Context**
+Wires up Spring beans according to auto‑configuration rules.
+2. **Enables Component Scanning**
+Finds and registers @Component, @Service, @Repository, and @Controller classes automatically.
+3. **Activates Auto‑Configuration**
+Reduces boilerplate by creating beans for common application needs (datasources, MVC config, security, etc.).
+4. **Centralizes Configuration**
+Makes your main application class a single point of setup.
+
+---
+
+## 🖼 ASCII Flow Overview
+
+┌─────────────────────────────────┐
+│ @SpringBootApplication on class │
+└───────────────┬─────────────────┘
+│
+┌───────────────▼──────────────────┐
+│ @SpringBootConfiguration         │
+└───────────────┬──────────────────┘
+│
+┌───────────────▼──────────────────┐
+│ @EnableAutoConfiguration         │──▶ Auto‑configures beans
+└───────────────┬──────────────────┘
+│
+┌───────────────▼──────────────────┐
+│ @ComponentScan                   │──▶ Finds annotated components
+└──────────────────────────────────┘
+
+---
+
+## 💻 Typical Usage
+
+@SpringBootApplication
+public class MyApplication {
+public static void main(String[] args) {
+SpringApplication.run(MyApplication.class, args);
+}
+}
+
+---
+
+## 🎯 Best Practices
+
+- Place the annotated class in a **root package** above other components so @ComponentScan covers them.
+- Override auto‑configuration selectively using @EnableAutoConfiguration(exclude = ...) or application properties.
+- Use for the **primary entry point** to your Spring Boot application.
+
+---
+
+## 🧪 Verification Steps
+
+- Run the application and check the startup log for auto‑configuration reports.
+- Temporarily disable a specific auto‑configuration (e.g., DataSourceAutoConfiguration) to see the change in bean loading.
+- Add a custom component in a subpackage and confirm it is auto‑detected.
+
+---
+
+## 💡 Real‑World Use Cases
+
+- Quickly bootstrapping REST APIs with zero XML configuration.
+- Rapid prototyping: spin up applications with embedded Tomcat/Jetty in minutes.
+- Microservices: lightweight, standalone services with minimal setup.
+
+`,
+"important": true
+},{
 question: 'Explain Spring and Spring Boot key concepts in minute details',
 answerMd: `
 # Detailed Spring & Spring Boot Key Concepts
@@ -2949,146 +3041,181 @@ category: 'springBoot',
 title: 'Spring Bean Scopes: Use Cases & Examples',
 subItems: [
 {
-question: 'What are the six built-in Spring bean scopes and their lifecycles?',
-answerMd: `
-Spring defines six scopes to control bean instantiation, sharing, and destruction:
+"question": "What are the different Spring Bean scopes, their use cases, and examples?",
+"answerMd":
+`# 🧩 Spring Bean Scopes — Definitions, Use Cases, and Examples
 
-| Scope      | Lifecycle                                       |
-|------------|-------------------------------------------------|
-| singleton  | One instance per Spring container               |
-| prototype  | New instance on each lookup/injection           |
-| request    | One instance per HTTP request                   |
-| session    | One instance per HTTP session                   |
-| application| One instance per ServletContext (global web app)|
-| websocket  | One instance per WebSocket session              |
+Spring scopes define **how many instances** of a bean Spring creates and how long they live.
 
-Choosing the right scope helps you manage resources, state, and thread-safety in your applications.
-`
-},
-{
-question: 'When should I use singleton scope?',
-answerMd: `
-Singleton is the default. Spring creates one instance at startup (or lazily on first use) and shares it across the entire container.
+---
 
-Use cases:
-- Stateless services (business logic, DAOs)
-- Shared caches or connection pools
+## 📦 Common Scopes in Spring
 
-Example:
-\`\`\`java
-@Service
-public class UserService {
-public User findById(Long id) { … }
-}
-\`\`\`
+| **Scope**      | **Description**                                                 | **Typical Use Cases**                                                   |
+|----------------|-----------------------------------------------------------------|--------------------------------------------------------------------------|
+| singleton      | One shared instance per Spring IoC container                    | Stateless services, shared caches, utility components                   |
+| prototype      | New instance every time it is requested                         | Stateful operations, job/task handlers                                  |
+| request        | One instance per HTTP request                                   | Request‑specific DTOs, form models, security context wrappers           |
+| session        | One instance per HTTP session                                   | User session data, preference storage                                   |
+| application    | One instance per ServletContext                                 | Global caches, configuration shared across sessions                     |
+| websocket      | One instance per WebSocket session                              | Chat sessions, real‑time game state                                     |
 
-Ensure thread-safety if you hold mutable state.
-`
-},
-{
-question: 'When should I use prototype scope?',
-answerMd: `
-Prototype beans produce a new instance every time you request or inject them.
+---
 
-Use cases:
-- Objects carrying temporary or user-specific state
-- Heavy-init resources you want fresh each time
+## 🖼 ASCII Lifecycle Snapshot
 
-Example:
-\`\`\`java
+singleton  ──▶ same object for all lookups
+prototype  ──▶ new object per lookup
+request    ──▶ lives during a single HTTP request
+session    ──▶ lives during an HTTP session
+application──▶ lives as long as ServletContext
+websocket  ──▶ lives for WebSocket connection
+
+---
+
+## 💻 Detailed Examples & Deep‑Dives
+
+### **Singleton Scope (default)**
+- Global configuration reader (e.g., YAML/Properties loader)
+- Encryption/decryption service
+- Central logging service
+- Shared REST client bean
+
 @Component
-@Scope("prototype")
-public class ReportGenerator {
-private UUID sessionId = UUID.randomUUID();
-}
-\`\`\`
+public class LoggingService {}
 
-Note: Spring does not manage destruction for prototype beans—you must clean up manually if needed.
-`
-},
-{
-question: 'When should I use request scope?',
-answerMd: `
-Request-scoped beans live for a single HTTP request and are destroyed at its end.
+---
 
-Use cases:
-- Capturing per-request data (e.g., search criteria, filters)
-- Avoiding ThreadLocal for request parameters
+### **Prototype Scope — Deep Dive**
+**Definition**: Creates a **brand‑new instance every time** it’s requested from the container.
+**Lifecycle**:
+1. Created on getBean() or when injected into a newly created dependent bean
+2. Dependencies injected, init callbacks run (@PostConstruct)
+3. Spring hands it to you — no further tracking; you handle cleanup if needed
 
-Example:
-\`\`\`java
+**When to Use**:
+- Caller needs a **fresh state** every time
+- Bean isn’t thread‑safe for concurrent use
+- Examples:
+- Image processor per upload
+- Data import worker per file
+- Calculator instance with transient state
+- Report generator
+
+**Configuration**:
 @Component
-@Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)
-public class SearchCriteria {
-private String query;
-}
-\`\`\`
+@Scope(\"prototype\")
+    public class ReportBuilder {}
 
-Requires a web-aware ApplicationContext.
-`
-},
-{
-question: 'When should I use session scope?',
-answerMd: `
-Session-scoped beans persist for the lifetime of an HTTP session.
+**Comparison Snapshot**:
+| Feature                | Prototype                             | Singleton                   |
+|------------------------|---------------------------------------|-----------------------------|
+| Instances created      | New each retrieval                    | One per container           |
+| Lifecycle managed?     | Init only; no destruction             | Full init + destroy         |
+| Thread safe?           | Yes if per‑use; often simpler         | Must be explicitly designed |
+| Use case               | Per‑operation, per‑thread state       | Shared, stateless services  |
 
-Use cases:
-- Shopping carts, multi-step workflows
-- User preferences maintained across requests
+**Gotchas**:
+1. No automatic destruction callbacks (@PreDestroy)
+2. Injecting into singleton without provider gives only one instance (solve with ObjectProvider or @Lookup)
+3. Can create GC pressure if overused
 
-Example:
-\`\`\`java
-@Component
-@Scope(value = "session", proxyMode = ScopedProxyMode.INTERFACES)
-public class ShoppingCart {
-private List<Item> items = new ArrayList<>();
-}
-\`\`\`
+**Verification Trick**:
+    @RestController
+    public class TestController {
+        @Autowired private ObjectProvider<ReportBuilder> provider;
+        @GetMapping(\"/test-proto\")
+        public String test() {
+            return String.valueOf(System.identityHashCode(provider.getObject()));
+        }
+    }
 
-Always inject via a proxy when mixing with singletons.
-`
-},
-{
-question: 'When should I use application scope?',
-answerMd: `
-Application-scoped beans live for the entire ServletContext—one instance per web app.
+---
 
-Use cases:
-- Global caches or lookup tables
-- Shared counters or stats collectors
+#### 🔍 Prototype vs Request Scope — Key Differences
 
-Example:
-\`\`\`java
-@Component
-@Scope(value = "application", proxyMode = ScopedProxyMode.TARGET_CLASS)
-public class GlobalCache {
-private Map<String, Object> cache = new ConcurrentHashMap<>();
-}
-\`\`\`
+| Aspect | **Prototype** | **Request** |
+|--------|---------------|-------------|
+| **Lifecycle trigger** | New bean created **every time** you request it from the container | New bean created **once per HTTP request** |
+| **Context type** | Works in any Spring context (CLI, batch, web, etc.) | Only valid in a web app with active RequestContext |
+| **End of life** | Managed by you — Spring doesn’t destroy it automatically | Spring destroys it at the end of the HTTP request |
+| **Usage fit** | Fresh helper for any operation | Data tied to one HTTP request |
+| **Thread safety** | Safe if each caller gets its own instance | Safe because one instance per request thread |
+| **Injection into singleton** | Requires ObjectProvider or @Lookup to get fresh instances | Needs scope proxy to resolve per current request |
+| **Availability outside web layer** | ✅ Yes | ❌ No |
 
-Often singleton suffices outside web contexts.
-`
-},
-{
-question: 'When should I use websocket scope?',
-answerMd: `
-WebSocket-scoped beans are created per WebSocket session.
+**Verification Tip**:
+- Log System.identityHashCode() in two different requests.
+  - Prototype → always different
+  - Request → same within the request, different across requests
 
-Use cases:
-- Real-time chat handlers
-- Collaborative editing state per connection
+---
 
-Example:
-\`\`\`java
-@Component
-@Scope(value = "websocket", proxyMode = ScopedProxyMode.TARGET_CLASS)
-public class ChatSessionHandler {
-private String username;
-}
-\`\`\`
+### **Request Scope (Web)**
+- Form‑backing bean for registration form
+- Request‑bound validator object
+- API request metrics tracker
+- Security context DTO
 
-Requires Spring’s WebSocket support and proxy injection.
-`
+    @Component
+    @Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
+    public class RequestAuditBean {}
+
+---
+
+### **Session Scope (Web)**
+- Shopping cart object
+- Logged‑in user profile holder
+- UI theme preferences bean
+- Per‑user notification queue
+
+    @Component
+    @Scope(value = WebApplicationContext.SCOPE_SESSION, proxyMode = ScopedProxyMode.TARGET_CLASS)
+    public class UserSessionData {}
+
+---
+
+### **Application Scope (Web)**
+- Application‑wide product cache
+- Country/state code lookup table
+- Feature flag configuration
+- Preloaded AI model shared across sessions
+
+    @Component
+    @Scope(value = WebApplicationContext.SCOPE_APPLICATION, proxyMode = ScopedProxyMode.TARGET_CLASS)
+    public class AppConfigCache {}
+
+---
+
+### **WebSocket Scope (Web)**
+- Chat room participant session
+- Multiplayer game state
+- Stock price subscription channel
+- Collaborative editing state
+
+    @Component
+    @Scope(scopeName = \"websocket\", proxyMode = ScopedProxyMode.TARGET_CLASS)
+    public class ChatSessionBean {}
+
+---
+
+## 🎯 Best Practices
+
+- Use **singleton** for stateless, thread‑safe services.
+- Manage **prototype** cleanup manually.
+- Avoid large memory objects in request/session beans.
+- Match scope to both **data lifecycle** and **concurrency**.
+
+---
+
+## 🧪 Verification
+
+- Log System.identityHashCode(bean) for same/different instance checks
+- Build a test controller to display IDs for multiple scopes
+- Use scope proxies when mixing web scopes into singletons`,
+  "important": true
+
+
 }
 ]
 },// Add this card to your src/qa-data.ts
@@ -3194,26 +3321,174 @@ Then in a custom filter:
 var auth = new UsernamePasswordAuthenticationToken(user, null, authorities);
 SecurityContextHolder.getContext().setAuthentication(auth);
 \`\`\`
-`
+`,
+  "important": true
 },
 {
-question: 'How do you set up OAuth2 login with Google (or another provider)?',
-answerMd: `
-### OAuth2 Client Login
+"question": "How do you set up OAuth2 login using Google and Spring?",
+"answerMd": `
+# 🔑 Setting up Google OAuth2 Login in Spring
 
-1. Add \`spring-boot-starter-oauth2-client\`.
-2. Configure \`spring.security.oauth2.client.registration.google\` in \`application.yml\`.
-3. Enable OAuth2 login in \`SecurityFilterChain\`.
+---
 
-\`\`\`java
-http
-.oauth2Login(oauth2 -> oauth2
-.loginPage("/oauth2/authorization/google")
-);
+## 📦 Prerequisites
+- **Java** 17+ (or your Spring Boot version’s requirement)
+- **Spring Boot** (with \`spring-boot-starter-oauth2-client\`)
+- A **Google Cloud** account with access to [Google Cloud Console](https://console.cloud.google.com/)
+
+---
+
+## 🛠️ Step-by-Step Setup
+
+### 1. Create a Google Cloud Project & Enable OAuth2
+- Go to **Google Cloud Console** → *APIs & Services* → *Credentials*.
+- Click **Create Credentials** → *OAuth client ID*.
+- Configure **OAuth consent screen**:
+- App name, support email, authorized domains.
+- Add any required scopes.
+- Set **Application type** → *Web application*.
+- Add **Authorized redirect URIs**:
+- Example: \`http://localhost:8080/login/oauth2/code/google\`
+- Save and copy **Client ID** & **Client Secret**.
+
+---
+
+### 2. Add Dependencies in \`pom.xml\`
+\`\`\`xml
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-oauth2-client</artifactId>
+</dependency>
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-security</artifactId>
+</dependency>
 \`\`\`
 
-Spring handles the redirect, token exchange, and maps user info to a \`OAuth2User\`.
-`
+---
+
+### 3. Configure \`application.yml\` (or \`application.properties\`)
+\`\`\`yaml
+spring:
+security:
+oauth2:
+client:
+registration:
+google:
+client-id: YOUR_CLIENT_ID
+client-secret: YOUR_CLIENT_SECRET
+scope:
+- openid
+- profile
+- email
+provider:
+google:
+issuer-uri: https://accounts.google.com
+\`\`\`
+
+---
+
+### 4. Create a Security Configuration
+\`\`\`java
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+
+@org.springframework.context.annotation.Configuration
+public class SecurityConfig {
+
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+http
+.authorizeHttpRequests(auth -> auth
+.requestMatchers("/", "/public/**").permitAll()
+.anyRequest().authenticated()
+)
+.oauth2Login();
+return http.build();
+}
+}
+\`\`\`
+
+---
+
+### 5. OAuth2 Flow Diagram (ASCII)
+
+\`\`\`plaintext
+┌─────────────────────┐
+│   User's Browser    │
+└─────────┬───────────┘
+│
+│ 1️⃣ Accesses protected page
+▼
+┌───────────────────────────┐
+│ Spring Boot App (Client)  │
+└───────┬───────────────────┘
+│
+│ 2️⃣ Redirect to Google OAuth2 endpoint
+▼
+┌─────────────────────────────────────┐
+│ Google Authorization Server (AuthZ) │
+└───────┬─────────────────────────────┘
+│
+│ 3️⃣ User logs in & consents
+│
+│ 4️⃣ Authorization Code → redirect back
+▼
+┌───────────────────────────┐
+│ Spring Boot App (Client)  │
+└───────┬───────────────────┘
+│
+│ 5️⃣ Exchange Code → Access Token (+ ID Token if OIDC)
+▼
+┌─────────────────────────────────────┐
+│ Google Token Endpoint (Auth Server) │
+└─────────────────────────────────────┘
+│
+│ 6️⃣ Token response → Client stores token in Security Context
+▼
+┌───────────────────────────┐
+│ Spring Boot App (Client)  │
+└───────┬───────────────────┘
+│
+│ 7️⃣ Fetch User Info (if needed)
+▼
+┌─────────────────────────────────────┐
+│ Google UserInfo Endpoint (Optional)  │
+└─────────────────────────────────────┘
+│
+│ 8️⃣ User session established
+▼
+┌─────────────────────┐
+│   User's Browser    │
+└─────────────────────┘
+\`\`\`
+
+---
+
+### 6. Running & Testing
+- Start your Spring Boot app.
+- Navigate to [http://localhost:8080](http://localhost:8080).
+- Click **Login with Google** (auto-generated by Spring Security).
+- You’ll be redirected to Google, log in, and be sent back with a user principal.
+
+---
+
+## 🧪 Verification Steps
+- **Check Logs** — Spring Security prints the authenticated principal.
+- **Access User Info** — Inject \`OAuth2AuthenticationToken\` or \`OidcUser\` into your controllers.
+- **Test with Multiple Accounts** — Verify consent screen behavior.
+
+---
+
+## 💡 Real-World Use Cases
+- **Internal Admin Portal** — Restrict access to only company Google Workspace accounts.
+- **Customer Web App** — Offer “Login with Google” alongside other identity providers.
+- **Hybrid Apps** — Use Google OAuth2 for both browser-based and native mobile flows.
+
+---
+`,
+"important": true
 },
 {
 question: 'How do you secure APIs as an OAuth2 Resource Server (JWT bearer tokens)?',
@@ -3299,27 +3574,120 @@ category: 'springBoot',
 title: 'Spring Bean & Context Lifecycle: Use Cases & Examples',
 subItems: [
 {
-question: 'What are the main phases in a Spring bean’s lifecycle?',
-answerMd: `
-Spring manages each bean through these phases:
+"question": "What are the main phases in the Spring Bean lifecycle?",
+"answerMd": `
+# 🌱 Main Phases in the Spring Bean Lifecycle
 
-1. Instantiation
-2. Populate properties (DI)
-3. Aware callbacks (\`BeanNameAware\`, \`BeanFactoryAware\`)
-4. \`BeanPostProcessor.postProcessBeforeInitialization\`
-5. Initialization
-- \`@PostConstruct\`
-- \`InitializingBean.afterPropertiesSet()\`
-- Custom \`init-method\`
-6. \`BeanPostProcessor.postProcessAfterInitialization\`
-7. Usage by application
-8. Destruction
-- \`@PreDestroy\`
-- \`DisposableBean.destroy()\`
-- Custom \`destroy-method\`
+Spring beans go through a **well-defined sequence of stages** from creation to destruction, orchestrated by the Spring IoC container.
 
-Understanding these phases helps you hook into exactly the right moment to configure, validate, or tear down resources.
-`
+---
+
+## 📦 Phases Overview
+
+1. **Instantiation**
+- Bean instance creation (constructor or factory method).
+
+2. **Populate Properties**
+- Dependency injection.
+
+3. **Aware Interface Callbacks** *(optional)*
+- e.g., BeanNameAware, BeanFactoryAware, ApplicationContextAware.
+
+4. **Pre‑Initialization**
+- BeanPostProcessor.postProcessBeforeInitialization().
+
+5. **Initialization**
+- InitializingBean.afterPropertiesSet() or configured init-method.
+
+6. **Post‑Initialization**
+- BeanPostProcessor.postProcessAfterInitialization().
+
+7. **Ready for Use**
+- Bean is live in the container.
+
+8. **Destruction**
+- DisposableBean.destroy() or configured destroy-method.
+
+---
+
+## 🖼 ASCII Lifecycle Flow
+
+┌──────────────────────────┐
+│   Spring Container       │
+└───────┬──────────────────┘
+│
+1️⃣ Instantiate Bean
+│
+2️⃣ Populate Properties
+│
+3️⃣ Aware Interfaces (optional)
+│
+4️⃣ BeanPostProcessor (pre-init)
+│
+5️⃣ Initialization Callbacks
+│
+6️⃣ BeanPostProcessor (post-init)
+│
+7️⃣ Bean Ready for Use
+│
+8️⃣ Destruction Callbacks
+
+---
+
+## 📊 Phase vs Implementation Mapping
+
+| **Phase**                         | **Programmatic Interface(s)**                                     | **XML/Annotation Equivalent**                              |
+|-----------------------------------|--------------------------------------------------------------------|------------------------------------------------------------|
+| Instantiation                     | Constructor / Factory Method                                      | <bean class="..."/> or @Bean method                        |
+| Populate Properties               | Setter methods / constructor args                                | <property> in XML or @Value, @Autowired in annotations     |
+| Aware Callbacks                   | BeanNameAware, BeanFactoryAware, ApplicationContextAware          | N/A (triggered automatically if implemented)               |
+| Pre‑Initialization                | BeanPostProcessor.postProcessBeforeInitialization()               | N/A (implement and register BeanPostProcessor bean)         |
+| Initialization                    | InitializingBean.afterPropertiesSet()                             | init-method="methodName" in XML or @PostConstruct           |
+| Post‑Initialization               | BeanPostProcessor.postProcessAfterInitialization()                | N/A (implement and register BeanPostProcessor bean)         |
+| Ready for Use                     | N/A — beans are accessed normally                                 | N/A                                                         |
+| Destruction                       | DisposableBean.destroy()                                          | destroy-method="methodName" in XML or @PreDestroy           |
+
+---
+
+## 🕒 Call Order Timeline with Method Signatures
+
+1. Constructor:  public MyBean()
+2. BeanNameAware:  setBeanName(String name)
+3. BeanClassLoaderAware:  setBeanClassLoader(ClassLoader classLoader)
+4. BeanFactoryAware:  setBeanFactory(BeanFactory beanFactory)
+5. ApplicationContextAware:  setApplicationContext(ApplicationContext context)
+6. BeanPostProcessor (before init):  postProcessBeforeInitialization(Object bean, String beanName)
+7. @PostConstruct annotated method
+8. InitializingBean:  afterPropertiesSet()
+9. Custom init‑method:  public void customInit()
+10. BeanPostProcessor (after init):  postProcessAfterInitialization(Object bean, String beanName)
+--- Bean is now READY for use ---
+11. @PreDestroy annotated method
+12. DisposableBean:  destroy()
+13. Custom destroy‑method:  public void customDestroy()
+
+**Notes:**
+- Steps 2–5 occur only if the bean implements respective Aware interfaces.
+- Steps 6 and 10 occur for all beans if a BeanPostProcessor is present.
+- @PostConstruct runs between steps 6 and 8.
+- @PreDestroy runs before step 12.
+
+---
+
+## 🧪 Verification Steps
+- Enable DEBUG logging for org.springframework.beans.
+- Implement all lifecycle callbacks in a test bean and observe the log output.
+- Add breakpoints to watch live execution order.
+
+---
+
+## 💡 Real‑World Use Cases
+- Profiling & Monitoring — Hook into BeanPostProcessor to track bean load times.
+- Dynamic Wiring — Choose implementations before initialization based on environment.
+- Graceful Shutdown — Release or persist resources in destroy callbacks.
+
+`,
+"important": true
 },
 {
 question: 'How do you add custom initialization logic to a bean?',
@@ -4051,7 +4419,266 @@ jmxc.close();
 }
 ]
 },// Add this as the AWS Lambda card in your src/qa-data.ts
+{
+category: 'aws',
+title: 'AWS Architecture Key components',
+subItems: [{
+"question": "In AWS cloud architecture, what are the key components and their roles in handling a browser request?",
+"answerMd": `
+# 🔍 AWS Architecture Deep Dive
 
+When you type a URL and press Enter, AWS stitches together dozens of services to resolve DNS, secure traffic, run code, fetch data, and return content—all in milliseconds.
+
+---
+
+## 🗺️ Domain & DNS
+
+- **Amazon Route 53**
+Routes domain names to IP addresses using global DNS, health checks, and latency-based policies.
+
+---
+
+## 🌐 Edge & CDN
+
+- **Amazon CloudFront**
+Caches static and dynamic content at edge locations worldwide to reduce latency and offload origin servers.
+
+---
+
+## ⚖️ Traffic Distribution
+
+- **AWS Global Accelerator**
+Assigns static Anycast IPs and optimizes network paths over the AWS backbone for consistent performance.
+- **Elastic Load Balancer (ALB/NLB)**
+ALB manages HTTP/HTTPS with host- and path-based routing; NLB handles high-throughput TCP/UDP, both distributing requests to healthy targets.
+
+---
+
+## 🛡️ Security
+
+- **AWS WAF**
+Inspects incoming HTTP requests against customizable rules to block common web exploits.
+- **AWS Shield**
+Defends against DDoS at layers 3–7; Shield Advanced adds real-time metrics and integration with WAF.
+- **AWS IAM**
+Controls user and service permissions, enforcing least-privilege access across AWS resources.
+- **AWS KMS**
+Central key management for encrypting data at rest and in transit with audit logs.
+- **AWS Secrets Manager**
+Securely stores and rotates credentials, API keys, and other secrets without embedding them in code.
+
+---
+
+## 🌐 Networking
+
+- **Amazon VPC**
+Creates isolated virtual networks where you define IP ranges, subnets, and routing rules.
+- **Internet Gateway**
+Provides internet connectivity for resources in public subnets.
+- **NAT Gateway**
+Enables outbound internet access for instances in private subnets while blocking inbound connections.
+- **Route Tables**
+Direct traffic between subnets, gateways, and endpoints within the VPC.
+- **Subnets**
+Segment the VPC into public (internet-facing) and private (isolated) zones.
+- **Security Groups & NACLs**
+Stateful and stateless firewalls that filter traffic at instance and subnet levels.
+
+---
+
+## 🖥️ Compute
+
+- **Amazon EC2**
+Scalable virtual machines with customizable CPU, memory, and storage configurations.
+- **Amazon ECS/EKS with Fargate**
+Serverless container orchestration that automatically scales and manages compute resources.
+- **AWS Lambda**
+Event-driven functions that run code in response to triggers without provisioning servers.
+- **AWS Elastic Beanstalk**
+Simplifies application deployment by handling infrastructure provisioning, load balancing, and health monitoring.
+
+---
+
+## 🗄️ Data & Storage
+
+- **Amazon S3**
+Object storage for websites, backups, and logs with built-in durability and lifecycle policies.
+- **Amazon EBS**
+Block storage volumes attached to EC2 for low-latency transactional workloads.
+- **Amazon EFS**
+Managed NFS file system that scales across multiple Availability Zones.
+- **Amazon RDS/Aurora**
+Managed relational databases with automated backups, scaling, and multi-AZ failover.
+- **Amazon DynamoDB**
+Fully managed NoSQL store delivering single-digit millisecond performance at scale.
+- **Amazon ElastiCache**
+In-memory caching with Redis or Memcached to accelerate data retrieval.
+
+---
+
+## 📨 Messaging & Streaming
+
+- **Amazon SQS**
+Decouples components with reliable, scalable message queuing.
+- **Amazon SNS**
+Pub/Sub messaging for event notifications via email, SMS, or Lambda triggers.
+- **Amazon Kinesis**
+Real-time data ingestion and processing for analytics and streaming workloads.
+- **Amazon EventBridge**
+Event bus that routes events between AWS services and custom applications.
+
+---
+
+## 🔧 DevOps & Infrastructure as Code
+
+- **AWS CloudFormation / Terraform**
+Declarative templates to provision, update, and version infrastructure as code.
+- **AWS CodePipeline / CodeBuild / CodeDeploy**
+CI/CD services that automate build, test, and deployment workflows.
+- **AWS Systems Manager**
+Centralizes operational data, automates patching, and executes commands across instances.
+- **AWS Config**
+Tracks resource configurations, detects drift, and audits compliance.
+- **AWS CloudTrail**
+Records API calls and user activity for security auditing and governance.
+
+---
+
+## 📈 Observability & Monitoring
+
+- **Amazon CloudWatch**
+Collects logs, metrics, and events; powers dashboards, alarms, and automated responses.
+- **AWS X-Ray**
+Enables distributed tracing to analyze latency and errors across microservices.
+- **Amazon OpenSearch Service**
+Provides searchable log analytics with built-in visualization via Kibana.
+- **Amazon GuardDuty**
+Continuously monitors for threats using machine learning and anomaly detection.
+- **AWS Security Hub / Inspector**
+Aggregates security findings and assesses vulnerabilities across your AWS environment.
+
+---
+
+### 🧩 End-to-End ASCII Flow
+
+\`\`\`
+Browser
+▶ Route 53 (DNS)
+▶ CloudFront Edge
+▶ Global Accelerator (optional)
+▶ ALB / NLB
+▶ WAF → Shield
+▶ VPC: IGW → Public Subnet / Private Subnet (NAT)
+▶ EC2 / ECS & Fargate / Lambda
+▶ EBS / S3 / RDS / DynamoDB / ElastiCache
+▶ CloudWatch / X-Ray / GuardDuty
+▶ Response returns back through ALB / CloudFront to browser
+\`\`\`
+
+This comprehensive AWS blueprint reveals how each service—from DNS to observability—coalesces to handle your browser request securely, reliably, and at massive scale.
+`,
+"important": true
+}, {
+"question": "Explain AWS Networking components in deep dive with ASCII architecture: Amazon VPC, Internet Gateway, NAT Gateway, Route Tables, Subnets, Security Groups & NACLs.",
+"answerMd": `
+# 🌐 AWS Networking Components — Deep Dive
+
+## 🧩 Main Components & Their Roles
+
+| Component                 | Role                                                                 |
+|---------------------------|----------------------------------------------------------------------|
+| Amazon VPC                | Isolated, customizable network environment with defined IP ranges   |
+| Internet Gateway (IGW)    | Scales horizontally to connect public subnets to the internet        |
+| NAT Gateway               | Enables private subnets to reach the internet outbound only          |
+| Route Tables              | Control packet paths within and outside the VPC                      |
+| Subnets                   | Divide the VPC network into AZ-specific, public/private segments     |
+| Security Groups (SGs)     | Stateful, instance-level firewalls controlling ingress/egress        |
+| Network ACLs (NACLs)      | Stateless, subnet-level packet filters allowing/denying traffic      |
+
+---
+
+## 📖 Narrative
+
+Imagine **Cloud City** — your AWS VPC is the city boundary, drawn exactly how you like. Inside are neighborhoods (**subnets**) — some have open gates to the world (**public**), others are secluded behind walls (**private**).
+
+Visitors from the internet enter through the **Internet Gateway** — the grand front door. Inside, **Route Tables** are the street signs, showing data where to go. In private zones, residents can send letters out but no strangers can knock — that’s the **NAT Gateway** at work.
+
+**Security Groups** act like personal security at each house (EC2, RDS), remembering who they let in so return visits are easy. **NACLs** are like guard posts at neighborhood entrances — they check every single packet against a strict allow/deny list, every time.
+
+---
+
+## 🎯 Goals & Guarantees
+
+| Goal                 | Detail                                                               |
+|----------------------|----------------------------------------------------------------------|
+| Isolation            | Keep workloads in separate public/private subnets                    |
+| Controlled Exposure  | Public-facing only where necessary; private assets remain internal   |
+| Granular Filtering   | Layered security: SGs for instance scope, NACLs for subnet scope     |
+| Predictable Routing  | Explicit routes for IGW, NAT, peering, and VPC endpoints             |
+| Scalability          | Components scale with workload demand without redesign               |
+
+---
+
+## 🗺️ Architecture at a Glance (ASCII)
+
+\`\`\`
+                           ┌───────────── Internet ─────────────┐
+                           │                                    │
+                     0.0.0.0/0 → Internet Gateway (IGW)         │
+                           │                                    │
+                    ┌──────▼──────┐      ┌────────────────────┐
+                    │  Public     │      │     Private        │
+                    │  Subnet(s)  │      │    Subnet(s)       │
+                    │ (AZ1,AZ2..) │      │  (AZ1,AZ2..)       │
+                    └─────┬───────┘      └────────┬───────────┘
+                          │                      │
+             Public Route │                      │ Private Route
+      0.0.0.0/0 → IGW     │        0.0.0.0/0 → NAT Gateway in Public Subnet
+                          │                      │
+                    ┌─────▼─────┐         ┌──────▼─────┐
+                    │  EC2/Web  │         │   EC2/App  │
+                    │  SG:Allow │         │ SG: Allow  │
+                    │  80,443   │         │ 443 from LB│
+                    └─────┬─────┘         └──────┬─────┘
+                          │                     │
+                    NACL (Public)         NACL (Private)
+                Allow 80,443 inbound   Allow ephemeral inbound
+                Allow all outbound     Allow all outbound
+\`\`\`
+
+---
+
+## ⚙️ Core Patterns & Pitfalls
+
+| Pattern/Component  | Problem Solved                                              | Common Pitfall                                      | Fix / Best Practice                              |
+|--------------------|-------------------------------------------------------------|-----------------------------------------------------|--------------------------------------------------|
+| VPC                | Logical network isolation                                  | Overlapping CIDRs with other networks               | Plan IP ranges ahead for hybrid/multi-VPC setups |
+| IGW                | Public internet access for public subnets                   | Attaching to wrong VPC or missing route             | Always verify attachment and routes              |
+| NAT Gateway        | Outbound-only internet from private subnets                 | High cost in multiple AZs without need              | Deploy per-AZ for HA, but size for real demand   |
+| Route Tables       | Explicit traffic routing                                   | Route conflicts or missing local routes             | Keep one public and one private RT per AZ set    |
+| Subnets            | AZ-bound segmentation                                      | Wrong resource placement (cross-AZ latency)         | Align compute/data in same AZ for performance    |
+| Security Groups    | Instance-level stateful filtering                          | Overly permissive rules                             | Least-privilege and reference by SG, not CIDR    |
+| NACLs              | Subnet-level stateless allow/deny                          | Rule mis-order or ephemeral ports blocking          | Understand stateless nature and ephemeral ranges |
+
+---
+
+## 🛠 Step-by-Step Implementation (Hands-On)
+
+1. **Create VPC** with planned CIDR (e.g., 10.0.0.0/16)
+2. **Create Subnets** — public (route to IGW) and private (route to NAT)
+3. **Create IGW** and attach to VPC
+4. **Create NAT GW** in each public subnet for HA
+5. **Set up Route Tables** — public routes to IGW; private routes to NAT
+6. **Configure NACLs** — allow required ports, block undesired ranges
+7. **Configure SGs** — allow minimal inbound, restrict outbound if needed
+8. **Launch EC2** in each subnet to test internet access paths
+9. **Verify** — Public EC2 reachable from internet, private EC2 outbound-only
+
+---
+
+With this layout, AWS Networking becomes an intuitive, layered defense and routing system — letting you design controlled, secure, and highly available connectivity for any workload.
+`
+}]},
 {
 category: 'aws',
 title: 'AWS Lambda Functions',
@@ -7676,7 +8303,198 @@ console.log(x.toUpperCase()); // safe
 }
 ]
 },// Add this as the next card in your src/qa-data.ts
+{
+category: 'cloud',
+title: 'Cloud Architecture Behind URL requests',
+subItems: [
+{
+"question": "Once I hit a URL in my browser, how does the request flow through cloud architecture?",
+"answerMd": `
+# 🚀 The Epic Journey of a Browser Request in AWS
 
+---
+
+## 🌅 1. The Moment of Launch
+Lucy’s finger taps Enter on “https://shop.example.com/products/123.” Her browser instantly packages an HTTP GET request and sends it toward the internet gateway of her operating system.
+
+---
+
+## 🔍 2. Amazon Route 53 – Global DNS Resolution
+- The browser asks Lucy’s configured resolver: “What IP serves shop.example.com?”
+- The resolver queries Route 53’s global DNS network.
+- Route 53 responds with the optimal edge location IP, using latency-based routing and health checks.
+
+---
+
+## 🌐 3. Amazon CloudFront & Global Accelerator – Edge Networking
+- **Global Accelerator (optional)**
+- Provides two static Anycast IPs.
+- Routes Lucy’s traffic over the AWS global backbone to the nearest edge.
+- **CloudFront**
+- Hits the nearest edge PoP.
+- If /products/123 HTML is cached, returns it in microseconds.
+- On a cache miss, forwards request to the origin (ALB or custom domain).
+
+---
+
+## ⚖️ 4. Elastic Load Balancer – Traffic Maestro
+- **Application Load Balancer (ALB)**
+- Receives the request on HTTPS (TLS termination optional).
+- Performs health checks on target groups (EC2, ECS tasks, Lambda).
+- Uses host/path-based routing to send traffic to the correct service.
+- **Network Load Balancer (NLB)**
+- Handles ultra-low-latency TCP/UDP flows if needed.
+
+---
+
+## 🛡️ 5. AWS WAF & Shield – Security Sentries
+- **AWS WAF**
+- Inspects HTTP headers, URIs, bodies.
+- Blocks OWASP Top 10 threats with customizable rules.
+- **AWS Shield**
+- Standard protects against common DDoS at no extra cost.
+- Shield Advanced provides event cost protection and 24/7 DDoS response.
+
+---
+
+## 🌐 6. Amazon VPC & Networking – Private Highways
+- **VPC**
+- Logical network boundary.
+- **Subnets**
+- Public subnets host ALBs, NAT Gateways, and Internet Gateways.
+- Private subnets host application servers and databases.
+- **Internet Gateway & NAT Gateway**
+- IGW enables public subnet egress/ingress.
+- NAT Gateway allows private subnet instances to call out without public IPs.
+- **Route Tables**
+- Direct traffic between subnets, gateways, and peered VPCs.
+- **VPC Endpoints & PrivateLink**
+- Privately connect to S3, DynamoDB, or custom services without traversing the internet.
+
+---
+
+## 🔐 7. Security Groups & Network ACLs – Stateful Firewalls
+- **Security Groups**
+- Attached to instances and ELBs.
+- Stateful: return traffic automatically allowed.
+- **Network ACLs**
+- Attached to subnets.
+- Stateless: explicit allow/deny rules for ingress and egress.
+
+---
+
+## 🖥️ 8. Compute – Running the Application
+- **Amazon EC2**
+- Persistent VMs for custom configurations and long-running processes.
+- **Amazon ECS/EKS + Fargate**
+- Container orchestration without managing servers.
+- **AWS Lambda**
+- Event-driven functions for light compute (e.g., authentication hooks).
+- **AWS Elastic Beanstalk**
+- Platform-as-a-Service automating provisioning, load balancing, and scaling.
+
+---
+
+## 🗄️ 9. Caching & In-Memory Stores
+- **Amazon ElastiCache (Redis/Memcached)**
+- In-memory caching for session data or frequent queries.
+- **CloudFront**
+- Caches static assets (JS, CSS, images) at edge to reduce round trips.
+
+---
+
+## 🗃️ 10. Data Storage & Databases
+- **Amazon S3**
+- Durable object storage for static assets, backups, logs.
+- **Amazon EBS/EFS**
+- Block and file storage for EC2 instances with low latency.
+- **Amazon RDS/Aurora**
+- Managed relational databases with read replicas and multi-AZ failover.
+- **Amazon DynamoDB**
+- Serverless NoSQL with single-digit-millisecond reads/writes.
+- **Amazon Aurora Global Database**
+- Multi-region read-scaling for global applications.
+
+---
+
+## 🔄 11. Messaging & Streaming
+- **Amazon SQS**
+- Decouples microservices with reliable message queues.
+- **Amazon SNS**
+- Pub/Sub notifications via email, SMS, or HTTP endpoints.
+- **Amazon EventBridge**
+- Central event bus routing events between AWS services or custom producers.
+- **Amazon Kinesis Data Streams**
+- Real-time ingestion and processing for analytics pipelines.
+
+---
+
+## 📈 12. Observability & Automation
+- **Amazon CloudWatch**
+- Collects logs, metrics, and events.
+- Alarms trigger auto-scaling or notifications.
+- **AWS X-Ray**
+- Distributed tracing to visualize request latencies across microservices.
+- **AWS CloudTrail**
+- Records API calls for auditing and compliance.
+- **Amazon OpenSearch Service**
+- Search and analytics on logs and metrics.
+- **AWS Config & Systems Manager**
+- Tracks configuration drift and automates patching.
+- **AWS GuardDuty & Security Hub**
+- Continuous threat detection and consolidated security findings.
+
+---
+
+## ⚙️ 13. DevOps & Infrastructure as Code
+- **AWS CloudFormation / Terraform**
+- Declarative templates provisioning entire stacks reproducibly.
+- **AWS CodePipeline / CodeBuild / CodeDeploy**
+- CI/CD automates build, test, and deployment across environments.
+- **AWS Systems Manager Parameter Store & Secrets Manager**
+- Secure management of configuration and credentials.
+
+---
+
+## 📬 14. The Return Trip
+1. App server packages the HTML/JSON response.
+2. Sends it back through the ALB → CloudFront origin → edge PoP.
+3. CloudFront caches new content and returns it to Lucy’s browser.
+
+---
+
+## 🎨 15. Browser & Final Rendering
+- Browser parses HTML, CSS, and JS.
+- Fetches additional resources directly from CloudFront.
+- Executes scripts, renders images, and enables interactive features.
+
+---
+
+## 🧩 Architecture at a Glance (ASCII Flow)
+
+\`\`\`
+Browser
+▶ Route 53 (DNS)
+▶ [Global Accelerator]
+▶ CloudFront Edge
+▶ ALB / NLB
+▶ AWS WAF → Shield
+▶ VPC: Public Subnet (ALB, NAT Gateway)
+Private Subnet (EC2/ECS/EKS/Lambda)
+▶ VPC Endpoints → S3 / DynamoDB
+▶ ElastiCache / RDS / Aurora / DynamoDB
+▶ SQS / SNS / EventBridge / Kinesis
+▶ CloudWatch / X-Ray / CloudTrail / GuardDuty
+▶ CloudFormation / CodePipeline
+▶ Response returns the same path back to browser
+\`\`\`
+
+Through this exhaustive AWS tapestry, every service—from global DNS to serverless functions, from object storage to distributed tracing—collaborates to deliver a fast, reliable, and secure experience for Lucy’s browser request.
+`,
+"important": true
+}
+]
+},
 {
 category: 'cloud',
 title: 'Spring Cloud Architecture & Microservices Patterns',
@@ -8607,7 +9425,9 @@ Client ──▶│ DNS/CDN  │▶──────▶│ Global LB │▶─�
 ---
 
 Through this choreography, cloud components form an agile, resilient ecosystem—each reliant on the others to deliver secure, scalable services.`
-    }
+,
+important: true,
+}
 ]
 },{
 category: 'cloud',
@@ -9554,7 +10374,8 @@ Your organization’s focus on innovation and customer trust resonates with my p
 
 - Tendency to over-validate every edge case  
 - Mitigation: set strict timeboxes and enlist peer reviews  
-`
+`,
+important: true,
     },
     {
       question: 'How do you keep up with industry trends and advancements?',
@@ -12720,7 +13541,8 @@ Motivation  Culture      Performance     Process   Career & Succession
 \`\`\`
 
 Use this checklist to cover every dimension of people management and tailor your questions to assess each area thoroughly.
-`
+`,
+"important": true
 },{
 question: 'What are the key Communication & Collaboration questions for a Team Lead and how would you answer them?',
 answerMd: `
