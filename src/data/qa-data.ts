@@ -2305,7 +2305,1220 @@ System.out.println("Bird is flying");
 }
 ]
 },// Add this as the next card in your src/qa-data.ts
+{
+  category: 'springBoot',
+  title: 'Spring Boot - End to End Implementation',
+  subItems: [{
+  "question": "How do I bootstrap a modern Spring Boot 3 project with a clean structure and build setup?",
+  "answerMd": `
+# 🚀 Spring Boot Bootstrap — Project, Build, Structure
 
+---
+
+## 📦 Minimal project structure
+
+- **Top-level:**
+  - \`pom.xml\` or \`build.gradle\`
+  - \`src/main/java/com/example/demo/DemoApplication.java\`
+  - \`src/main/resources/application.yml\`
+  - \`src/test/java/.../DemoApplicationTests.java\`
+
+---
+
+## 🧱 Maven (Java 17+, Boot 3.x)
+
+\`\`\`xml
+<!-- pom.xml -->
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.3.3</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.example</groupId>
+  <artifactId>demo</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>demo</name>
+  <properties>
+    <java.version>17</java.version>
+  </properties>
+
+  <dependencies>
+    <!-- Core web + validation -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+
+    <!-- Observability (added in Module 4) -->
+    <!--
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
+    -->
+
+    <!-- Optional: annotation processing for @ConfigurationProperties metadata -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-configuration-processor</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <!-- Test -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <layered>true</layered>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+\`\`\`
+
+---
+
+## 🧱 Gradle (Kotlin DSL)
+
+\`\`\`kotlin
+// build.gradle.kts
+plugins {
+  id("org.springframework.boot") version "3.3.3"
+  id("io.spring.dependency-management") version "1.1.6"
+  kotlin("jvm") version "1.9.25" // remove if using Java only
+}
+
+group = "com.example"
+version = "0.0.1-SNAPSHOT"
+java { toolchain { languageVersion.set(JavaLanguageVersion.of(17)) } }
+
+repositories { mavenCentral() }
+
+dependencies {
+  implementation("org.springframework.boot:spring-boot-starter-web")
+  implementation("org.springframework.boot:spring-boot-starter-validation")
+  // implementation("org.springframework.boot:spring-boot-starter-actuator")
+  // implementation("io.micrometer:micrometer-registry-prometheus")
+  annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+  testImplementation("org.springframework.boot:spring-boot-starter-test")
+}
+
+tasks.test { useJUnitPlatform() }
+\`\`\`
+
+---
+
+## 🧩 Application entrypoint
+
+\`\`\`java
+// src/main/java/com/example/demo/DemoApplication.java
+package com.example.demo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+
+@SpringBootApplication
+@ConfigurationPropertiesScan // Enables @ConfigurationProperties scanning
+public class DemoApplication {
+  public static void main(String[] args) {
+    SpringApplication.run(DemoApplication.class, args);
+  }
+}
+\`\`\`
+
+---
+
+## 🧪 Run and verify
+
+- **Build + run (Maven):**
+  \`\`\`bash
+  ./mvnw spring-boot:run
+  \`\`\`
+- **Build jar + run:**
+  \`\`\`bash
+  ./mvnw -q -DskipTests package
+  java -jar target/demo-0.0.1-SNAPSHOT.jar
+  \`\`\`
+- **Hello Controller (quick smoke):**
+  \`\`\`java
+  @RestController
+  class HelloController {
+    @GetMapping("/hello") String hello() { return "ok"; }
+  }
+  \`\`\`
+  \`\`\`bash
+  curl -s localhost:8080/hello
+  \`\`\`
+`
+},{
+  "question": "How do I manage configuration, profiles, and safe secrets in Spring Boot?",
+  "answerMd": `
+# ⚙️ Configuration, Profiles, and Secrets
+
+---
+
+## 🌐 application.yml with profiles
+
+\`\`\`yaml
+# src/main/resources/application.yml
+spring:
+  application:
+    name: demo
+server:
+  port: 8080
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+server:
+  port: 8081
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+server:
+  port: 8080
+logging:
+  level:
+    root: INFO
+\`\`\`
+
+- **Profile activation:**
+  \`\`\`bash
+  java -jar app.jar --spring.profiles.active=dev
+  \`\`\`
+
+---
+
+## 🏷️ Type-safe settings with @ConfigurationProperties
+
+\`\`\`java
+// src/main/java/com/example/demo/config/AppProps.java
+package com.example.demo.config;
+
+import jakarta.validation.constraints.*;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+
+@Validated
+@ConfigurationProperties(prefix = "app")
+public record AppProps(
+  @NotBlank String name,
+  @Min(1) @Max(10) int workers,
+  @Pattern(regexp = "http[s]?://.+") String upstreamBaseUrl
+) {}
+\`\`\`
+
+\`\`\`yaml
+# application.yml
+app:
+  name: demo
+  workers: 3
+  upstream-base-url: https://api.example.com
+\`\`\`
+
+- **Inject and use:**
+  \`\`\`java
+  @RestController
+  class InfoController {
+    private final AppProps props;
+    InfoController(AppProps props) { this.props = props; }
+    @GetMapping("/config") AppProps config() { return props; }
+  }
+  \`\`\`
+
+---
+
+## 🔐 Externalized config and secrets
+
+- **Environment variables:**
+  - **Format:** \`APP_WORKERS=5\` maps to \`app.workers\`
+  - **Run:**
+    \`\`\`bash
+    APP_NAME=demo APP_WORKERS=5 APP_UPSTREAM_BASE_URL=https://api.example.com \\
+    java -jar app.jar
+    \`\`\`
+- **Command-line has highest precedence:**
+  \`\`\`bash
+  java -jar app.jar --app.workers=7
+  \`\`\`
+- **Do not commit secrets:**
+  - **Use:** container secrets, Vault, AWS SSM/Secrets Manager, Azure Key Vault, GCP Secret Manager
+  - **Mount as env files:** \`.env\` + process manager (Docker/Kubernetes)
+
+---
+
+## 🧪 Verification
+
+- **Fail-fast validation:** Boot fails startup if \`@Validated\` constraints on \`@ConfigurationProperties\` are violated.
+- **Echo config endpoint:** \`GET /config\` returns bound values for quick sanity checks (dev-only).
+`
+},{
+  "question": "How do I build robust REST endpoints with validation and consistent error responses?",
+  "answerMd": `
+# 🌐 REST, Validation, and Error Handling
+
+---
+
+## ✍️ DTOs with Bean Validation
+
+\`\`\`java
+// src/main/java/com/example/demo/api/dto/CreateOrderRequest.java
+package com.example.demo.api.dto;
+
+import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
+
+public record CreateOrderRequest(
+  @NotBlank String orderId,
+  @NotBlank String customerId,
+  @Positive BigDecimal amount
+) {}
+\`\`\`
+
+---
+
+## 🧭 REST Controller
+
+\`\`\`java
+// src/main/java/com/example/demo/api/OrderController.java
+package com.example.demo.api;
+
+import com.example.demo.api.dto.CreateOrderRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api/orders")
+class OrderController {
+
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  public CreateOrderRequest create(@Valid @RequestBody CreateOrderRequest req) {
+    // persist or enqueue; return resource representation
+    return req;
+  }
+
+  @GetMapping("/{orderId}")
+  public CreateOrderRequest get(@PathVariable String orderId) {
+    // demo; replace with real fetch
+    return new CreateOrderRequest(orderId, "C-001", new java.math.BigDecimal("99.00"));
+  }
+}
+\`\`\`
+
+---
+
+## 🛡️ Global error handling (ProblemDetail in Spring 6/Boot 3)
+
+\`\`\`java
+// src/main/java/com/example/demo/api/GlobalExceptionHandler.java
+package com.example.demo.api;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
+import java.util.Map;
+
+@RestControllerAdvice
+class GlobalExceptionHandler {
+
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
+    var pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+    pd.setType(URI.create("https://example.com/problem/validation-error"));
+    pd.setTitle("Validation failed");
+    var fieldErrors = ex.getBindingResult().getFieldErrors().stream()
+        .collect(java.util.stream.Collectors.groupingBy(
+            fe -> fe.getField(),
+            java.util.stream.Collectors.mapping(
+              fe -> fe.getDefaultMessage(), java.util.stream.Collectors.toList()
+            )
+        ));
+    pd.setProperty("errors", fieldErrors);
+    return pd;
+  }
+
+  @ExceptionHandler(ResourceNotFoundException.class)
+  ProblemDetail handleNotFound(ResourceNotFoundException ex) {
+    var pd = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+    pd.setTitle("Resource not found");
+    pd.setDetail(ex.getMessage());
+    return pd;
+  }
+}
+
+class ResourceNotFoundException extends RuntimeException {
+  ResourceNotFoundException(String msg) { super(msg); }
+}
+\`\`\`
+
+---
+
+## 🧪 Verification
+
+- **Happy path:**
+  \`\`\`bash
+  curl -s -X POST localhost:8080/api/orders \\
+    -H "Content-Type: application/json" \\
+    -d '{ "orderId":"A123", "customerId":"C1", "amount": 12.50 }' | jq
+  \`\`\`
+- **Validation error:**
+  \`\`\`bash
+  curl -s -X POST localhost:8080/api/orders \\
+    -H "Content-Type: application/json" \\
+    -d '{ "orderId":"", "customerId":"", "amount": -1 }' | jq
+  \`\`\`
+- **Consistent errors:** Responses follow RFC 7807-like structure via \`ProblemDetail\`.
+`
+},{
+  "question": "How do I add health checks, metrics, Prometheus scraping, and graceful shutdown?",
+  "answerMd": `
+# 📊 Observability and Lifecycle — Actuator, Metrics, Shutdown
+
+---
+
+## 🔌 Add dependencies
+
+- **Maven:**
+  \`\`\`xml
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-prometheus</artifactId>
+  </dependency>
+  \`\`\`
+- **Gradle:**
+  \`\`\`kotlin
+  implementation("org.springframework.boot:spring-boot-starter-actuator")
+  implementation("io.micrometer:micrometer-registry-prometheus")
+  \`\`\`
+
+---
+
+## ⚙️ Actuator configuration
+
+\`\`\`yaml
+# application.yml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true        # adds liveness/readiness groups
+  server:
+    port: 8080               # same port; or move to 8081 for sidecar isolation
+
+# Graceful shutdown
+server:
+  shutdown: graceful
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+\`\`\`
+
+- **Endpoints of interest:**
+  - **/actuator/health** (with \`liveness\` and \`readiness\` groups)
+  - **/actuator/metrics** and **/actuator/metrics/http.server.requests**
+  - **/actuator/prometheus**
+
+---
+
+## 📈 Prometheus scrape example
+
+\`\`\`yaml
+# prometheus.yml
+scrape_configs:
+  - job_name: 'spring-app'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['app:8080']
+\`\`\`
+
+---
+
+## 🧪 Health and metrics checks
+
+- **Health:**
+  \`\`\`bash
+  curl -s localhost:8080/actuator/health | jq
+  curl -s localhost:8080/actuator/health/liveness | jq
+  curl -s localhost:8080/actuator/health/readiness | jq
+  \`\`\`
+- **Metrics:**
+  \`\`\`bash
+  curl -s localhost:8080/actuator/metrics/http.server.requests | jq
+  curl -s localhost:8080/actuator/metrics/jvm.memory.used | jq
+  \`\`\`
+
+---
+
+## 📴 Graceful shutdown in practice
+
+- **Terminate:**
+  \`\`\`bash
+  kill -TERM $(pgrep -f demo-0.0.1-SNAPSHOT.jar)
+  \`\`\`
+- **Behavior:**
+  - **Accept no new requests.**
+  - **Finish in-flight requests** within \`timeout-per-shutdown-phase\`.
+  - **Close connectors and thread pools** cleanly.
+
+---
+
+## 🔐 Locking down Actuator (prod)
+
+\`\`\`yaml
+# Expose only health in prod
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+\`\`\`
+
+- **Secure endpoints via Spring Security** (Module 6) or network policy.
+`
+},{
+  "question": "How do I set up persistence with Spring Data JPA, Flyway migrations, and Testcontainers for integration testing?",
+  "answerMd": `
+# 🗃️ Persistence — JPA, Flyway, Testcontainers
+
+---
+
+## 🧱 Dependencies
+
+- **Maven:**
+  \`\`\`xml
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.flywaydb</groupId>
+    <artifactId>flyway-core</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>org.testcontainers</groupId>
+    <artifactId>postgresql</artifactId>
+    <scope>test</scope>
+  </dependency>
+  \`\`\`
+
+---
+
+## 🧩 Entity + Repository
+
+\`\`\`java
+@Entity
+@Table(name = "orders")
+public class Order {
+  @Id
+  private String orderId;
+
+  private String customerId;
+
+  private BigDecimal amount;
+}
+\`\`\`
+
+\`\`\`java
+public interface OrderRepository extends JpaRepository<Order, String> {}
+\`\`\`
+
+---
+
+## 🛠️ Flyway migration
+
+\`\`\`sql
+-- src/main/resources/db/migration/V1__init.sql
+CREATE TABLE orders (
+  order_id VARCHAR PRIMARY KEY,
+  customer_id VARCHAR NOT NULL,
+  amount NUMERIC NOT NULL
+);
+\`\`\`
+
+---
+
+## 🧪 Testcontainers integration test
+
+\`\`\`java
+@Testcontainers
+@SpringBootTest
+class OrderRepositoryTest {
+
+  @Container
+  static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
+    .withDatabaseName("testdb")
+    .withUsername("test")
+    .withPassword("test");
+
+  @DynamicPropertySource
+  static void overrideProps(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", postgres::getJdbcUrl);
+    registry.add("spring.datasource.username", postgres::getUsername);
+    registry.add("spring.datasource.password", postgres::getPassword);
+  }
+
+  @Autowired
+  OrderRepository repo;
+
+  @Test
+  void saveAndFetch() {
+    var order = new Order("A123", "C001", new BigDecimal("99.00"));
+    repo.save(order);
+    assertTrue(repo.findById("A123").isPresent());
+  }
+}
+\`\`\`
+
+---
+
+## 🧠 Best Practices
+
+- Use Flyway for versioned schema control
+- Validate schema on startup: \`spring.jpa.hibernate.ddl-auto=validate\`
+- Use Testcontainers for real DB testing, not H2
+`
+}
+,{
+  "question": "How do I secure Spring Boot endpoints with stateless JWT authentication?",
+  "answerMd": `
+# 🔐 Security — JWT Auth and Endpoint Protection
+
+---
+
+## 🔌 Dependencies
+
+- **Maven:**
+  \`\`\`xml
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-api</artifactId>
+    <version>0.11.5</version>
+  </dependency>
+  <dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-impl</artifactId>
+    <version>0.11.5</version>
+    <scope>runtime</scope>
+  </dependency>
+  <dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-jackson</artifactId>
+    <version>0.11.5</version>
+    <scope>runtime</scope>
+  </dependency>
+  \`\`\`
+
+---
+
+## 🧩 JWT Filter
+
+\`\`\`java
+@Component
+public class JwtAuthFilter extends OncePerRequestFilter {
+
+  @Override
+  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                  FilterChain filterChain) throws ServletException, IOException {
+    String token = extractToken(request);
+    if (token != null && validate(token)) {
+      var auth = buildAuthentication(token);
+      SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+    filterChain.doFilter(request, response);
+  }
+
+  // extractToken(), validate(), buildAuthentication() — implement as needed
+}
+\`\`\`
+
+---
+
+## 🛡️ Security config
+
+\`\`\`java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthFilter jwtFilter) throws Exception {
+    return http
+      .csrf(AbstractHttpConfigurer::disable)
+      .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+      .authorizeHttpRequests(auth -> auth
+        .requestMatchers("/api/orders/**").authenticated()
+        .anyRequest().permitAll()
+      )
+      .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+      .build();
+  }
+}
+\`\`\`
+
+---
+
+## 🧪 Verification
+
+- **Protected endpoint:**
+  \`\`\`bash
+  curl -H "Authorization: Bearer <token>" localhost:8080/api/orders
+  \`\`\`
+- **Missing/invalid token:** returns 401
+- **Valid token:** authenticated principal injected
+
+---
+
+## 🧠 Best Practices
+
+- Use stateless JWT for APIs; avoid sessions
+- Rotate signing keys periodically
+- Validate claims (exp, iss, aud)
+- Use HTTPS and secure headers
+`
+}
+,{
+  "question": "How do I configure structured logging with JSON format and correlation IDs?",
+  "answerMd": `
+# 📋 Logging — JSON Format, Correlation IDs, Logback
+
+---
+
+## 🧱 Dependencies
+
+- **Maven:**
+  \`\`\`xml
+  <dependency>
+    <groupId>net.logstash.logback</groupId>
+    <artifactId>logstash-logback-encoder</artifactId>
+    <version>7.4</version>
+  </dependency>
+  \`\`\`
+
+---
+
+## 🧩 logback-spring.xml
+
+\`\`\`xml
+<configuration>
+  <appender name="JSON" class="net.logstash.logback.appender.LoggingEventCompositeJsonEncoder">
+    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+      <providers>
+        <timestamp />
+        <pattern>
+          <pattern>
+            {
+              "level": "%level",
+              "logger": "%logger",
+              "thread": "%thread",
+              "message": "%message",
+              "correlationId": "%X{X-Correlation-Id:-}"
+            }
+          </pattern>
+        </pattern>
+      </providers>
+    </encoder>
+    <file>logs/app.json</file>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="JSON"/>
+  </root>
+</configuration>
+\`\`\`
+
+---
+
+## 🔗 Correlation ID filter
+
+\`\`\`java
+@Component
+public class CorrelationIdFilter extends OncePerRequestFilter {
+  @Override
+  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                  FilterChain filterChain) throws ServletException, IOException {
+    String cid = Optional.ofNullable(request.getHeader("X-Correlation-Id"))
+                         .orElse(UUID.randomUUID().toString());
+    MDC.put("X-Correlation-Id", cid);
+    response.setHeader("X-Correlation-Id", cid);
+    try {
+      filterChain.doFilter(request, response);
+    } finally {
+      MDC.remove("X-Correlation-Id");
+    }
+  }
+}
+\`\`\`
+
+---
+
+## 🧪 Verification
+
+- **Send request with header:**
+  \`\`\`bash
+  curl -H "X-Correlation-Id: test-123" localhost:8080/hello
+  \`\`\`
+- **Log output:**
+  - JSON line includes \`correlationId: test-123\`
+
+---
+
+## 🧠 Best Practices
+
+- Use structured logs for observability
+- Propagate correlation ID across services
+- Scrape logs with ELK, Loki, or Fluent Bit
+`
+}
+,{
+  "question": "How do I package Spring Boot apps with Docker, optimize JVM flags, and configure startup probes?",
+  "answerMd": `
+# 📦 Packaging — Docker, JVM Tuning, Startup Probes
+
+---
+
+## 🐳 Dockerfile (layered jar)
+
+\`\`\`dockerfile
+FROM eclipse-temurin:17-jre as base
+WORKDIR /app
+COPY target/demo-0.0.1-SNAPSHOT.jar app.jar
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-jar", "app.jar"]
+\`\`\`
+
+- **Build:**
+  \`\`\`bash
+  ./mvnw -DskipTests package
+  docker build -t demo-app .
+  \`\`\`
+
+---
+
+## ⚙️ JVM flags for containers
+
+\`\`\`bash
+java -XX:+UseContainerSupport \\
+     -XX:MaxRAMPercentage=75.0 \\
+     -XX:+UseG1GC \\
+     -XX:+ExitOnOutOfMemoryError \\
+     -Dspring.profiles.active=prod \\
+     -jar app.jar
+\`\`\`
+
+- **UseContainerSupport**: respects container memory limits
+- **MaxRAMPercentage**: avoids full heap allocation
+- **ExitOnOutOfMemoryError**: ensures container exits cleanly
+
+---
+
+## 🔍 Startup probes (Kubernetes)
+
+\`\`\`yaml
+# deployment.yaml
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 15
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10
+\`\`\`
+
+- **Liveness**: restarts pod if stuck
+- **Readiness**: blocks traffic until app is ready
+
+---
+
+## 🧪 Verification
+
+- **Run container:**
+  \`\`\`bash
+  docker run -p 8080:8080 demo-app
+  \`\`\`
+- **Check health:**
+  \`\`\`bash
+  curl localhost:8080/actuator/health
+  \`\`\`
+- **Inspect logs for GC, memory, startup time**
+
+---
+
+## 🧠 Best Practices
+
+- Use distroless or slim base images for security
+- Pin JVM flags for predictable memory behavior
+- Externalize config via env vars or mounted secrets
+- Use probes to manage lifecycle in orchestrators
+`
+}
+,{
+  "question": "How do I integrate Kafka or RabbitMQ for asynchronous messaging in Spring Boot?",
+  "answerMd": `
+# 📬 Async Messaging — Kafka & RabbitMQ
+
+---
+
+## 🧱 Dependencies
+
+- **Kafka:**
+  \`\`\`xml
+  <dependency>
+    <groupId>org.springframework.kafka</groupId>
+    <artifactId>spring-kafka</artifactId>
+  </dependency>
+  \`\`\`
+
+- **RabbitMQ:**
+  \`\`\`xml
+  <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-amqp</artifactId>
+  </dependency>
+  \`\`\`
+
+---
+
+## 🧩 Kafka Producer & Listener
+
+\`\`\`java
+@Service
+public class KafkaProducer {
+  private final KafkaTemplate<String, String> kafkaTemplate;
+  public KafkaProducer(KafkaTemplate<String, String> kafkaTemplate) {
+    this.kafkaTemplate = kafkaTemplate;
+  }
+  public void send(String topic, String message) {
+    kafkaTemplate.send(topic, message);
+  }
+}
+\`\`\`
+
+\`\`\`java
+@KafkaListener(topics = "orders", groupId = "order-group")
+public void listen(String message) {
+  log.info("Received: {}", message);
+}
+\`\`\`
+
+---
+
+## 🧩 RabbitMQ Sender & Listener
+
+\`\`\`java
+@Service
+public class RabbitSender {
+  private final RabbitTemplate rabbitTemplate;
+  public RabbitSender(RabbitTemplate rabbitTemplate) {
+    this.rabbitTemplate = rabbitTemplate;
+  }
+  public void send(String queue, String message) {
+    rabbitTemplate.convertAndSend(queue, message);
+  }
+}
+\`\`\`
+
+\`\`\`java
+@RabbitListener(queues = "orders.queue")
+public void receive(String message) {
+  log.info("Received: {}", message);
+}
+\`\`\`
+
+---
+
+## 🧪 Verification
+
+- **Kafka:**
+  \`\`\`bash
+  kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic orders
+  \`\`\`
+- **RabbitMQ:**
+  - Use RabbitMQ Management UI: http://localhost:15672
+
+---
+
+## 🧠 Best Practices
+
+- Use retry + dead-letter queues
+- Validate payloads before sending
+- Monitor lag and throughput
+- Use Avro/JSON schema for message contracts
+`
+},{
+  "question": "How do I schedule tasks and run background jobs in Spring Boot?",
+  "answerMd": `
+# ⏱️ Scheduling and Background Jobs
+
+---
+
+## 🧩 Enable scheduling
+
+\`\`\`java
+@SpringBootApplication
+@EnableScheduling
+public class DemoApplication {}
+\`\`\`
+
+---
+
+## 🧭 Scheduled task
+
+\`\`\`java
+@Component
+public class ScheduledTasks {
+
+  @Scheduled(fixedRate = 60000)
+  public void pollQueue() {
+    log.info("Polling queue...");
+  }
+
+  @Scheduled(cron = "0 0 * * * *")
+  public void hourlyJob() {
+    log.info("Running hourly job...");
+  }
+}
+\`\`\`
+
+---
+
+## 🧩 Async background execution
+
+\`\`\`java
+@EnableAsync
+@Configuration
+public class AsyncConfig {}
+
+@Service
+public class JobService {
+  @Async
+  public void runHeavyJob() {
+    log.info("Running job in background thread");
+  }
+}
+\`\`\`
+
+---
+
+## 🧪 Verification
+
+- **Logs show execution timestamps**
+- **Async runs on separate thread pool**
+
+---
+
+## 🧠 Best Practices
+
+- Use cron for precise scheduling
+- Offload long-running tasks with @Async
+- Configure thread pool size via \`TaskExecutor\`
+- Monitor job duration and failures
+`
+},{
+  "question": "How do I structure unit, slice, and integration tests in Spring Boot?",
+  "answerMd": `
+# 🧪 Testing Strategy — Unit, Slice, Integration
+
+---
+
+## 🧩 Unit test (pure Java)
+
+\`\`\`java
+class OrderServiceTest {
+
+  OrderService service = new OrderService();
+
+  @Test
+  void testTotalAmount() {
+    assertEquals(100, service.calculateTotal(List.of(50, 50)));
+  }
+}
+\`\`\`
+
+---
+
+## 🧩 Slice test (@WebMvcTest)
+
+\`\`\`java
+@WebMvcTest(OrderController.class)
+class OrderControllerTest {
+
+  @Autowired
+  MockMvc mockMvc;
+
+  @Test
+  void testCreateOrder() throws Exception {
+    mockMvc.perform(post("/api/orders")
+      .contentType("application/json")
+      .content("{\"orderId\":\"A1\",\"customerId\":\"C1\",\"amount\":99.0}"))
+      .andExpect(status().isCreated());
+  }
+}
+\`\`\`
+
+---
+
+## 🧩 Integration test (@SpringBootTest + Testcontainers)
+
+\`\`\`java
+@SpringBootTest
+@Testcontainers
+class OrderIntegrationTest {
+
+  @Container
+  static PostgreSQLContainer<?> db = new PostgreSQLContainer<>("postgres:16");
+
+  @DynamicPropertySource
+  static void overrideProps(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", db::getJdbcUrl);
+  }
+
+  @Autowired
+  OrderRepository repo;
+
+  @Test
+  void testPersistence() {
+    repo.save(new Order("A1", "C1", new BigDecimal("99.0")));
+    assertTrue(repo.findById("A1").isPresent());
+  }
+}
+\`\`\`
+
+---
+
+## 🧠 Best Practices
+
+- Use slices for fast controller/service tests
+- Use Testcontainers for real DB integration
+- Mock external services with WireMock
+- Run tests in CI with isolated environments
+`
+},{
+  "question": "How do I implement full observability with tracing, metrics, and structured logs?",
+  "answerMd": `
+# 🔍 Observability — Tracing, Metrics, Logs
+
+---
+
+## 📈 Metrics (Actuator + Prometheus)
+
+- **Add:**
+  \`\`\`xml
+  <dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-prometheus</artifactId>
+  </dependency>
+  \`\`\`
+
+- **Expose:**
+  \`\`\`yaml
+  management.endpoints.web.exposure.include: prometheus
+  \`\`\`
+
+- **Scrape:**
+  \`\`\`yaml
+  scrape_configs:
+    - job_name: 'spring-app'
+      metrics_path: /actuator/prometheus
+      static_configs:
+        - targets: ['localhost:8080']
+  \`\`\`
+
+---
+
+## 📋 Logs (JSON + Correlation ID)
+
+- Use logstash-logback-encoder (see Module 7)
+- Inject \`X-Correlation-Id\` via filter
+- Forward logs to ELK, Loki, or CloudWatch
+
+---
+
+## 📡 Tracing (OpenTelemetry)
+
+- **Add:**
+  \`\`\`xml
+  <dependency>
+    <groupId>io.opentelemetry.instrumentation</groupId>
+    <artifactId>opentelemetry-spring-boot-starter</artifactId>
+    <version>1.32.0</version>
+  </dependency>
+  \`\`\`
+
+- **Configure exporter (OTLP):**
+  \`\`\`yaml
+  otel:
+    exporter:
+      otlp:
+        endpoint: http://otel-collector:4317
+  \`\`\`
+
+- **Verify spans:**
+  - View in Jaeger, Zipkin, or Grafana Tempo
+
+---
+
+## 🧠 Best Practices
+
+- Use structured logs with trace IDs
+- Export metrics and traces to unified backend
+- Correlate logs, metrics, and spans by request
+- Monitor latency, error rates, and saturation
+`
+}
+
+  ]
+},
 {
 category: 'springBoot',
 title: 'Spring & Spring Boot Deep Dive',
@@ -3839,7 +5052,1254 @@ Remember: prototype = your responsibility for full lifecycle.
 {
 category: 'kafka',
 title: 'Apache Kafka: Common Code‐Level Questions',
-subItems: [
+subItems: [{
+  "question": "Can you explain Kafka architecture using a single realistic use case with minute details?",
+  "answerMd": `
+# 🧠 Kafka Architecture — Order Events Pipeline (End-to-End Use Case)
+
+---
+
+## 📦 Use Case Overview
+
+E-commerce system emitting order lifecycle events:
+- Producers: \`order-service\`, \`payment-service\`, \`shipping-service\`
+- Consumers: \`analytics-service\`, \`fulfillment-service\`
+- Topics: \`order.events\`, \`order.aggregates\`
+
+---
+
+## 🔄 Data Flow
+
+\`\`\`
+[order-service] ---> [Kafka Broker]
+                        |
+                        |-- Topic: order.events
+                        |     |-- Partition 0 (orderId: A123)
+                        |     |-- Partition 1 (orderId: B456)
+                        |
+                   [Consumer Group: analytics-g1]
+                        |-- C1 reads Partition 0
+                        |-- C2 reads Partition 1
+\`\`\`
+
+---
+
+## 🔁 Replication Internals
+
+- \`replication.factor = 3\`
+- \`min.insync.replicas = 2\`
+- \`acks = all\`
+
+---
+
+## 🧮 Partitioning Strategy
+
+- Key by \`orderId\` → preserves per-order ordering
+- Enables parallelism across partitions
+
+---
+
+## 🧪 Idempotent Producer
+
+- \`enable.idempotence = true\`
+- Deduplicates retries using \`producerId\` and \`sequenceNumber\`
+
+---
+
+## 🔀 Kafka Streams
+
+Aggregate latest order status:
+\`\`\`java
+KStream<String, String> orders = builder.stream("order.events");
+orders.groupByKey()
+      .reduce((oldVal, newVal) -> newVal)
+      .toStream()
+      .to("order.aggregates");
+\`\`\`
+
+---
+
+## 🔌 Kafka Connect
+
+Sink connector to PostgreSQL:
+\`\`\`json
+{
+  "name": "pg-sink",
+  "connector.class": "JdbcSinkConnector",
+  "topics": "order.events",
+  "connection.url": "jdbc:postgresql://localhost:5432/orders",
+  "auto.create": true,
+  "insert.mode": "upsert"
+}
+\`\`\`
+
+---
+
+## 🧪 Verification Checklist
+
+- ✅ Produce events → confirm partitioning
+- ✅ Kill broker → observe ISR recovery
+- ✅ Consume → validate offset tracking
+- ✅ Streams → inspect state store
+- ✅ Connect → confirm DB sync
+`
+}
+,{
+  "question": "How do you configure a Kafka producer for safe, idempotent message delivery?",
+  "answerMd": `
+# 🚀 Kafka Producer — Idempotent, Reliable Delivery
+
+---
+
+## 🔧 Key Configurations
+
+| Property                             | Purpose                                      |
+|-------------------------------------|----------------------------------------------|
+| \`acks=all\`                          | Wait for all replicas to confirm write       |
+| \`enable.idempotence=true\`          | Deduplicate retries using producerId         |
+| \`retries=10\`                        | Retry on transient failures                  |
+| \`max.in.flight.requests.per.connection=5\` | Prevent out-of-order retries         |
+| \`compression.type=lz4\`             | Efficient batching                           |
+| \`linger.ms=5\`                      | Delay to batch more records                  |
+
+---
+
+## 🧪 Java Producer Example
+
+\`\`\`java
+Properties props = new Properties();
+props.put("bootstrap.servers", "broker-1:9092,broker-2:9092");
+props.put("acks", "all");
+props.put("enable.idempotence", "true");
+props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+KafkaProducer<String, String> producer = new KafkaProducer<>(props);
+ProducerRecord<String, String> record = new ProducerRecord<>("order.events", "A123", "{\"eventType\":\"ORDER_CREATED\"}");
+
+producer.send(record, (metadata, exception) -> {
+  if (exception != null) exception.printStackTrace();
+  else System.out.printf("Sent to %s-%d @ offset %d%n", metadata.topic(), metadata.partition(), metadata.offset());
+});
+producer.flush();
+\`\`\`
+
+---
+
+## 🧠 Why Idempotence Matters
+
+- Prevents duplicate records on retry
+- Guarantees exactly-once delivery within Kafka
+- Critical for financial, transactional, or audit logs
+`
+}
+,{
+  "question": "How does Kafka consumer offset management and rebalancing work?",
+  "answerMd": `
+# 📥 Kafka Consumer — Offset Management & Rebalancing
+
+---
+
+## 🔁 Offset Strategies
+
+| Mode                  | Behavior                                      |
+|-----------------------|-----------------------------------------------|
+| \`enable.auto.commit=true\` | Commits offsets periodically (default)   |
+| \`enable.auto.commit=false\`| Manual control via \`commitSync()\`      |
+
+---
+
+## 🔄 Rebalancing Flow
+
+1. Consumer joins/leaves group
+2. Group coordinator triggers rebalance
+3. Partitions reassigned
+4. Consumers resume from last committed offset
+
+---
+
+## 🧪 Java Consumer Example
+
+\`\`\`java
+Properties props = new Properties();
+props.put("bootstrap.servers", "broker-1:9092");
+props.put("group.id", "analytics-g1");
+props.put("enable.auto.commit", "false");
+props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+consumer.subscribe(List.of("order.events"));
+
+while (true) {
+  ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(500));
+  for (ConsumerRecord<String, String> r : records) {
+    // process r.key(), r.value()
+  }
+  consumer.commitSync();
+}
+\`\`\`
+
+---
+
+## 🧠 Best Practices
+
+- Use manual commits for precise control
+- Monitor lag via \`records-lag\` metrics
+- Use sticky assignment to reduce churn
+`
+}
+,{
+  "question": "How do Kafka topic configurations affect performance and data lifecycle?",
+  "answerMd": `
+# 📦 Kafka Topics — Partitioning, Retention, Compaction
+
+---
+
+## 🔀 Partitioning
+
+- Enables parallelism
+- Keyed partitioning preserves order per key
+- More partitions = higher throughput, but more overhead
+
+---
+
+## 🧹 Retention Policies
+
+| Policy     | Behavior                                  |
+|------------|-------------------------------------------|
+| \`delete\`   | Removes old segments after time/size      |
+| \`compact\`  | Keeps latest record per key              |
+
+---
+
+## 🧪 Topic Config Example
+
+\`\`\`bash
+kafka-topics.sh --create --topic order.events --partitions 12 --replication-factor 3 --bootstrap-server broker-1:9092
+
+kafka-configs.sh --alter --topic order.events --bootstrap-server broker-1:9092 \\
+  --add-config retention.ms=604800000,cleanup.policy=delete
+
+kafka-topics.sh --create --topic order.aggregates --partitions 6 --replication-factor 3 --bootstrap-server broker-1:9092
+
+kafka-configs.sh --alter --topic order.aggregates --bootstrap-server broker-1:9092 \\
+  --add-config cleanup.policy=compact
+\`\`\`
+
+---
+
+## 🧠 Design Tips
+
+- Use \`compact\` for materialized views
+- Use \`delete\` for event logs
+- Tune \`segment.bytes\` and \`retention.ms\` for disk usage
+`
+}
+,{
+  "question": "How does Kafka Streams work for real-time aggregation and joins?",
+  "answerMd": `
+# 🔀 Kafka Streams — Aggregation, Joins, and State Stores
+
+---
+
+## 🧩 What Is Kafka Streams?
+
+Kafka Streams is a client-side Java library for building real-time applications that:
+- Read from Kafka topics
+- Transform, aggregate, and join data
+- Write results back to Kafka
+
+---
+
+## 🧮 Aggregation Example — Latest Order Status
+
+Input: \`order.events\`  
+Output: \`order.aggregates\` (compacted topic)
+
+\`\`\`java
+KStream<String, String> orders = builder.stream("order.events");
+orders.groupByKey()
+      .reduce((oldVal, newVal) -> newVal)
+      .toStream()
+      .to("order.aggregates");
+\`\`\`
+
+- Uses a **state store** to track latest value per key
+- Automatically creates a **changelog topic** for fault tolerance
+
+---
+
+## 🔗 Join Example — Enrich Orders with Customer Info
+
+Topics:
+- \`orders\`: orderId → order details
+- \`customers\`: customerId → profile
+
+\`\`\`java
+KStream<String, Order> orders = builder.stream("orders");
+KTable<String, Customer> customers = builder.table("customers");
+
+orders.join(customers,
+            (order, customer) -> enrich(order, customer))
+      .to("enriched.orders");
+\`\`\`
+
+- Joins stream with table (KStream–KTable)
+- Enrichment happens in-memory using state store
+
+---
+
+## 🧠 State Store Internals
+
+- Backed by **RocksDB** (default)
+- Stores intermediate results locally
+- Restored from changelog topic on restart
+
+---
+
+## 🛡️ Fault Tolerance
+
+- All state changes logged to Kafka
+- On crash, Streams replays changelog to rebuild state
+
+---
+
+## 🧪 Verification Tips
+
+- Inspect changelog topics (e.g., \`order.aggregates-changelog\`)
+- Use \`KafkaStreams#store()\` to query local state
+- Monitor \`stream-thread\` metrics for lag and throughput
+`
+}
+,{
+  "question": "How does Kafka Connect integrate Kafka with external systems?",
+  "answerMd": `
+# 🔌 Kafka Connect — Source, Sink, and Fault Tolerance
+
+---
+
+## 🧩 What Is Kafka Connect?
+
+Kafka Connect is a framework for moving data between Kafka and external systems:
+- **Source connectors** ingest data into Kafka
+- **Sink connectors** push Kafka data to external stores
+
+---
+
+## 🔄 Example Use Case
+
+- Source: MySQL → Kafka (\`order_db.orders\` → \`orders\`)
+- Sink: Kafka → PostgreSQL (\`orders\` → \`pg.orders\`)
+
+---
+
+## ⚙️ Sink Connector Config (PostgreSQL)
+
+\`\`\`json
+{
+  "name": "pg-sink",
+  "connector.class": "JdbcSinkConnector",
+  "topics": "orders",
+  "connection.url": "jdbc:postgresql://localhost:5432/orders",
+  "auto.create": true,
+  "insert.mode": "upsert",
+  "pk.mode": "record_key",
+  "pk.fields": "orderId"
+}
+\`\`\`
+
+---
+
+## ⚙️ Source Connector Config (MySQL)
+
+\`\`\`json
+{
+  "name": "mysql-source",
+  "connector.class": "MySqlSourceConnector",
+  "database.hostname": "localhost",
+  "database.user": "root",
+  "database.password": "password",
+  "database.server.id": "184054",
+  "database.include.list": "order_db",
+  "table.include.list": "orders",
+  "topic.prefix": "mysql."
+}
+\`\`\`
+
+---
+
+## 🛡️ Fault Tolerance
+
+- Connect workers store offsets in Kafka
+- Tasks auto-restart on failure
+- Distributed mode supports horizontal scaling
+
+---
+
+## 🧪 Verification Tips
+
+- Check connector status via REST API:
+  \`GET /connectors/pg-sink/status\`
+- Inspect Kafka topics for expected records
+- Monitor \`task-failure-rate\`, \`records-written-rate\`
+`
+}
+,{
+  "question": "How do Kafka transactions enable exactly-once semantics?",
+  "answerMd": `
+# 🔒 Kafka Transactions — Exactly-Once Semantics (EOS)
+
+---
+
+## 🧩 Why Use Transactions?
+
+To ensure:
+- Output records and offset commits happen atomically
+- No duplicates or partial writes
+- Safe read-process-write pipelines
+
+---
+
+## 🔁 EOS Flow
+
+1. Begin transaction
+2. Read input records
+3. Process and produce output
+4. Send offsets to transaction
+5. Commit transaction
+
+---
+
+## ⚙️ Producer Config
+
+\`\`\`properties
+enable.idempotence=true
+transactional.id=order-pipeline-tx
+acks=all
+\`\`\`
+
+---
+
+## 🧪 Java Example
+
+\`\`\`java
+producer.initTransactions();
+
+while (true) {
+  producer.beginTransaction();
+  ConsumerRecords<K, V> records = consumer.poll(Duration.ofMillis(500));
+  for (ConsumerRecord<K, V> r : records) {
+    ProducerRecord<K, V> out = transform(r);
+    producer.send(out);
+  }
+  producer.sendOffsetsToTransaction(currentOffsets(records), consumer.groupMetadata());
+  producer.commitTransaction();
+}
+\`\`\`
+
+---
+
+## 🛡️ Isolation Levels
+
+| Level             | Behavior                          |
+|------------------|-----------------------------------|
+| \`read_uncommitted\` | Sees all records, even aborted |
+| \`read_committed\`   | Sees only committed records     |
+
+---
+
+## 🧠 Best Practices
+
+- Use EOS for financial, audit, or stateful pipelines
+- Monitor \`transaction-start-rate\`, \`abort-rate\`
+- Avoid mixing transactional and non-transactional producers on same topic
+`
+}
+,{
+  "question": "What are the key Kafka metrics to monitor and how can you verify cluster health via CLI?",
+  "answerMd": `
+# 📈 Kafka Monitoring — Metrics and CLI Health Checks
+
+---
+
+## 🔍 Broker Metrics
+
+| Metric                        | Insight                                  |
+|------------------------------|-------------------------------------------|
+| \`BytesInPerSec\`              | Producer throughput                       |
+| \`BytesOutPerSec\`             | Consumer throughput                       |
+| \`RequestLatencyMs\`           | Broker responsiveness                     |
+| \`UnderReplicatedPartitions\`  | Replication lag; ISR shrink               |
+| \`OfflinePartitionsCount\`     | Partitions with no leader                 |
+| \`ActiveControllerCount\`      | Should be 1 in KRaft mode                 |
+
+---
+
+## 📥 Consumer Metrics
+
+| Metric              | Insight                                  |
+|---------------------|-------------------------------------------|
+| \`records-lag\`       | How far behind the consumer is            |
+| \`commit-latency\`    | Offset commit performance                 |
+| \`rebalance-rate\`    | Frequency of group reassignments          |
+
+---
+
+## 🧪 CLI Health Checks
+
+### Describe topic and ISR:
+
+\`\`\`bash
+kafka-topics.sh --describe --topic order.events --bootstrap-server broker-1:9092
+\`\`\`
+
+### List consumer groups:
+
+\`\`\`bash
+kafka-consumer-groups.sh --bootstrap-server broker-1:9092 --list
+\`\`\`
+
+### Describe group lag:
+
+\`\`\`bash
+kafka-consumer-groups.sh --bootstrap-server broker-1:9092 --describe --group analytics-g1
+\`\`\`
+
+### Check controller quorum:
+
+\`\`\`bash
+kafka-metadata-quorum.sh --bootstrap-server broker-1:9092 describe
+\`\`\`
+
+---
+
+## 🧠 Best Practices
+
+- Alert on \`UnderReplicatedPartitions > 0\`
+- Track \`ConsumerLagMax\` for backpressure
+- Use dashboards (Prometheus + Grafana or JMX exporters)
+- Monitor disk usage and segment growth
+`
+}
+,{
+  "question": "How does Kafka Schema Registry work and how do you use Avro with Kafka producers and consumers?",
+  "answerMd": `
+# 📦 Kafka Schema Registry — Avro Integration
+
+---
+
+## 🧩 What Is Schema Registry?
+
+A centralized service that:
+- Stores Avro/Protobuf/JSON schemas
+- Validates schema compatibility
+- Enables schema evolution
+
+---
+
+## 🔗 Avro Producer Workflow
+
+1. Define Avro schema
+2. Register schema with Schema Registry
+3. Serialize record using Avro serializer
+
+---
+
+## 🧪 Avro Producer Example
+
+\`\`\`java
+Properties props = new Properties();
+props.put("bootstrap.servers", "broker-1:9092");
+props.put("key.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
+props.put("value.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
+props.put("schema.registry.url", "http://localhost:8081");
+
+KafkaProducer<String, GenericRecord> producer = new KafkaProducer<>(props);
+
+Schema schema = new Schema.Parser().parse(new File("order.avsc"));
+GenericRecord order = new GenericData.Record(schema);
+order.put("orderId", "A123");
+order.put("amount", 250);
+
+ProducerRecord<String, GenericRecord> record = new ProducerRecord<>("order.events", "A123", order);
+producer.send(record);
+\`\`\`
+
+---
+
+## 🔄 Compatibility Modes
+
+| Mode         | Behavior                                  |
+|--------------|-------------------------------------------|
+| \`BACKWARD\`   | New schema can read old data             |
+| \`FORWARD\`    | Old schema can read new data             |
+| \`FULL\`       | Both directions must be compatible       |
+
+---
+
+## 🧪 CLI Verification
+
+### List subjects:
+
+\`\`\`bash
+curl http://localhost:8081/subjects
+\`\`\`
+
+### Get schema by ID:
+
+\`\`\`bash
+curl http://localhost:8081/schemas/ids/1
+\`\`\`
+
+### Check compatibility:
+
+\`\`\`bash
+curl -X POST -H "Content-Type: application/json" \\
+  --data '{"schema": "..."}' \\
+  http://localhost:8081/compatibility/subjects/order-value/versions/latest
+\`\`\`
+
+---
+
+## 🧠 Best Practices
+
+- Use Avro for compact, schema-enforced messages
+- Version schemas carefully
+- Validate compatibility before deployment
+`
+}
+,{
+  "question": "How does Kafka handle broker failures and ensure fault tolerance?",
+  "answerMd": `
+# 🛡️ Kafka Fault Tolerance — Broker Failures and Recovery
+
+---
+
+## 🔁 Replication Model
+
+- Each partition has:
+  - One **leader**
+  - Multiple **followers**
+- Followers replicate data from leader
+- ISR (In-Sync Replicas) = replicas caught up within threshold
+
+---
+
+## 🔄 Failure Scenarios
+
+| Failure Type         | Kafka Behavior                                      |
+|----------------------|-----------------------------------------------------|
+| Broker crash         | Controller elects new leader from ISR               |
+| Follower lag         | Removed from ISR; produce fails if ISR < min.insync |
+| Consumer crash       | Rebalance; partitions reassigned                    |
+| Network partition    | ISR may shrink; produce fails safely                |
+| Disk full            | Broker stops accepting writes; alert via metrics    |
+
+---
+
+## 🔧 Key Configs
+
+| Config                        | Purpose                                  |
+|------------------------------|-------------------------------------------|
+| \`replication.factor=3\`       | Tolerate 2 broker failures                |
+| \`min.insync.replicas=2\`     | Require quorum for writes                 |
+| \`acks=all\`                   | Producer waits for ISR confirmation       |
+| \`unclean.leader.election=false\` | Prevent data loss on failover     |
+
+---
+
+## 🧪 Verification CLI
+
+### Describe topic ISR:
+
+\`\`\`bash
+kafka-topics.sh --describe --topic order.events --bootstrap-server broker-1:9092
+\`\`\`
+
+### Simulate broker failure:
+
+- Stop broker-1
+- Observe leader re-election
+- Check ISR shrinkage
+
+---
+
+## 🧠 Best Practices
+
+- Use RF=3 and MISR=2 for production durability
+- Monitor \`UnderReplicatedPartitions\` and \`ISR count\`
+- Disable unclean leader election for critical topics
+- Use alerts for disk usage and replication lag
+`
+}
+,{
+  "question": "What are the most useful Kafka CLI commands for topic, consumer, and broker management?",
+  "answerMd": `
+# 🛠️ Kafka CLI — Essential Admin Commands
+
+---
+
+## 📁 Topic Management
+
+### Create topic:
+
+\`\`\`bash
+kafka-topics.sh --create --topic order.events \\
+  --bootstrap-server broker-1:9092 \\
+  --partitions 3 --replication-factor 2
+\`\`\`
+
+### List topics:
+
+\`\`\`bash
+kafka-topics.sh --list --bootstrap-server broker-1:9092
+\`\`\`
+
+### Describe topic:
+
+\`\`\`bash
+kafka-topics.sh --describe --topic order.events --bootstrap-server broker-1:9092
+\`\`\`
+
+### Delete topic:
+
+\`\`\`bash
+kafka-topics.sh --delete --topic obsolete.topic --bootstrap-server broker-1:9092
+\`\`\`
+
+---
+
+## 👥 Consumer Group Management
+
+### List groups:
+
+\`\`\`bash
+kafka-consumer-groups.sh --bootstrap-server broker-1:9092 --list
+\`\`\`
+
+### Describe group:
+
+\`\`\`bash
+kafka-consumer-groups.sh --bootstrap-server broker-1:9092 \\
+  --describe --group analytics-g1
+\`\`\`
+
+### Reset offsets:
+
+\`\`\`bash
+kafka-consumer-groups.sh --bootstrap-server broker-1:9092 \\
+  --group analytics-g1 --topic order.events \\
+  --reset-offsets --to-earliest --execute
+\`\`\`
+
+---
+
+## 🧠 Broker and Cluster Ops
+
+### Check controller:
+
+\`\`\`bash
+kafka-metadata-quorum.sh --bootstrap-server broker-1:9092 describe
+\`\`\`
+
+### Broker config:
+
+\`\`\`bash
+kafka-configs.sh --bootstrap-server broker-1:9092 \\
+  --entity-type brokers --entity-name 1 --describe
+\`\`\`
+
+### Add config:
+
+\`\`\`bash
+kafka-configs.sh --bootstrap-server broker-1:9092 \\
+  --entity-type brokers --entity-name 1 \\
+  --alter --add-config log.retention.hours=168
+\`\`\`
+
+---
+
+## 🧠 Best Practices
+
+- Always describe before altering
+- Use CLI for quick diagnostics and automation
+- Combine with monitoring for full visibility
+`
+}
+,{
+  "question": "What are common Kafka design patterns like Event Sourcing, CQRS, and Saga?",
+  "answerMd": `
+# 🧩 Kafka Design Patterns — Event Sourcing, CQRS, Saga
+
+---
+
+## 📜 Event Sourcing
+
+- Store state changes as immutable events
+- Kafka topics = event logs
+- Consumers rebuild state by replaying events
+
+### Benefits:
+- Auditability
+- Time travel
+- Loose coupling
+
+### Example:
+
+\`\`\`json
+{ "eventType": "OrderPlaced", "orderId": "A123", "amount": 250 }
+\`\`\`
+
+---
+
+## 🔄 CQRS (Command Query Responsibility Segregation)
+
+- Separate write (command) and read (query) models
+- Kafka enables async propagation between models
+
+### Pattern:
+
+- Producer sends command → topic
+- Consumer updates read model → query service
+
+---
+
+## 🔗 Saga Pattern
+
+- Manage distributed transactions via event choreography
+- Each service reacts to events and emits compensating actions
+
+### Example Flow:
+
+1. OrderPlaced → PaymentRequested
+2. PaymentConfirmed → InventoryReserved
+3. InventoryFailed → PaymentRefunded
+
+---
+
+## 🧠 Best Practices
+
+- Use compacted topics for state snapshots
+- Ensure idempotency in consumers
+- Track correlation IDs for saga orchestration
+- Use schema evolution for long-lived event streams
+`
+}
+,{
+  "question": "How do Kafka topic configurations affect performance and data lifecycle?",
+  "answerMd": `
+# 📦 Kafka Topics — Partitioning, Retention, Compaction
+
+---
+
+## 🔀 Partitioning
+
+- Enables parallelism
+- Keyed partitioning preserves order per key
+- More partitions = higher throughput, but more overhead
+
+---
+
+## 🧹 Retention Policies
+
+| Policy     | Behavior                                  |
+|------------|-------------------------------------------|
+| \`delete\`   | Removes old segments after time/size      |
+| \`compact\`  | Keeps latest record per key              |
+
+---
+
+## 🧪 Topic Config Example
+
+\`\`\`bash
+kafka-topics.sh --create --topic order.events --partitions 12 --replication-factor 3 --bootstrap-server broker-1:9092
+
+kafka-configs.sh --alter --topic order.events --bootstrap-server broker-1:9092 \\
+  --add-config retention.ms=604800000,cleanup.policy=delete
+
+kafka-topics.sh --create --topic order.aggregates --partitions 6 --replication-factor 3 --bootstrap-server broker-1:9092
+
+kafka-configs.sh --alter --topic order.aggregates --bootstrap-server broker-1:9092 \\
+  --add-config cleanup.policy=compact
+\`\`\`
+
+---
+
+## 🧠 Design Tips
+
+- Use \`compact\` for materialized views
+- Use \`delete\` for event logs
+- Tune \`segment.bytes\` and \`retention.ms\` for disk usage
+`
+}
+,{
+  "question": "How does Kafka Streams work for real-time aggregation and joins?",
+  "answerMd": `
+# 🔀 Kafka Streams — Aggregation, Joins, and State Stores
+
+---
+
+## 🧩 What Is Kafka Streams?
+
+Kafka Streams is a client-side Java library for building real-time applications that:
+- Read from Kafka topics
+- Transform, aggregate, and join data
+- Write results back to Kafka
+
+---
+
+## 🧮 Aggregation Example — Latest Order Status
+
+Input: \`order.events\`  
+Output: \`order.aggregates\` (compacted topic)
+
+\`\`\`java
+KStream<String, String> orders = builder.stream("order.events");
+orders.groupByKey()
+      .reduce((oldVal, newVal) -> newVal)
+      .toStream()
+      .to("order.aggregates");
+\`\`\`
+
+- Uses a **state store** to track latest value per key
+- Automatically creates a **changelog topic** for fault tolerance
+
+---
+
+## 🔗 Join Example — Enrich Orders with Customer Info
+
+Topics:
+- \`orders\`: orderId → order details
+- \`customers\`: customerId → profile
+
+\`\`\`java
+KStream<String, Order> orders = builder.stream("orders");
+KTable<String, Customer> customers = builder.table("customers");
+
+orders.join(customers,
+            (order, customer) -> enrich(order, customer))
+      .to("enriched.orders");
+\`\`\`
+
+- Joins stream with table (KStream–KTable)
+- Enrichment happens in-memory using state store
+
+---
+
+## 🧠 State Store Internals
+
+- Backed by **RocksDB** (default)
+- Stores intermediate results locally
+- Restored from changelog topic on restart
+
+---
+
+## 🛡️ Fault Tolerance
+
+- All state changes logged to Kafka
+- On crash, Streams replays changelog to rebuild state
+
+---
+
+## 🧪 Verification Tips
+
+- Inspect changelog topics (e.g., \`order.aggregates-changelog\`)
+- Use \`KafkaStreams#store()\` to query local state
+- Monitor \`stream-thread\` metrics for lag and throughput
+`
+}
+,{
+  "question": "How does Kafka Connect integrate Kafka with external systems?",
+  "answerMd": `
+# 🔌 Kafka Connect — Source, Sink, and Fault Tolerance
+
+---
+
+## 🧩 What Is Kafka Connect?
+
+Kafka Connect is a framework for moving data between Kafka and external systems:
+- **Source connectors** ingest data into Kafka
+- **Sink connectors** push Kafka data to external stores
+
+---
+
+## 🔄 Example Use Case
+
+- Source: MySQL → Kafka (\`order_db.orders\` → \`orders\`)
+- Sink: Kafka → PostgreSQL (\`orders\` → \`pg.orders\`)
+
+---
+
+## ⚙️ Sink Connector Config (PostgreSQL)
+
+\`\`\`json
+{
+  "name": "pg-sink",
+  "connector.class": "JdbcSinkConnector",
+  "topics": "orders",
+  "connection.url": "jdbc:postgresql://localhost:5432/orders",
+  "auto.create": true,
+  "insert.mode": "upsert",
+  "pk.mode": "record_key",
+  "pk.fields": "orderId"
+}
+\`\`\`
+
+---
+
+## ⚙️ Source Connector Config (MySQL)
+
+\`\`\`json
+{
+  "name": "mysql-source",
+  "connector.class": "MySqlSourceConnector",
+  "database.hostname": "localhost",
+  "database.user": "root",
+  "database.password": "password",
+  "database.server.id": "184054",
+  "database.include.list": "order_db",
+  "table.include.list": "orders",
+  "topic.prefix": "mysql."
+}
+\`\`\`
+
+---
+
+## 🛡️ Fault Tolerance
+
+- Connect workers store offsets in Kafka
+- Tasks auto-restart on failure
+- Distributed mode supports horizontal scaling
+
+---
+
+## 🧪 Verification Tips
+
+- Check connector status via REST API:
+  \`GET /connectors/pg-sink/status\`
+- Inspect Kafka topics for expected records
+- Monitor \`task-failure-rate\`, \`records-written-rate\`
+`
+}
+,{
+  "question": "How do Kafka transactions enable exactly-once semantics?",
+  "answerMd": `
+# 🔒 Kafka Transactions — Exactly-Once Semantics (EOS)
+
+---
+
+## 🧩 Why Use Transactions?
+
+To ensure:
+- Output records and offset commits happen atomically
+- No duplicates or partial writes
+- Safe read-process-write pipelines
+
+---
+
+## 🔁 EOS Flow
+
+1. Begin transaction
+2. Read input records
+3. Process and produce output
+4. Send offsets to transaction
+5. Commit transaction
+
+---
+
+## ⚙️ Producer Config
+
+\`\`\`properties
+enable.idempotence=true
+transactional.id=order-pipeline-tx
+acks=all
+\`\`\`
+
+---
+
+## 🧪 Java Example
+
+\`\`\`java
+producer.initTransactions();
+
+while (true) {
+  producer.beginTransaction();
+  ConsumerRecords<K, V> records = consumer.poll(Duration.ofMillis(500));
+  for (ConsumerRecord<K, V> r : records) {
+    ProducerRecord<K, V> out = transform(r);
+    producer.send(out);
+  }
+  producer.sendOffsetsToTransaction(currentOffsets(records), consumer.groupMetadata());
+  producer.commitTransaction();
+}
+\`\`\`
+
+---
+
+## 🛡️ Isolation Levels
+
+| Level             | Behavior                          |
+|------------------|-----------------------------------|
+| \`read_uncommitted\` | Sees all records, even aborted |
+| \`read_committed\`   | Sees only committed records     |
+
+---
+
+## 🧠 Best Practices
+
+- Use EOS for financial, audit, or stateful pipelines
+- Monitor \`transaction-start-rate\`, \`abort-rate\`
+- Avoid mixing transactional and non-transactional producers on same topic
+`
+}
+,
+{
+"question": "Can you expand the Kafka architecture use case with deeper internals and design insights?",
+"answerMd": `
+# 🔍 Kafka Architecture — Deep Dive on Order Events Pipeline
+
+---
+
+## 🧠 Why Kafka for This Use Case?
+
+Kafka is ideal for event-driven systems like order pipelines because it offers:
+- **Durability**: Events are persisted across replicated brokers
+- **Scalability**: Partitioning allows horizontal scaling of producers and consumers
+- **Replayability**: Consumers can reprocess events from any offset
+- **Loose coupling**: Producers and consumers evolve independently
+
+---
+
+## 🧱 Broker Internals — What Happens When You Send a Message
+
+1. **Producer sends a record** → goes to partition leader
+2. **Leader appends to log** → stored in segment file (e.g., 000000000000.log)
+3. **Followers replicate** → fetch from leader, update ISR
+4. **High watermark** → updated when min.insync.replicas have the record
+5. **Consumer fetches** → reads from log, tracks offset
+
+### Log Anatomy:
+- Each partition = append-only log
+- Segments: rotated files (e.g., every 1GB or 1 hour)
+- Index files: map offset → byte position for fast lookup
+- Retention:
+- \`delete\`: old segments removed
+- \`compact\`: keep latest record per key
+
+---
+
+## 🧮 Partitioning Strategy — Why Key by orderId?
+
+- Ensures **per-order event ordering**
+- Enables **parallelism** across orders
+- Avoids cross-partition reordering issues
+
+### Example:
+\`\`\`
+orderId: A123 → Partition 0
+orderId: B456 → Partition 1
+orderId: A123 → Partition 0 (again)
+\`\`\`
+
+All events for A123 go to Partition 0 → ordering preserved.
+
+---
+
+## 🧪 Idempotent Producer — How Kafka Prevents Duplicates
+
+Kafka assigns:
+- \`producerId\`: unique ID per producer session
+- \`sequenceNumber\`: incremented per message
+
+If a retry occurs, broker checks:
+- Same \`producerId\` and \`sequenceNumber\`?
+→ Discard duplicate.
+
+### Required configs:
+- \`enable.idempotence=true\`
+- \`acks=all\`
+- \`retries > 0\`
+- \`max.in.flight.requests.per.connection ≤ 5\`
+
+---
+
+## 🔁 Consumer Rebalancing — What Happens When a Consumer Joins/Leaves
+
+1. Consumer joins group → triggers rebalance
+2. Group coordinator reassigns partitions
+3. Consumers pause, revoke old assignments
+4. New assignments received → resume from last committed offset
+
+### Implications:
+- Temporary pause in processing
+- Use \`partition.assignment.strategy\` to control behavior
+- Sticky assignment reduces churn
+
+---
+
+## 🧵 Streams State Stores — How Aggregates Are Stored
+
+Kafka Streams uses:
+- **RocksDB** (default) for local state
+- **Changelog topics** to persist state externally
+
+### Example:
+- Aggregating latest order status:
+- Key: \`orderId\`
+- Value: latest status (e.g., SHIPPED)
+
+State store:
+- Keeps latest per key
+- Restores from changelog on restart
+
+---
+
+## 🛡️ Fault Tolerance Matrix
+
+| Failure Type         | Kafka Behavior                                      |
+|----------------------|-----------------------------------------------------|
+| Broker crash         | Leader election from ISR; clients retry             |
+| Follower lag         | Removed from ISR; produce fails if ISR < min.insync |
+| Consumer crash       | Rebalance; partitions reassigned                    |
+| Network partition    | ISR may shrink; produce fails safely                |
+| Disk full            | Broker stops accepting writes; alert via metrics    |
+
+---
+
+## 📈 Monitoring Essentials
+
+| Metric                      | What It Tells You                             |
+|----------------------------|-----------------------------------------------|
+| \`UnderReplicatedPartitions\` | Replication lag; check ISR health             |
+| \`ConsumerLag\`               | Processing delay; backpressure or crash       |
+| \`BytesIn/OutPerSec\`        | Throughput; capacity planning                 |
+| \`RequestLatencyMs\`         | Broker responsiveness                         |
+| \`ActiveControllerCount\`    | Should be 1 in KRaft mode                     |
+
+---
+
+## 🧪 Verification Tips
+
+- Produce 10 events with same \`orderId\` → confirm same partition
+- Kill broker → observe leader election and ISR recovery
+- Consume → validate offset tracking and ordering
+- Streams → inspect state store and changelog topic
+- Connect → confirm DB sync and retry behavior
+
+---
+
+## 🧠 Design Summary
+
+- Use **keyed partitioning** for ordering
+- Enable **idempotence** for safe retries
+- Use **compacted topics** for latest snapshots
+- Monitor **ISR health** and **consumer lag**
+- Prefer **Kafka Streams** for in-app processing
+- Use **Kafka Connect** for external system sync
+
+`
+},
 {
 question: 'What is Apache Kafka and how do you send messages with the Java Producer API?',
 answerMd: `
@@ -4419,6 +6879,316 @@ jmxc.close();
 }
 ]
 },// Add this as the AWS Lambda card in your src/qa-data.ts
+{
+  category: 'aws',
+  title: 'AWS - End to End Implementation',
+  subItems: [{
+  "question": "How do I define IAM roles and policies for least privilege access?",
+  "answerMd": `
+# 🔐 IAM — Roles, Policies, Least Privilege
+
+---
+
+## 🧩 IAM Role Structure
+
+- **Trust policy**: who can assume the role
+- **Permissions policy**: what the role can do
+
+---
+
+## 🛠️ Trust policy (EC2 example)
+
+\`\`\`json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "Service": "ec2.amazonaws.com" },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+\`\`\`
+
+---
+
+## 🛡️ Permissions policy (S3 read-only)
+
+\`\`\`json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": ["arn:aws:s3:::my-bucket/*"]
+    }
+  ]
+}
+\`\`\`
+
+---
+
+## 🧠 Best Practices
+
+- Use **managed policies** for common roles
+- Prefer **resource-level permissions**
+- Enable **MFA** for sensitive actions
+- Use **IAM Access Analyzer** to audit exposure
+`
+},{
+  "question": "How do I launch EC2 instances, connect via SSH, and access instance metadata?",
+  "answerMd": `
+# 🖥️ EC2 — Launch, SSH, Metadata
+
+---
+
+## 🚀 Launch EC2 (CLI)
+
+\`\`\`bash
+aws ec2 run-instances \\
+  --image-id ami-0abcdef1234567890 \\
+  --instance-type t3.micro \\
+  --key-name my-key \\
+  --security-groups my-sg \\
+  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=demo}]'
+\`\`\`
+
+---
+
+## 🔐 SSH Access
+
+- **Key pair:** create via AWS Console or CLI
+- **Connect:**
+  \`\`\`bash
+  ssh -i my-key.pem ec2-user@<public-ip>
+  \`\`\`
+
+---
+
+## 📦 Instance Metadata
+
+- **IMDSv2 token:**
+  \`\`\`bash
+  TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \\
+    -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+  \`\`\`
+
+- **Fetch metadata:**
+  \`\`\`bash
+  curl -H "X-aws-ec2-metadata-token: $TOKEN" \\
+    http://169.254.169.254/latest/meta-data/
+  \`\`\`
+
+---
+
+## 🧠 Best Practices
+
+- Use **IMDSv2** only (disable IMDSv1)
+- Tag instances for traceability
+- Restrict SSH via security groups
+- Rotate keys and use SSM Session Manager for access
+`
+},{
+  "question": "How do I create S3 buckets, manage access, and configure lifecycle rules?",
+  "answerMd": `
+# 🪣 S3 — Buckets, Access, Lifecycle
+
+---
+
+## 📁 Create bucket (CLI)
+
+\`\`\`bash
+aws s3api create-bucket --bucket my-bucket --region ap-south-1
+\`\`\`
+
+---
+
+## 🔐 Bucket policy (read-only)
+
+\`\`\`json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::my-bucket/*"
+    }
+  ]
+}
+\`\`\`
+
+---
+
+## 🧹 Lifecycle rule (auto-delete after 30 days)
+
+\`\`\`json
+{
+  "Rules": [
+    {
+      "ID": "expire-old-objects",
+      "Status": "Enabled",
+      "Prefix": "",
+      "Expiration": { "Days": 30 }
+    }
+  ]
+}
+\`\`\`
+
+- Apply via:
+  \`\`\`bash
+  aws s3api put-bucket-lifecycle-configuration \\
+    --bucket my-bucket \\
+    --lifecycle-configuration file://rules.json
+  \`\`\`
+
+---
+
+## 🧠 Best Practices
+
+- Block public access unless explicitly needed
+- Use lifecycle rules to manage storage costs
+- Enable versioning + MFA delete for sensitive buckets
+- Use S3 Access Analyzer to audit exposure
+`
+},{
+  "question": "How do I use CloudWatch for logging, metrics, and alerting?",
+  "answerMd": `
+# 📊 CloudWatch — Logs, Metrics, Alarms
+
+---
+
+## 📥 Log ingestion (EC2)
+
+- **Install agent:**
+  \`\`\`bash
+  sudo yum install amazon-cloudwatch-agent
+  \`\`\`
+
+- **Config file (logs):**
+  \`\`\`json
+  {
+    "logs": {
+      "logs_collected": {
+        "files": {
+          "collect_list": [
+            {
+              "file_path": "/var/log/messages",
+              "log_group_name": "demo-logs",
+              "log_stream_name": "{instance_id}"
+            }
+          ]
+        }
+      }
+    }
+  }
+  \`\`\`
+
+- **Start agent:**
+  \`\`\`bash
+  sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \\
+    -a fetch-config -m ec2 -c file:/opt/config.json -s
+  \`\`\`
+
+---
+
+## 📈 Custom metric (CLI)
+
+\`\`\`bash
+aws cloudwatch put-metric-data \\
+  --namespace "DemoApp" \\
+  --metric-name "OrdersProcessed" \\
+  --value 42
+\`\`\`
+
+---
+
+## 🚨 Alarm (CPU > 80%)
+
+\`\`\`bash
+aws cloudwatch put-metric-alarm \\
+  --alarm-name "HighCPU" \\
+  --metric-name CPUUtilization \\
+  --namespace AWS/EC2 \\
+  --statistic Average \\
+  --period 300 --threshold 80 \\
+  --comparison-operator GreaterThanThreshold \\
+  --evaluation-periods 2 \\
+  --alarm-actions <SNS-topic-ARN>
+\`\`\`
+
+---
+
+## 🧠 Best Practices
+
+- Centralize logs with structured format
+- Use custom namespaces for app metrics
+- Set alarms on latency, error rates, and resource usage
+- Integrate with SNS for alerting and automation
+`
+},{
+  "question": "How do I set up a VPC with public/private subnets, route tables, and NAT gateway?",
+  "answerMd": `
+# 🌐 VPC Networking — Subnets, Routes, NAT
+
+---
+
+## 🧱 Create VPC
+
+\`\`\`bash
+aws ec2 create-vpc --cidr-block 10.0.0.0/16
+\`\`\`
+
+---
+
+## 🧩 Subnets
+
+- **Public subnet:** 10.0.1.0/24
+- **Private subnet:** 10.0.2.0/24
+
+\`\`\`bash
+aws ec2 create-subnet --vpc-id <vpc-id> --cidr-block 10.0.1.0/24 --availability-zone ap-south-1a
+aws ec2 create-subnet --vpc-id <vpc-id> --cidr-block 10.0.2.0/24 --availability-zone ap-south-1a
+\`\`\`
+
+---
+
+## 🚦 Route tables
+
+- **Public route table:**
+  \`\`\`bash
+  aws ec2 create-route-table --vpc-id <vpc-id>
+  aws ec2 create-route --route-table-id <rtb-id> --destination-cidr-block 0.0.0.0/0 --gateway-id <igw-id>
+  \`\`\`
+
+- **Private route table (via NAT):**
+  \`\`\`bash
+  aws ec2 create-route --route-table-id <rtb-id> --destination-cidr-block 0.0.0.0/0 --nat-gateway-id <nat-id>
+  \`\`\`
+
+---
+
+## 🔄 NAT Gateway
+
+\`\`\`bash
+aws ec2 create-nat-gateway --subnet-id <public-subnet-id> --allocation-id <eip-id>
+\`\`\`
+
+---
+
+## 🧠 Best Practices
+
+- Use **NAT Gateway** for private subnet internet access
+- Enable **flow logs** for VPC diagnostics
+- Use **Network ACLs** for stateless firewall rules
+- Tag resources for traceability
+`
+},
+]
+},
 {
 category: 'aws',
 title: 'AWS Architecture Key components',
