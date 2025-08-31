@@ -3,13 +3,16 @@ export interface SubItemData {
 question: string;
 answerMd: string;
 important?: boolean; // Add this property
+images?: string[]; // ✅ Add this line
 }
 
 export interface QACardData {
 category: string;
 title: string;
 subItems: SubItemData[];
-important?: boolean; 
+important?: boolean;
+images?: string[]; // ✅ Add this line
+
 }
 
 const data: QACardData[] = [
@@ -853,7 +856,10 @@ Repeated words:
 hi
 hello
 ~~~
-`
+`,
+images: ['/assets/DesignURLShortener.png?v=1']
+
+
 },// Add this under the “String Based Questions” card’s subItems array
 {
 question: "How do you print all words that appear more than once using Java Streams?",
@@ -16576,7 +16582,7 @@ Would you like to explore setting up a GraphQL server in Spring Boot or Node.js,
 `
 }
 ]
-}
+},
 
 ];
 

@@ -24,6 +24,13 @@ export default function SubItem({ item }: SubItemProps) {
       {open && (
         <div className="sub-answer">
           <MarkdownRenderer content={item.answerMd} />
+          {item.images && item.images.length > 0 && (
+            <div className="image-gallery">
+              {item.images.map((src, idx) => (
+                <img key={idx} src={src} alt={`img-${idx}`} className="qa-image" />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </li>
