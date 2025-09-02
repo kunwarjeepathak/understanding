@@ -3,16 +3,13 @@ export interface SubItemData {
 question: string;
 answerMd: string;
 important?: boolean; // Add this property
-images?: string[]; // ✅ Add this line
 }
 
 export interface QACardData {
 category: string;
 title: string;
 subItems: SubItemData[];
-important?: boolean;
-images?: string[]; // ✅ Add this line
-
+important?: boolean; 
 }
 
 const data: QACardData[] = [
@@ -857,8 +854,9 @@ hi
 hello
 ~~~
 `,
-images: ['/assets/DesignURLShortener.png?v=1']
-
+images: [
+    '/assets/DesignURLShortener.png'
+  ]
 
 },// Add this under the “String Based Questions” card’s subItems array
 {
