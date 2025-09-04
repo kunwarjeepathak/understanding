@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import MarkdownRenderer from './MarkdownRenderer';
 import type { SubItemData } from '../data/qa-data';
+import ImageModal from './ImageModal'; // Assuming you have this component
 
 interface SubItemProps {
   item: SubItemData;
@@ -8,6 +9,7 @@ interface SubItemProps {
 
 export default function SubItem({ item }: SubItemProps) {
   const [open, setOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <li className={`sub-item${item.important ? ' important' : ''}`}>
@@ -24,11 +26,32 @@ export default function SubItem({ item }: SubItemProps) {
       {open && (
         <div className="sub-answer">
           <MarkdownRenderer content={item.answerMd} />
-          {item.images && item.images.length > 0 && (
-            <div className="image-gallery">
-              {item.images.map((src, idx) => (
-                <img key={idx} src={src} alt={`img-${idx}`} className="qa-image" />
-              ))}
+
+          {item.imageUrl && (
+            <div className="qa-image-wrapper">
+              <img
+                src={
+                  process.env.PUBLIC_URL +
+                  '/assets/' +
+                  (item.imageUrl?.replace('/assets/', '') || '')
+                }
+                alt="QA related"
+                className="qa-image"
+                style={{ cursor: 'pointer' }}
+                onClick={() => setModalOpen(true)}
+              />
+
+              <ImageModal
+                src={
+                  modalOpen
+                    ? process.env.PUBLIC_URL +
+                      '/assets/' +
+                      (item.imageUrl?.replace('/assets/', '') || '')
+                    : ''
+                }
+                alt="QA related"
+                onClose={() => setModalOpen(false)}
+              />
             </div>
           )}
         </div>

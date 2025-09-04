@@ -1,357 +1,673 @@
-/* Layout */
-header {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  background: #fafafa;
-  border-bottom: 1px solid #ddd;
+/* Accessibility: Focus outline for interactive elements */
+
+button:focus,
+
+a:focus,
+
+input:focus {
+
+  outline: 2px solid #0078d7;
+
+  outline-offset: 2px;
+
 }
 
-.logo {
+ 
+
+/* Skip to content link */
+
+.skip-link {
+
+  position: absolute;
+
+  left: -999px;
+
+  top: 0;
+
+  background: #0078d7;
+
+  color: #fff;
+
+  padding: 0.5rem 1rem;
+
+  z-index: 10000;
+
+  border-radius: 0 0 6px 6px;
+
   font-weight: bold;
-  font-size: 1.25rem;
-  margin-right: auto;
+
 }
 
-header input {
-  padding: 0.4rem;
-  font-size: 1rem;
-  width: 200px;
+ 
+
+.skip-link:focus {
+
+  left: 0;
+
 }
 
-.layout {
-  display: flex;
-  min-height: calc(100vh - 50px);
+ 
+
+/* Responsive button styles */
+
+@media (max-width: 600px) {
+
+ 
+
+  button,
+
+  .modal-close {
+
+    font-size: 1rem;
+
+    padding: 0.5rem 1rem;
+
+  }
+
 }
 
-.sidebar {
-  width: 200px;
-  background: #f4f4f4;
-  padding: 1rem;
-  border-right: 1px solid #ddd;
+ 
+
+/* Responsive Design */
+
+@media (max-width: 900px) {
+
+  .layout {
+
+    flex-direction: column;
+
+  }
+
+ 
+
+  .sidebar {
+
+    width: 100%;
+
+    min-width: unset;
+
+    border-right: none;
+
+    border-bottom: 1px solid #ddd;
+
+    margin-bottom: 1rem;
+
+  }
+
 }
 
-.sidebar ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+ 
+
+@media (max-width: 600px) {
+
+  header {
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+  }
+
+ 
+
+  .logo {
+
+    margin-bottom: 0.5rem;
+
+  }
+
+ 
+
+  .layout {
+
+    flex-direction: column;
+
+    min-height: unset;
+
+  }
+
+ 
+
+  .sidebar {
+
+    width: 100%;
+
+    min-width: unset;
+
+    border-right: none;
+
+    border-bottom: 1px solid #ddd;
+
+    margin-bottom: 1rem;
+
+  }
+
+ 
+
+  .qa-image {
+
+    max-width: 80vw;
+
+    margin-right: 0;
+
+    margin-bottom: 1rem;
+
+  }
+
+ 
+
+  .modal-content {
+
+    max-width: 98vw;
+
+    padding: 0.5rem;
+
+  }
+
+ 
+
+  .modal-image {
+
+    max-width: 95vw;
+
+    max-height: 60vh;
+
+  }
+
 }
 
-.sidebar li {
-  padding: 0.5rem;
-  margin-bottom: 0.25rem;
-  cursor: pointer;
-  border-radius: 4px;
-}
+ 
 
-.sidebar li.active,
-.sidebar li:hover {
-  background: #ddd;
-}
-
-.content {
-  flex: 1;
-  padding: 1rem;
-}
-
-/* Q&A Card */
-.qa-card {
-  border: 1px solid #ccc;
-  margin-bottom: 1rem;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.q-header,
-.sub-header {
-  background: #eee;
-  border: none;
-  width: 100%;
-  text-align: left;
-  padding: 0.75rem 1rem;
-  display: flex;
-  justify-content: space-between;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.sub-header {
-  background: transparent;
-  padding: 0.5rem 1rem;
-}
-
-.answer {
-  padding: 0.5rem 1rem;
-}
-
-.sub-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-/* Toggle icon */
-.toggle-icon {
-  transition: transform 0.2s ease;
-}
-
-.toggle-icon.open {
-  transform: rotate(90deg);
-}
-
-/* Markdown content styling */
-.sub-answer {
-  padding: 0.5rem 1rem;
-  border-left: 2px solid #ccc;
-  margin-bottom: 0.5rem;
-}
-
-.sub-answer h3,
-.sub-answer h4 {
-  margin: 0.5rem 0;
-}
-
-.sub-answer pre {
-  background: #2d2d2d;
-  color: #f8f8f2;
-  padding: 0.75rem;
-  border-radius: 4px;
-  overflow-x: auto;
-}
+/* Markdown Table Responsive */
 
 .sub-answer table {
+
   width: 100%;
+
   border-collapse: collapse;
-  margin: 0.5rem 0;
-}
 
-.sub-answer table,
-.sub-answer th,
-.sub-answer td {
-  border: 1px solid #999;
-}
-
-.sub-answer th,
-.sub-answer td {
-  padding: 0.3rem 0.6rem;
-}
-
-.qa-card.important {
-  border: 2px solid #e74c3c;
-  background: #fff6f6;
-}
-
-.sub-answer code {
-  background: #eee;
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  font-family: monospace;
-}
-
-/* ——— Dark-themed Code Snippets Only ——— */
-.sub-answer pre {
-  background: #2d2d2d;
-  color: #f8f8f2;
-  padding: 0.75rem;
-  border-radius: 4px;
   overflow-x: auto;
-}
 
-.sub-answer code {
-  background: #2d2d2d;
-  color: #f8f8f2;
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  font-family: monospace;
-}
-/* Add to your CSS file */
-.important-question {
-  color: blue;
-  font-weight: bold;
-}
-
-/* ============================
-   MERMAID / SVG OVERRIDES
-   (Integrated into styles.css)
-   These rules ensure diagram lines, arrowheads and text remain visible
-   and responsive. They provide a safe default for light backgrounds and
-   an explicit dark-panel override for dark diagram panels.
-   ============================ */
-
-/* Container sizing & responsiveness for Mermaid diagrams */
-.mermaid,
-.mermaid-container,
-.mermaid-wrapper,
-.sub-answer .mermaid {
   display: block;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow: auto;
-  margin: 1rem 0;
-  padding: 0;
-  background: transparent !important;
+
 }
 
-/* Make the rendered SVG responsive */
-.mermaid svg {
-  width: 100% !important;
-  height: auto !important;
-  max-width: 100%;
-  display: block;
-  margin: 0 auto;
-  background: transparent !important;
-}
+ 
 
-/* Default (light-friendly) diagram styling: dark strokes and text */
-.mermaid svg .edgePath path,
-.mermaid svg path.edge,
-.mermaid svg .messageLine,
-.mermaid svg line,
-.mermaid svg rect,
-.mermaid svg polygon {
-  stroke: rgba(34,34,34,0.95) !important; /* dark stroke for light backgrounds */
-  stroke-width: 1.4px !important;
-  stroke-linecap: round !important;
-  stroke-linejoin: round !important;
-  fill: none !important;
-  opacity: 1 !important;
-}
+/* Modal Styles */
 
-/* Arrowhead markers default */
-.mermaid svg marker path,
-.mermaid svg marker polygon {
-  fill: rgba(34,34,34,0.95) !important;
-  stroke: none !important;
-}
+.modal-overlay {
 
-/* Default text/labels for light backgrounds */
-.mermaid svg text,
-.mermaid svg .messageText,
-.mermaid svg .label {
-  fill: rgba(17,17,17,0.95) !important;
-  font-size: 13px !important;
-  font-weight: 400 !important;
-}
+  position: fixed;
 
-/* Actor/participant boxes (sequence diagrams): keep light fill with dark text */
-.mermaid svg .actor,
-.mermaid svg .actor rect,
-.mermaid svg .actorLabel {
-  fill: #efecff !important;
-  stroke: rgba(120,120,130,0.9) !important;
-}
-.mermaid svg .actor text,
-.mermaid svg .actorLabel text {
-  fill: #111 !important;
-}
+  top: 0;
 
-/* Flowchart node appearance */
-.mermaid svg .flowchart .node rect,
-.mermaid svg .flowchart .node circle,
-.mermaid svg .flowchart .node polygon,
-.mermaid svg .flowchart .node path {
-  stroke-width: 1.6px !important;
-  stroke: rgba(34,34,34,0.95) !important;
-  fill: rgba(255,255,255,0.96) !important;
-}
+  left: 0;
 
-/* Notes styling */
-.mermaid svg .note {
-  fill: rgba(255,250,210,0.95) !important;
-  stroke: rgba(200,180,0,0.9) !important;
-  color: #111 !important;
-}
+  width: 100vw;
 
-/* Prevent parent CSS from scaling strokes unexpectedly */
-.mermaid svg * {
-  vector-effect: non-scaling-stroke !important;
-}
+  height: 100vh;
 
-/* ============= Dark-panel overrides =============
-   If your diagram is rendered inside a dark panel, add the class
-   "diagram-panel" (or "mermaid-panel") to the parent container.
-   These rules make strokes/text bright on dark backgrounds.
-   Example wrapper: <div class="diagram-panel"><div class="mermaid">...</div></div>
-   ================================================== */
-.diagram-panel .mermaid svg .edgePath path,
-.diagram-panel .mermaid svg path.edge,
-.mermaid-panel .mermaid svg .edgePath path,
-.mermaid-panel .mermaid svg path.edge,
-.sub-answer.dark .mermaid svg .edgePath path,
-.sub-answer.dark .mermaid svg path.edge {
-  stroke: rgba(255,255,255,0.92) !important; /* bright stroke for dark panels */
-  stroke-width: 1.6px !important;
-}
+  background: rgba(0, 0, 0, 0.7);
 
-.diagram-panel .mermaid svg text,
-.diagram-panel .mermaid svg .messageText,
-.diagram-panel .mermaid svg .label,
-.mermaid-panel .mermaid svg text,
-.sub-answer.dark .mermaid svg text {
-  fill: rgba(255,255,255,0.95) !important;
-}
-
-/* Arrowheads for dark panels */
-.diagram-panel .mermaid svg marker path,
-.diagram-panel .mermaid svg marker polygon,
-.mermaid-panel .mermaid svg marker path,
-.mermaid-panel .mermaid svg marker polygon,
-.sub-answer.dark .mermaid svg marker path,
-.sub-answer.dark .mermaid svg marker polygon {
-  fill: rgba(255,255,255,0.92) !important;
-}
-
-/* Actor boxes on dark panels: keep actor boxes pale to ensure readable labels */
-.diagram-panel .mermaid svg .actor,
-.mermaid-panel .mermaid svg .actor,
-.sub-answer.dark .mermaid svg .actor {
-  fill: #efecff !important;
-}
-.diagram-panel .mermaid svg .actor text,
-.mermaid-panel .mermaid svg .actor text,
-.sub-answer.dark .mermaid svg .actor text {
-  fill: #111 !important;
-}
-
-/* Ensure diagrams can scroll horizontally if they are wide */
-.mermaid,
-.mermaid-container,
-.mermaid-wrapper,
-.sub-answer .mermaid {
-  overflow-x: auto;
-}
-
-/* Small accessibility tweak: increase contrast for important connectors */
-.mermaid svg .edgeLabel,
-.mermaid svg .edgeLabel tspan {
-  fill: inherit !important;
-}
-
- If you want every diagram to sit inside a dark-looking panel by default,
-   you can enable the following (optional). Otherwise leave it commented out.
-
-.diagram-panel, .mermaid-panel {
-  background: #222 !important;
-  color: #eee;
-  padding: 12px;
-  border-radius: 4px;
-}
-
-.image-gallery {
-  margin-top: 1rem;
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+
+  align-items: center;
+
+  justify-content: center;
+
+  z-index: 1000;
+
 }
+
+ 
+
+.modal-content {
+
+  background: #fff;
+
+  padding: 1.5rem;
+
+  border-radius: 10px;
+
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+
+  position: relative;
+
+  max-width: 90vw;
+
+  max-height: 90vh;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+}
+
+ 
+
+.modal-image {
+
+  max-width: 80vw;
+
+  max-height: 70vh;
+
+  border-radius: 8px;
+
+}
+
+ 
+
+.modal-close {
+
+  position: absolute;
+
+  top: 0.5rem;
+
+  right: 0.5rem;
+
+  background: #222;
+
+  color: #fff;
+
+  border: none;
+
+  font-size: 2rem;
+
+  cursor: pointer;
+
+  border-radius: 50%;
+
+  width: 2.5rem;
+
+  height: 2.5rem;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+}
+
+ 
+
+/* Dark Mode Styles */
+
+.dark-mode,
+.dark-mode .content,
+.dark-mode .sub-answer,
+.dark-mode th,
+.dark-mode td,
+.dark-mode button,
+.dark-mode input,
+.dark-mode .qa-image-wrapper,
+.dark-mode .modal-content,
+.dark-mode .sidebar {
+  color: #fff !important;
+  background: #444 !important;
+}
+
+.dark-mode .modal-close {
+  background: #222 !important;
+  color: #eaeaea !important;
+}
+
+.dark-mode .sub-answer code,
+.dark-mode .sub-answer pre {
+  background: #222 !important;
+  color: #eaeaea !important;
+}
+
+
+ 
+
+/* QA Image Styles */
+
+.qa-image-wrapper {
+
+  margin-top: 1rem;
+
+  text-align: center;
+
+}
+
+ 
 
 .qa-image {
 
- border: 2px solid red;
- max-width: 300px;
+  max-width: 100%;
+
   height: auto;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+
+  border-radius: 8px;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
 }
 
-/* End of integrated styles.css */
+ 
+
+/* Layout */
+
+header {
+
+  display: flex;
+
+  align-items: center;
+
+  padding: 0.5rem 1rem;
+
+  background: #fafafa;
+
+  border-bottom: 1px solid #ddd;
+
+}
+
+ 
+
+.logo {
+
+  font-weight: bold;
+
+  font-size: 1.25rem;
+
+  margin-right: auto;
+
+}
+
+ 
+
+header input {
+
+  padding: 0.4rem;
+
+  font-size: 1rem;
+
+  width: 200px;
+
+}
+
+ 
+
+.layout {
+
+  display: flex;
+
+  min-height: calc(100vh - 50px);
+
+}
+
+ 
+
+.sidebar {
+
+  width: 200px;
+
+  background: #f4f4f4;
+
+  padding: 1rem;
+
+  border-right: 1px solid #ddd;
+
+}
+
+ 
+
+.sidebar ul {
+
+  list-style: none;
+
+  margin: 0;
+
+  padding: 0;
+
+}
+
+ 
+
+.sidebar li {
+
+  padding: 0.5rem;
+
+  margin-bottom: 0.25rem;
+
+  cursor: pointer;
+
+  border-radius: 4px;
+
+}
+
+ 
+
+.sidebar li.active,
+
+.sidebar li:hover {
+
+  background: #ddd;
+
+}
+
+ 
+
+.content {
+
+  flex: 1;
+
+  padding: 1rem;
+
+}
+
+ 
+
+/* Q&A Card */
+
+.qa-card {
+
+  border: 1px solid #ccc;
+
+  margin-bottom: 1rem;
+
+  border-radius: 4px;
+
+  overflow: hidden;
+
+}
+
+ 
+
+.q-header,
+
+.sub-header {
+
+  background: #eee;
+
+  border: none;
+
+  width: 100%;
+
+  text-align: left;
+
+  padding: 0.75rem 1rem;
+
+  display: flex;
+
+  justify-content: space-between;
+
+  cursor: pointer;
+
+  font-size: 1rem;
+
+}
+
+ 
+
+.sub-header {
+
+  background: transparent;
+
+  padding: 0.5rem 1rem;
+
+}
+
+ 
+
+.answer {
+
+  padding: 0.5rem 1rem;
+
+}
+
+ 
+
+.sub-list {
+
+  list-style: none;
+
+  margin: 0;
+
+  padding: 0;
+
+}
+
+ 
+
+/* Toggle icon */
+
+.toggle-icon {
+
+  transition: transform 0.2s ease;
+
+}
+
+ 
+
+.toggle-icon.open {
+
+  transform: rotate(90deg);
+
+}
+
+ 
+
+/* Markdown content styling */
+
+.sub-answer {
+
+  padding: 0.5rem 1rem;
+
+  border-left: 2px solid #ccc;
+
+  margin-bottom: 0.5rem;
+
+}
+
+ 
+
+.sub-answer h3,
+
+.sub-answer h4 {
+
+  margin: 0.5rem 0;
+
+}
+
+ 
+
+.sub-answer pre {
+
+  background: #2d2d2d;
+
+  color: #f8f8f2;
+
+  padding: 0.75rem;
+
+  border-radius: 4px;
+
+  overflow-x: auto;
+
+}
+
+ 
+
+.sub-answer table {
+
+  width: 100%;
+
+  border-collapse: collapse;
+
+  margin: 0.5rem 0;
+
+}
+
+ 
+
+.sub-answer table,
+
+.sub-answer th,
+
+.sub-answer td {
+
+  border: 1px solid #999;
+
+}
+
+ 
+
+.sub-answer th,
+
+.sub-answer td {
+
+  padding: 0.3rem 0.6rem;
+
+}
+
+ 
+
+.sub-answer code {
+
+  background: #eee;
+
+  padding: 0.2rem 0.4rem;
+
+  border-radius: 4px;
+
+  font-family: monospace;
+
+}
+
+ 
+
+/* ——— Dark-themed Code Snippets Only ——— */
+
+.sub-answer pre {
+
+  background: #2d2d2d;
+
+  color: #f8f8f2;
+
+  padding: 0.75rem;
+
+  border-radius: 4px;
+
+  overflow-x: auto;
+
+}
+
+ 
+
+.sub-answer code {
+
+  background: #2d2d2d;
+
+  color: #f8f8f2;
+
+  padding: 0.2rem 0.4rem;
+
+  border-radius: 4px;
+
+  font-family: monospace;
+
+}
