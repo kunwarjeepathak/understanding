@@ -1616,6 +1616,7 @@ title: 'JVM Memory Model',
 subItems: [
    {
       question: 'Explain the JVM architectural model in depth',
+    imageUrl: '/assets/JVM.png',
       answerMd: `
 # Detailed JVM Architecture
 
@@ -14154,8 +14155,9 @@ executor.shutdown();
 - Introduce JWT-based user authentication
 - Push live seat counts via WebSocket
 - Implement soft deletes and audit trails for cancellations
-`
-}
+`,
+imageUrl: '/assets/Event_Booking_System.png'
+},
 ]
 },{
   category: 'systemDesign',
@@ -16864,6 +16866,115 @@ Would you like to explore setting up a GraphQL server in Spring Boot or Node.js,
 ]
 },
 
+{
+category: 'hobbies',
+title: 'Start an AI Agency',
+subItems: [{
+  question: 'How can I quickly set up a faceless YouTube channel using AI tools?',
+  answerMd: `
+# 🚀 Fast-Track Setup for AI-Generated YouTube Videos
+
+---
+
+## 🧠 Ideation & Scripting (ChatGPT)
+- **Prompt Engineering**  
+  Generate engaging scripts using reusable prompts:
+  \`"Write a 90-second YouTube script with a hook, conflict, and resolution on [topic]."\`
+- **Content Types**  
+  - Tool reviews  
+  - Motivational stories  
+  - Educational explainers  
+  - Passive income breakdowns
+
+---
+
+## 🔊 Voiceover Creation (ElevenLabs)
+- **Setup**  
+  Choose a realistic voice, adjust tone and pacing.
+- **Usage**  
+  Generate narration from your script in minutes.
+- **Best Practices**  
+  Save voice profiles for consistency across videos.
+
+---
+
+## 🎨 Visuals & Animation (Midjourney + Runway)
+- **Midjourney**  
+  Create stylized backgrounds, characters, and icons.
+- **Runway ML**  
+  Animate visuals, lip-sync voiceovers, and edit scenes.
+- **Templates**  
+  Build reusable visual styles for faster production.
+
+---
+
+## ✂️ Editing & Assembly (CapCut / Runway)
+- **Workflow**  
+  - Intro → Voiceover → Visuals → Outro  
+  - Add transitions, subtitles, and music.
+- **Efficiency**  
+  Use timeline templates to reduce editing time.
+
+---
+
+## 📈 Channel Setup & SEO
+- **Niche Selection**  
+  Choose high-demand, low-competition topics.
+- **Thumbnail Design**  
+  Use Canva templates with bold text and contrast.
+- **Title Optimization**  
+  Apply SEO principles: keywords + curiosity gap.
+
+---
+
+## 💰 Monetization Strategy
+- **YouTube Partner Program**  
+  Join after 1K subs + 4K watch hours.
+- **Revenue Streams**  
+  - AdSense  
+  - Sponsorships  
+  - Digital products (courses, templates)
+- **Analytics Interpretation**  
+  Track RPM, CTR, retention, and optimize accordingly.
+
+---
+
+## 🧮 Revenue Estimation Example
+- **Video Views**: 1.2M  
+- **RPM Range**: $2–$12  
+- **Estimated Earnings**:  
+  \`(1,200,000 ÷ 1000) × RPM = $2,400–$14,400\`
+
+---
+
+## 🗂️ Notion Board Structure
+- **Video Tracker**: Title, status, upload date, link  
+- **Asset Library**: Visuals, voice profiles, templates  
+- **Prompt Vault**: ChatGPT, ElevenLabs, Midjourney  
+- **Analytics Dashboard**: Manual or embedded stats
+
+---
+
+## 🕒 Time & Cost Summary
+| Phase            | Time (Setup) | Time (Per Video) | Cost (Monthly) |
+|------------------|--------------|------------------|----------------|
+| Channel Setup    | 1–2 days     | —                | —              |
+| Script + Voice   | 1–2 hours    | 30–60 mins       | $25–$40        |
+| Visuals + Edit   | 2–3 hours    | 1–2 hours        | $30–$60        |
+| SEO + Upload     | —            | 30–45 mins       | —              |
+
+---
+
+# ✅ Next Steps
+- [ ] Create Notion board with above structure  
+- [ ] Generate first 3 scripts using ChatGPT  
+- [ ] Set up ElevenLabs voice profile  
+- [ ] Design thumbnail templates in Canva  
+- [ ] Produce first video using Runway or CapCut  
+- [ ] Track analytics and iterate
+
+`
+}]}
 ];
 
 export default data;

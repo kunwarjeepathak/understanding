@@ -307,7 +307,7 @@ input:focus {
 .dark-mode .modal-content,
 .dark-mode .sidebar {
   color: #fff !important;
-  background: #444 !important;
+  background: #222 !important;
 }
 
 .dark-mode .modal-close {
@@ -338,13 +338,13 @@ input:focus {
 
 .qa-image {
 
-  max-width: 100%;
-
+ display: block;
+  max-width: 600px;
+  width: 100%;
   height: auto;
-
   border-radius: 8px;
-
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin: 1rem auto;
 
 }
 
