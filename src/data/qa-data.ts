@@ -11,8 +11,6 @@ category: string;
 title: string;
 subItems: SubItemData[];
 important?: boolean;
-
-  imageUrl?: string; // <-- Add this line
 }
 
 const data: QACardData[] = [
