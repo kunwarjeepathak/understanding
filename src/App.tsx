@@ -40,23 +40,14 @@ function App() {
     <>
       <Header onSearch={setSearchTerm} />
 
-      <div style={{ padding: '0.5rem 1rem' }}>
-        <button
-          style={{
-            float: 'right',
-            marginBottom: '1rem',
-            padding: '0.5rem 1rem',
-            borderRadius: '6px',
-            border: 'none',
-            background: darkMode ? '#444' : '#eee',
-            color: darkMode ? '#fff' : '#222',
-            cursor: 'pointer',
-          }}
-          onClick={() => setDarkMode((dm) => !dm)}
-        >
-          {darkMode ? 'Light Mode' : 'Dark Mode'}
-        </button>
-      </div>
+      <button
+        className="dark-mode-toggle"
+        onClick={() => setDarkMode((dm) => !dm)}
+        aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+        title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+      >
+        {darkMode ? '☀️' : '🌙'}
+      </button>
 
       <div className="layout">
         <Sidebar

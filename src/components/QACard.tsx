@@ -15,6 +15,7 @@ export default function QACard({ card }: QACardProps) {
         <span>{card.title}</span>
         <span className={`toggle-icon${open ? ' open' : ''}`}>▸</span>
         {card.important && <span className="important-badge">Important</span>}
+        
       </button>
       {open && (
         <div className="answer">
@@ -25,6 +26,9 @@ export default function QACard({ card }: QACardProps) {
           </ul>
         </div>
       )}
+      {card.imageUrl && (
+  <img src="/assets/Architecture_diagram.png" alt="Test" />
+)}
     </div>
   );
 }
